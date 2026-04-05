@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/geometry-kernel",
   "dependencies": {
-    "@ggez/shared": "workspace:*",
+    "@ggez/shared": "*",
     "clipper2-ts": "latest",
     "earcut": "^3.0.2"
   }

@@ -19,13 +19,13 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-core": "workspace:*",
-    "@ggez/anim-schema": "workspace:*"
+    "@ggez/anim-core": "*",
+    "@ggez/anim-schema": "*"
   }
 }

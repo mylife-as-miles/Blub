@@ -19,15 +19,15 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-compiler": "workspace:*",
-    "@ggez/anim-schema": "workspace:*",
-    "@ggez/anim-utils": "workspace:*",
+    "@ggez/anim-compiler": "*",
+    "@ggez/anim-schema": "*",
+    "@ggez/anim-utils": "*",
     "zod": "^3.25.76"
   }
 }

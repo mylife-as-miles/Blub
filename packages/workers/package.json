@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
@@ -35,11 +35,11 @@
   "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/workers",
   "dependencies": {
     "@types/three": "^0.181.0",
-    "@ggez/editor-core": "workspace:*",
-    "@ggez/geometry-kernel": "workspace:*",
-    "@ggez/runtime-build": "workspace:*",
-    "@ggez/runtime-format": "workspace:*",
-    "@ggez/shared": "workspace:*",
+    "@ggez/editor-core": "*",
+    "@ggez/geometry-kernel": "*",
+    "@ggez/runtime-build": "*",
+    "@ggez/runtime-format": "*",
+    "@ggez/shared": "*",
     "comlink": "^4.4.2",
     "three": "^0.181.1",
     "three-mesh-bvh": "^0.9.2"

@@ -10,12 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ggez/anim-compiler": "workspace:*",
-    "@ggez/anim-core": "workspace:*",
-    "@ggez/anim-editor-core": "workspace:*",
-    "@ggez/anim-exporter": "workspace:*",
-    "@ggez/anim-runtime": "workspace:*",
-    "@ggez/anim-three": "workspace:*",
+    "@ggez/anim-compiler": "*",
+    "@ggez/anim-core": "*",
+    "@ggez/anim-editor-core": "*",
+    "@ggez/anim-exporter": "*",
+    "@ggez/anim-runtime": "*",
+    "@ggez/anim-three": "*",
     "@xyflow/react": "^12.10.1",
     "@base-ui/react": "^1.3.0",
     "@fontsource-variable/geist": "^5.2.8",

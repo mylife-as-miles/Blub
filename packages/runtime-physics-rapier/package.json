@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
@@ -38,9 +38,9 @@
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.2",
-    "@ggez/render-pipeline": "workspace:*",
-    "@ggez/runtime-format": "workspace:*",
-    "@ggez/shared": "workspace:*",
+    "@ggez/render-pipeline": "*",
+    "@ggez/runtime-format": "*",
+    "@ggez/shared": "*",
     "three": "^0.181.1"
   }
 }

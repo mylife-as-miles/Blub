@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
@@ -37,9 +37,9 @@
     "@types/three": "^0.181.0"
   },
   "dependencies": {
-    "@ggez/render-pipeline": "workspace:*",
-    "@ggez/runtime-format": "workspace:*",
-    "@ggez/shared": "workspace:*",
+    "@ggez/render-pipeline": "*",
+    "@ggez/runtime-format": "*",
+    "@ggez/shared": "*",
     "crashcat": "^0.0.3",
     "three": "^0.181.1"
   }

@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
     "test": "bun test src/cli.test.ts",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",

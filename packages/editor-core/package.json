@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup --config ../../scripts/tsup.package.config.mjs",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "npm run build"
   },
   "publishConfig": {
     "access": "public"
@@ -34,8 +34,8 @@
   },
   "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/editor-core",
   "dependencies": {
-    "@ggez/geometry-kernel": "workspace:*",
-    "@ggez/shared": "workspace:*",
+    "@ggez/geometry-kernel": "*",
+    "@ggez/shared": "*",
     "three": "^0.181.1"
   }
 }
