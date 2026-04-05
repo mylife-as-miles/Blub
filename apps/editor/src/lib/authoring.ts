@@ -13,7 +13,7 @@ import {
   type PropPhysics,
   type Transform,
   type Vec3
-} from "@ggez/shared";
+} from "@blud/shared";
 
 export const BRUSH_SHAPES: Array<{ label: string; shape: BrushShape }> = [
   { label: "Cube", shape: "cube" },

@@ -9,8 +9,8 @@ import type {
   NodeID,
   Transform,
   Vec3
-} from "@ggez/shared";
-import { isGroupNode, isInstancingNode, isLightNode, resolveInstancingSourceNode, resolveSceneGraph, vec3 } from "@ggez/shared";
+} from "@blud/shared";
+import { isGroupNode, isInstancingNode, isLightNode, resolveInstancingSourceNode, resolveSceneGraph, vec3 } from "@blud/shared";
 import { createDerivedRenderMesh, type DerivedRenderMesh } from "../meshes/render-mesh";
 
 export type DerivedEntityMarker = {

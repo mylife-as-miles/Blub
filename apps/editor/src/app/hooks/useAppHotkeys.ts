@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import type { EditorCore, TransformAxis } from "@ggez/editor-core";
+import type { EditorCore, TransformAxis } from "@blud/editor-core";
 import type { MeshEditMode } from "@/viewport/editing";
-import type { ToolId } from "@ggez/tool-system";
+import type { ToolId } from "@blud/tool-system";
 
 type UseAppHotkeysOptions = {
   activeToolId: ToolId;

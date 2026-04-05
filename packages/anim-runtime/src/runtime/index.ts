@@ -1,6 +1,6 @@
-import { addPoseAdditive, blendPosesMasked, copyPose, createPoseBufferFromRig, createRootMotionDelta } from "@ggez/anim-core";
-import type { AnimationClipAsset, RigDefinition } from "@ggez/anim-core";
-import type { CompiledAnimatorGraph } from "@ggez/anim-schema";
+import { addPoseAdditive, blendPosesMasked, copyPose, createPoseBufferFromRig, createRootMotionDelta } from "@blud/anim-core";
+import type { AnimationClipAsset, RigDefinition } from "@blud/anim-core";
+import type { CompiledAnimatorGraph } from "@blud/anim-schema";
 import { createAnimatorParameterStore } from "../parameters";
 import { addScaledRootMotion } from "./helpers";
 import { evaluateNode } from "./evaluation";

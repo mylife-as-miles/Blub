@@ -1,4 +1,4 @@
-import { createPoseBufferFromRig, sampleClipPose } from "@ggez/anim-core";
+import { createPoseBufferFromRig, sampleClipPose } from "@blud/anim-core";
 import { memo, useEffect, useRef, type RefObject } from "react";
 import {
   AmbientLight,

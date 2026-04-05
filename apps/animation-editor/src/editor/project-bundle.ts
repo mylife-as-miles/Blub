@@ -1,16 +1,16 @@
-import type { AnimationClipAsset } from "@ggez/anim-core";
+import type { AnimationClipAsset } from "@blud/anim-core";
 import {
   parseAnimationEditorDocument,
   type AnimationEditorDocument,
   type SerializableClip
-} from "@ggez/anim-schema";
+} from "@blud/anim-schema";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import type { EquipmentBundle } from "./character-equipment";
 
-const PROJECT_BUNDLE_FORMAT = "ggez.animation.editor.project";
+const PROJECT_BUNDLE_FORMAT = "blud.animation.editor.project";
 const PROJECT_BUNDLE_LEGACY_VERSION = 1;
 const PROJECT_BUNDLE_VERSION = 2;
-const PROJECT_BUNDLE_MANIFEST_PATH = "project.ggezanimproj.json";
+const PROJECT_BUNDLE_MANIFEST_PATH = "project.bludanimproj.json";
 
 type EncodedFile = {
   name: string;

@@ -1,6 +1,6 @@
-import { createStableId } from "@ggez/anim-utils";
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { EditorGraph, ParameterDefinition, TransitionOperator } from "@ggez/anim-schema";
+import { createStableId } from "@blud/anim-utils";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { EditorGraph, ParameterDefinition, TransitionOperator } from "@blud/anim-schema";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";

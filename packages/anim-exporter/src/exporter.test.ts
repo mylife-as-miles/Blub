@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { CompiledAnimatorGraph } from "@ggez/anim-schema";
+import type { CompiledAnimatorGraph } from "@blud/anim-schema";
 import {
   createAnimationArtifact,
   createAnimationBundle,
@@ -11,7 +11,7 @@ import {
   serializeClipDataBinary
 } from "./exporter";
 
-describe("@ggez/anim-exporter", () => {
+describe("@blud/anim-exporter", () => {
   it("preserves transition blend settings in serialized artifacts", () => {
     const graph: CompiledAnimatorGraph = {
       version: 1,

@@ -8,7 +8,7 @@ import {
   type RuntimeWorldIndex,
   type WebHammerEngineBundle,
   type WebHammerEngineScene
-} from "@ggez/runtime-format";
+} from "@blud/runtime-format";
 
 const TEXTURE_FIELDS = ["baseColorTexture", "metallicRoughnessTexture", "normalTexture"] as const;
 

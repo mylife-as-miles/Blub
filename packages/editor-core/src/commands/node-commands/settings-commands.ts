@@ -1,4 +1,4 @@
-import type { SceneSettings } from "@ggez/shared";
+import type { SceneSettings } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 

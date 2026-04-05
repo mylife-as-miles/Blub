@@ -1,4 +1,4 @@
-import { compileAnimationEditorDocument, type CompileDiagnostic, type CompileResult } from "@ggez/anim-compiler";
+import { compileAnimationEditorDocument, type CompileDiagnostic, type CompileResult } from "@blud/anim-compiler";
 import type {
   AnimationEditorDocument,
   BoneMaskDefinition,
@@ -9,8 +9,8 @@ import type {
   ParameterDefinition,
   SecondaryDynamicsProfile,
   SerializableRig
-} from "@ggez/anim-schema";
-import { createStableId, Emitter, type Unsubscribe } from "@ggez/anim-utils";
+} from "@blud/anim-schema";
+import { createStableId, Emitter, type Unsubscribe } from "@blud/anim-utils";
 import { createDefaultAnimationEditorDocument, createDefaultNode } from "./defaults";
 
 export type EditorTopic =

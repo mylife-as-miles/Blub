@@ -1,4 +1,4 @@
-# @ggez/render-pipeline
+# @blud/render-pipeline
 
 Render-facing scene derivation and viewport helpers for Web Hammer.
 
@@ -7,5 +7,5 @@ Use this package when you need derived render meshes, scene projection helpers, 
 ## Install
 
 ```bash
-bun add @ggez/render-pipeline
+bun add @blud/render-pipeline
 ```

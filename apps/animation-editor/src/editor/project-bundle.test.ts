@@ -1,5 +1,5 @@
 import { strFromU8, unzipSync } from "fflate";
-import type { AnimationEditorDocument } from "@ggez/anim-schema";
+import type { AnimationEditorDocument } from "@blud/anim-schema";
 import {
   createProjectBundleArchive,
   parseProjectBundleFile,
@@ -119,7 +119,7 @@ describe("project bundle", () => {
     });
 
     const archive = unzipSync(archiveBytes);
-    const manifest = JSON.parse(strFromU8(archive["project.ggezanimproj.json"]!)) as {
+    const manifest = JSON.parse(strFromU8(archive["project.bludanimproj.json"]!)) as {
       assets: {
         characterFile?: { path: string; dataBase64?: string };
         equipmentFiles?: Array<{ path: string; dataBase64?: string }>;
@@ -133,7 +133,7 @@ describe("project bundle", () => {
     expect(Array.from(archive[manifest.assets.characterFile!.path]!)).toEqual(Array.from(characterBytes));
     expect(Array.from(archive[manifest.assets.equipmentFiles![0]!.path]!)).toEqual(Array.from(equipmentBytes));
 
-    const restored = await parseProjectBundleFile(new File([toArrayBuffer(archiveBytes)], "locomotion.ggezanimproj.zip", { type: "application/zip" }));
+    const restored = await parseProjectBundleFile(new File([toArrayBuffer(archiveBytes)], "locomotion.bludanimproj.zip", { type: "application/zip" }));
 
     expect(restored.characterFile?.name).toEqual("hero.glb");
     expect(restored.equipmentFiles.map((file) => file.id)).toEqual(["sword"]);
@@ -145,7 +145,7 @@ describe("project bundle", () => {
   it("still imports legacy embedded-json bundles", async () => {
     const characterBytes = new Uint8Array([9, 10, 11]);
     const legacyJson = JSON.stringify({
-      format: "ggez.animation.editor.project",
+      format: "blud.animation.editor.project",
       version: 1,
       document: createDocument(),
       assets: {
@@ -171,7 +171,7 @@ describe("project bundle", () => {
       }
     });
 
-    const restored = await parseProjectBundleFile(new File([legacyJson], "legacy.ggezanimproj.json", { type: "application/json" }));
+    const restored = await parseProjectBundleFile(new File([legacyJson], "legacy.bludanimproj.json", { type: "application/json" }));
 
     expect(restored.document.name).toEqual("Locomotion");
     expect(restored.clips.map((clip) => clip.id)).toEqual(["walk"]);

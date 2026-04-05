@@ -1,5 +1,5 @@
-import type { AnimationClipAsset, AnimationTrack, RigDefinition } from "@ggez/anim-core";
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationClipAsset, AnimationTrack, RigDefinition } from "@blud/anim-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { Clock3, Film, Pause, Play, Plus, Scissors, Square, Trash2, Upload } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Button } from "@/components/ui/button";

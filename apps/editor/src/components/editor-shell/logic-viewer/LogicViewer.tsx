@@ -11,7 +11,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Entity, GeometryNode, SceneHook } from "@ggez/shared";
+import type { Entity, GeometryNode, SceneHook } from "@blud/shared";
 import { deriveLogicGraph } from "./logic-graph";
 import { layoutGraph, NODE_WIDTH } from "./logic-layout";
 import { LogicNode, computeNodeHeight, type LogicNodeData } from "./LogicNode";

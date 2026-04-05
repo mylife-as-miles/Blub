@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { EditorCore } from "@ggez/editor-core";
+import type { EditorCore } from "@blud/editor-core";
 
 export function useEditorSubscriptions(
   editor: EditorCore,

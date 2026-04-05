@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/dev-sync",
+  "name": "@blud/dev-sync",
   "version": "0.1.11",
   "description": "Development-time editor and game synchronization utilities for Web Hammer.",
   "license": "MIT",
@@ -33,11 +33,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/dev-sync"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/dev-sync"
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/dev-sync"
 }

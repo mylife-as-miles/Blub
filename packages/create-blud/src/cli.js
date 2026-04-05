@@ -6,7 +6,7 @@ import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promi
 import { basename, join, relative, resolve } from "node:path";
 
 const TEMPLATE_ROOT = resolve(import.meta.dirname, "../template");
-const DEFAULT_PROJECT_DIR = "my-ggez-app";
+const DEFAULT_PROJECT_DIR = "my-blud-app";
 const DEFAULT_TEMPLATE = "vanilla-three";
 const TEMPLATE_DEFINITIONS = {
   "vanilla-three": {
@@ -59,7 +59,7 @@ async function main() {
   const interactive = !options.yes && process.stdout.isTTY && process.stdin.isTTY;
 
   if (interactive) {
-    intro(pico.inverse(" create-ggez "));
+    intro(pico.inverse(" create-blud "));
   }
 
   const context = await resolveScaffoldContext(options, interactive);
@@ -590,7 +590,7 @@ function printUsage() {
   process.stdout.write(
     [
       "Usage:",
-      "  create-ggez [project-dir] [options]",
+      "  create-blud [project-dir] [options]",
       "",
       "Options:",
       "  -h, --help                       Show this help message",
@@ -609,11 +609,11 @@ function printUsage() {
       ),
       "",
       "Examples:",
-      "  bunx create-ggez",
-      "  bunx create-ggez my-game",
-      "  npm create ggez@latest my-game -- --package-manager npm",
-      "  pnpm create ggez my-game --template vanilla-three --no-install",
-      "  bunx create-ggez . --name my-studio-game --force",
+      "  bunx create-blud",
+      "  bunx create-blud my-game",
+      "  npm create blud@latest my-game -- --package-manager npm",
+      "  pnpm create blud my-game --template vanilla-three --no-install",
+      "  bunx create-blud . --name my-studio-game --force",
       ""
     ].join("\n")
   );

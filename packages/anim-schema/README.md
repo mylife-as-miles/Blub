@@ -1,4 +1,4 @@
-# @ggez/anim-schema
+# @blud/anim-schema
 
 Framework-agnostic schemas for:
 

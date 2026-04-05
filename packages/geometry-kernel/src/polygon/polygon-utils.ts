@@ -9,8 +9,8 @@ import {
   scaleVec3,
   subVec3,
   vec3
-} from "@ggez/shared";
-import type { Vec3 } from "@ggez/shared";
+} from "@blud/shared";
+import type { Vec3 } from "@blud/shared";
 
 export function computePolygonNormal(vertices: Vec3[]): Vec3 {
   if (vertices.length < 3) {

@@ -1,4 +1,4 @@
-import { vec3, type GameplayObject, type GameplayValue, type Transform, type Vec3 } from "@ggez/shared";
+import { vec3, type GameplayObject, type GameplayValue, type Transform, type Vec3 } from "@blud/shared";
 import {
   type GameplayActor,
   type GameplayHookTarget,

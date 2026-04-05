@@ -322,6 +322,19 @@ export function createDefaultSceneSettings(): SceneSettings {
       fogColor: "#0b1118",
       fogFar: 2000,
       fogNear: 500,
+      grass: {
+        baseColor: "#223515",
+        bladeHeight: 0.85,
+        bladeWidth: 0.08,
+        density: 1,
+        enabled: false,
+        interactionRadius: 1.85,
+        interactionStrength: 0.8,
+        radius: 18,
+        tipColor: "#8fd15d",
+        windSpeed: 1.65,
+        windStrength: 0.22
+      },
       gravity: vec3(0, -9.81, 0),
       lod: {
         bakedAt: "",
@@ -365,6 +378,7 @@ function normalizeWorldSettings(world?: Partial<WorldSettings> | WorldSettings):
   const fogNear = clampFiniteNumber(world?.fogNear, defaults.fogNear);
   const fogFar = clampFiniteNumber(world?.fogFar, defaults.fogFar);
   const resolvedFogNear = Math.max(0, fogNear);
+  const grass = normalizeWorldGrassSettings(world?.grass);
   const lod = normalizeWorldLodSettings(world?.lod);
   const skybox = normalizeSceneSkybox(world?.skybox);
 
@@ -373,9 +387,32 @@ function normalizeWorldSettings(world?: Partial<WorldSettings> | WorldSettings):
     ...world,
     fogNear: resolvedFogNear,
     fogFar: Math.max(resolvedFogNear + 0.01, fogFar),
+    grass,
     gravity: world?.gravity ?? defaults.gravity,
     lod,
     skybox,
+  };
+}
+
+function normalizeWorldGrassSettings(
+  grass?: Partial<WorldSettings["grass"]> | WorldSettings["grass"]
+): WorldSettings["grass"] {
+  const defaults = createDefaultSceneSettings().world.grass;
+
+  return {
+    ...defaults,
+    ...grass,
+    baseColor: typeof grass?.baseColor === "string" ? grass.baseColor : defaults.baseColor,
+    bladeHeight: Math.max(0.15, clampFiniteNumber(grass?.bladeHeight, defaults.bladeHeight)),
+    bladeWidth: Math.max(0.01, clampFiniteNumber(grass?.bladeWidth, defaults.bladeWidth)),
+    density: Math.max(0, clampFiniteNumber(grass?.density, defaults.density)),
+    enabled: Boolean(grass?.enabled),
+    interactionRadius: Math.max(0, clampFiniteNumber(grass?.interactionRadius, defaults.interactionRadius)),
+    interactionStrength: Math.max(0, clampFiniteNumber(grass?.interactionStrength, defaults.interactionStrength)),
+    radius: Math.max(2, clampFiniteNumber(grass?.radius, defaults.radius)),
+    tipColor: typeof grass?.tipColor === "string" ? grass.tipColor : defaults.tipColor,
+    windSpeed: Math.max(0, clampFiniteNumber(grass?.windSpeed, defaults.windSpeed)),
+    windStrength: Math.max(0, clampFiniteNumber(grass?.windStrength, defaults.windStrength))
   };
 }
 

@@ -1,4 +1,4 @@
-# @ggez/anim-utils
+# @blud/anim-utils
 
 Small shared helpers used across the animation packages.
 

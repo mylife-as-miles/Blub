@@ -1,4 +1,4 @@
-import type { GeometryNode } from "@ggez/shared";
+import type { GeometryNode } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 

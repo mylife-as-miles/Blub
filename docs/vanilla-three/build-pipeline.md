@@ -10,7 +10,7 @@ Related guides:
 
 ## Build-Time Package
 
-Use `@ggez/runtime-build` for headless compilation.
+Use `@blud/runtime-build` for headless compilation.
 
 Main APIs:
 
@@ -40,7 +40,7 @@ import {
   buildRuntimeBundleFromSnapshot,
   buildRuntimeSceneFromSnapshot,
   packRuntimeBundle
-} from "@ggez/runtime-build";
+} from "@blud/runtime-build";
 
 const runtimeScene = await buildRuntimeSceneFromSnapshot(snapshot);
 

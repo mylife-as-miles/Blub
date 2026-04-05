@@ -1,4 +1,4 @@
-import type { SerializableRig } from "@ggez/anim-schema";
+import type { SerializableRig } from "@blud/anim-schema";
 import { sectionHintClassName } from "../shared";
 import { hashRigSignature, identifyRigFamily } from "./rig-utils";
 

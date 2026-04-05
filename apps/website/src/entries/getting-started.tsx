@@ -3,21 +3,21 @@ import { CommandBlock, PageShell, Section, renderPage, siteHref } from "../site"
 const currentPath = window.location.pathname;
 
 renderPage(
-  "GGEZ | Getting Started",
+  "BLUD | Getting Started",
   <PageShell
     currentPath={currentPath}
     intro="Use the CLI when you want a game project that already knows how to host runtime scenes, gameplay hooks, and animation bundles. The starter targets a vanilla Three.js workflow and stays close to plain Vite."
     title="From CLI scaffold to live game dev server"
   >
     <Section
-      intro="The published scaffolder is create-ggez. It can use the default package manager or one you choose explicitly."
+      intro="The published scaffolder is create-blud. It can use the default package manager or one you choose explicitly."
       title="Create your own game"
     >
       <CommandBlock title="Default package manager">
-        {`bunx create-ggez my-game`}
+        {`bunx create-blud my-game`}
       </CommandBlock>
       <CommandBlock title="Choose a package manager">
-        {`bunx create-ggez my-game --package-manager npm`}
+        {`bunx create-blud my-game --package-manager npm`}
       </CommandBlock>
       <p>
         The generated starter currently targets the vanilla Three.js runtime workflow. That means you get a lightweight app shell instead of a hidden engine layer.

@@ -1,7 +1,7 @@
 import { Billboard } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { triangulatePolygon3D, type ReconstructedBrushFace } from "@ggez/geometry-kernel";
-import { averageVec3, normalizeVec3, toTuple, vec3, type Transform, type Vec3 } from "@ggez/shared";
+import { triangulatePolygon3D, type ReconstructedBrushFace } from "@blud/geometry-kernel";
+import { averageVec3, normalizeVec3, toTuple, vec3, type Transform, type Vec3 } from "@blud/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BufferGeometry,

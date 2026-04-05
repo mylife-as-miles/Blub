@@ -9,7 +9,7 @@ Related guides:
 
 ## Gameplay Runtime
 
-`@ggez/gameplay-runtime` stays headless. It does not require Three.js.
+`@blud/gameplay-runtime` stays headless. It does not require Three.js.
 
 Use the adapter helper:
 
@@ -21,7 +21,7 @@ Example:
 import {
   createGameplayRuntime,
   createGameplayRuntimeSceneFromRuntimeScene
-} from "@ggez/gameplay-runtime";
+} from "@blud/gameplay-runtime";
 
 const gameplayRuntime = createGameplayRuntime({
   scene: createGameplayRuntimeSceneFromRuntimeScene(instance.scene),
@@ -52,7 +52,7 @@ That is the intended ownership boundary:
 
 ## Rapier Physics
 
-Use `@ggez/runtime-physics-rapier` when you want Rapier bindings without baking Rapier into `three-runtime`.
+Use `@blud/runtime-physics-rapier` when you want Rapier bindings without baking Rapier into `three-runtime`.
 
 Core APIs:
 
@@ -70,7 +70,7 @@ import {
   createRapierPhysicsWorld,
   createStaticRigidBody,
   ensureRapierRuntimePhysics
-} from "@ggez/runtime-physics-rapier";
+} from "@blud/runtime-physics-rapier";
 
 await ensureRapierRuntimePhysics();
 

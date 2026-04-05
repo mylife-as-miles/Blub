@@ -1,5 +1,5 @@
-import type { AnimationTrack } from "@ggez/anim-core";
-import type { SerializableRig } from "@ggez/anim-schema";
+import type { AnimationTrack } from "@blud/anim-core";
+import type { SerializableRig } from "@blud/anim-schema";
 import type { ImportedPreviewClip } from "@/editor/preview-assets";
 
 type Args = Record<string, unknown>;

@@ -1,6 +1,6 @@
-import type { PoseBuffer, RigDefinition, RootMotionDelta } from "@ggez/anim-core";
-import type { CompiledGraphNode } from "@ggez/anim-schema";
-import { clamp } from "@ggez/anim-utils";
+import type { PoseBuffer, RigDefinition, RootMotionDelta } from "@blud/anim-core";
+import type { CompiledGraphNode } from "@blud/anim-schema";
+import { clamp } from "@blud/anim-utils";
 import type { EvaluationContext } from "./types";
 
 type WorldPose = {

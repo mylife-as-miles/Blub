@@ -18,9 +18,9 @@ import {
   type World
 } from "crashcat";
 import { capsule, castRay, createClosestCastRayCollector, createDefaultCastRaySettings, cylinder, dof, filter } from "crashcat";
-import type { DerivedRenderMesh } from "@ggez/render-pipeline";
-import { getRuntimePhysicsDescriptors, type RuntimePhysicsDescriptor } from "@ggez/runtime-format";
-import { resolveTransformPivot, toTuple, type SceneSettings } from "@ggez/shared";
+import type { DerivedRenderMesh } from "@blud/render-pipeline";
+import { getRuntimePhysicsDescriptors, type RuntimePhysicsDescriptor } from "@blud/runtime-format";
+import { resolveTransformPivot, toTuple, type SceneSettings } from "@blud/shared";
 import {
   BoxGeometry,
   BufferGeometry,

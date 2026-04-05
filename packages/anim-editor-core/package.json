@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/anim-editor-core",
+  "name": "@blud/anim-editor-core",
   "version": "0.1.11",
   "description": "React-independent animation graph editor domain logic and state store.",
   "license": "MIT",
@@ -25,9 +25,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-compiler": "*",
-    "@ggez/anim-schema": "*",
-    "@ggez/anim-utils": "*",
+    "@blud/anim-compiler": "*",
+    "@blud/anim-schema": "*",
+    "@blud/anim-utils": "*",
     "zod": "^3.25.76"
   }
 }

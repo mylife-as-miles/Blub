@@ -1,5 +1,5 @@
 import { PerspectiveCamera, Vector3 } from "three";
-import type { SceneSettings } from "@ggez/shared";
+import type { SceneSettings } from "@blud/shared";
 import { FpsCameraController } from "./fps";
 import { ThirdPersonCameraController } from "./third-person";
 import { TopDownCameraController } from "./top-down";

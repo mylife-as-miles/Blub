@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { useEffect, useRef, useState } from "react";
 import { loadStoredAnimationEditorDraft, saveAnimationEditorDraft } from "../draft-storage";
 import type { AssetState } from "./use-asset-state";
@@ -53,7 +53,7 @@ export function useDraftPersistence(options: {
           return;
         }
 
-        const file = new File([draft.archive], "autosave.ggezanimproj.zip", {
+        const file = new File([draft.archive], "autosave.bludanimproj.zip", {
           type: draft.archive.type || "application/zip"
         });
 

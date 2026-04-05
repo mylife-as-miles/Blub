@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { makeTransform, vec3 } from "@ggez/shared";
-import { CURRENT_RUNTIME_SCENE_VERSION, type RuntimeScene } from "@ggez/runtime-format";
+import { makeTransform, vec3 } from "@blud/shared";
+import { CURRENT_RUNTIME_SCENE_VERSION, type RuntimeScene } from "@blud/runtime-format";
 import { buildRuntimeWorldIndex, externalizeRuntimeAssets, packRuntimeBundle, unpackRuntimeBundle } from "./index";
 
 const runtimeScene: RuntimeScene = {

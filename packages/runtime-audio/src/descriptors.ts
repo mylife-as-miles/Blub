@@ -1,4 +1,4 @@
-import type { Entity, GameplayObject, GameplayValue, GeometryNode } from "@ggez/shared";
+import type { Entity, GameplayObject, GameplayValue, GeometryNode } from "@blud/shared";
 import type { RuntimeAudioEmitterDescriptor, AudioDistanceModel } from "./types";
 
 /**

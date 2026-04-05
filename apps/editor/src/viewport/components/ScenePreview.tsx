@@ -27,7 +27,7 @@ import {
   BufferGeometry,
   type Side
 } from "three";
-import type { GeometryNode, MaterialRenderSide, SceneHook, Transform, Vec3 } from "@ggez/shared";
+import type { GeometryNode, MaterialRenderSide, SceneHook, Transform, Vec3 } from "@blud/shared";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -41,11 +41,12 @@ import {
   type DerivedLight,
   type DerivedRenderMesh,
   type DerivedRenderScene
-} from "@ggez/render-pipeline";
-import { createBlockoutTextureDataUri, resolveTransformPivot, toTuple } from "@ggez/shared";
+} from "@blud/render-pipeline";
+import { createBlockoutTextureDataUri, resolveTransformPivot, toTuple } from "@blud/shared";
+import { GrassField } from "@/viewport/components/GrassField";
 import { createIndexedGeometry } from "@/viewport/utils/geometry";
 import type { ViewportRenderMode } from "@/viewport/viewports";
-import type { SceneSettings } from "@ggez/shared";
+import type { SceneSettings } from "@blud/shared";
 
 const previewTextureCache = new Map<string, ReturnType<TextureLoader["load"]>>();
 const modelSceneCache = new Map<string, Object3D>();
@@ -128,6 +129,9 @@ export function ScenePreview({
 
   return (
     <>
+      {renderMode === "lit" && sceneSettings.world.grass.enabled ? (
+        <GrassField center={renderScene.boundsCenter} settings={sceneSettings.world.grass} />
+      ) : null}
       <PathGuides pathDefinitions={pathDefinitions ?? sceneSettings.paths ?? []} selectedPathId={selectedPathId} />
       <TriggerHookGuides nodeTransforms={renderScene.nodeTransforms} nodes={selectedHookNodes} />
 

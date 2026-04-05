@@ -1,5 +1,5 @@
-import type { AnimationClipAsset, BoneMask, PoseBuffer, RigDefinition, RootMotionDelta } from "@ggez/anim-core";
-import type { CompiledAnimatorGraph, CompiledTransition } from "@ggez/anim-schema";
+import type { AnimationClipAsset, BoneMask, PoseBuffer, RigDefinition, RootMotionDelta } from "@blud/anim-core";
+import type { CompiledAnimatorGraph, CompiledTransition } from "@blud/anim-schema";
 import type { AnimatorParameterStore } from "../parameters";
 
 export interface LayerRuntimeState {

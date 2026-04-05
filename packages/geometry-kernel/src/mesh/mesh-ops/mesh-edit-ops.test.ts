@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { averageVec3, dotVec3, subVec3, vec3 } from "@ggez/shared";
+import { averageVec3, dotVec3, subVec3, vec3 } from "@blud/shared";
 import { computePolygonNormal } from "../../polygon/polygon-utils";
 import {
   createEditableMeshFromPolygons,

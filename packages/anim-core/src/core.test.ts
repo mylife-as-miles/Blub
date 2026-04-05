@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { addPoseAdditive, blendPosesMasked, createBoneMask, createPoseBuffer, createRigDefinition, extractRootMotionDelta, sampleClipPose, setBoneRotation, setBoneScale, setBoneTranslation } from "./index";
 
-describe("@ggez/anim-core", () => {
+describe("@blud/anim-core", () => {
   const rig = createRigDefinition({
     boneNames: ["root", "hand"],
     parentIndices: [-1, 0],

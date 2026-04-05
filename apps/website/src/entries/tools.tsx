@@ -3,10 +3,10 @@ import { CommandBlock, PageShell, Section, renderPage } from "../site";
 const currentPath = window.location.pathname;
 
 renderPage(
-  "GGEZ | Tools",
+  "BLUD | Tools",
   <PageShell
     currentPath={currentPath}
-    intro="Trident is the world editor. Animation Studio is the animation editor. Both live in this monorepo today, so the install flow is shared and the run commands are separate."
+    intro="Blob is the world editor. Animation Studio is the animation editor. Both live in this monorepo today, so the install flow is shared and the run commands are separate."
     title="Install and run the editors"
   >
     <Section
@@ -14,8 +14,8 @@ renderPage(
       title="Install the toolchain"
     >
       <CommandBlock title="Repository setup">
-        {`git clone https://github.com/vibe-stack/trident.git
-cd trident
+        {`git clone https://github.com/vibe-stack/blob.git
+cd blob
 bun install`}
       </CommandBlock>
       <p>
@@ -24,8 +24,8 @@ bun install`}
     </Section>
 
     <Section
-      intro="Trident is the browser-based world editor for building levels, runtime bundles, and scene data."
-      title="Run Trident"
+      intro="Blob is the browser-based world editor for building levels, runtime bundles, and scene data."
+      title="Run Blob"
     >
       <CommandBlock title="From the repository root">
         {`bun run dev`}
@@ -34,7 +34,7 @@ bun install`}
         {`bun run --cwd apps/editor dev`}
       </CommandBlock>
       <p>
-        The root <code className="rounded bg-white/8 px-2 py-1 text-sm text-white">dev</code> script currently targets Trident, so the short command is fine if you are working from the monorepo root.
+        The root <code className="rounded bg-white/8 px-2 py-1 text-sm text-white">dev</code> script currently targets Blob, so the short command is fine if you are working from the monorepo root.
       </p>
     </Section>
 

@@ -41,14 +41,14 @@ import {
   createUpsertMaterialCommand,
   createUpsertTextureCommand,
   type TransformAxis
-} from "@ggez/editor-core";
-import { convertBrushToEditableMesh, invertEditableMeshNormals } from "@ggez/geometry-kernel";
+} from "@blud/editor-core";
+import { convertBrushToEditableMesh, invertEditableMeshNormals } from "@blud/geometry-kernel";
 import {
   createDerivedRenderSceneCache,
   deriveRenderSceneCached,
   gridSnapValues,
   type ViewportState
-} from "@ggez/render-pipeline";
+} from "@blud/render-pipeline";
 import {
   type BrushShape,
   type GeometryNode,
@@ -77,22 +77,22 @@ import {
   type Vec2,
   type Vec3,
   type SceneSettings
-} from "@ggez/shared";
-import type { PrimitiveShape } from "@ggez/shared";
-import { createToolSession, defaultToolId, defaultTools, type ToolId } from "@ggez/tool-system";
+} from "@blud/shared";
+import type { PrimitiveShape } from "@blud/shared";
+import { createToolSession, defaultToolId, defaultTools, type ToolId } from "@blud/tool-system";
 import {
   createWorkerTaskManager,
   type WorkerJob
-} from "@ggez/workers";
+} from "@blud/workers";
 import {
   createWebHammerEngineBundleZip,
   isWebHammerEngineBundle
-} from "@ggez/three-runtime";
-import { slugifyProjectName, type EditorFileMetadata } from "@ggez/dev-sync";
+} from "@blud/three-runtime";
+import { slugifyProjectName, type EditorFileMetadata } from "@blud/dev-sync";
 import { EditorShell } from "@/components/EditorShell";
 import { useGameConnection } from "@/app/hooks/useGameConnection";
 import { uiStore, type RightPanelId } from "@/state/ui-store";
-import type { Transform } from "@ggez/shared";
+import type { Transform } from "@blud/shared";
 import type { MeshEditMode } from "@/viewport/editing";
 import { useAppHotkeys } from "@/app/hooks/useAppHotkeys";
 import { useCopilot } from "@/app/hooks/useCopilot";
@@ -1419,7 +1419,7 @@ export function App() {
         setProjectSlug(slugifyProjectName(draft.projectSlug || draft.projectName || "Untitled Scene"));
         setProjectSlugDirty(draft.projectSlugDirty);
       } catch (error) {
-        console.warn("Failed to restore the Trident draft.", error);
+        console.warn("Failed to restore the Blob draft.", error);
       } finally {
         if (!cancelled) {
           setDraftHydrated(true);
@@ -1441,7 +1441,7 @@ export function App() {
 
     const timeoutId = window.setTimeout(() => {
       void saveSceneEditorDraft(buildSceneDraftPayload()).catch((error) => {
-        console.warn("Failed to save the Trident draft.", error);
+        console.warn("Failed to save the Blob draft.", error);
       });
     }, 500);
 
@@ -1459,7 +1459,7 @@ export function App() {
       }
 
       void saveSceneEditorDraft(draft).catch((error) => {
-        console.warn("Failed to flush the Trident draft on unload.", error);
+        console.warn("Failed to flush the Blob draft on unload.", error);
       });
     };
   }, []);

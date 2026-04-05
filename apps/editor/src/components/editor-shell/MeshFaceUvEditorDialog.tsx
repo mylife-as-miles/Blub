@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { computePolygonNormal, getFaceVertices } from "@ggez/geometry-kernel";
+import { computePolygonNormal, getFaceVertices } from "@blud/geometry-kernel";
 import {
   crossVec3,
   dotVec3,
@@ -10,7 +10,7 @@ import {
   type EditableMesh,
   type Vec2,
   type Vec3
-} from "@ggez/shared";
+} from "@blud/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

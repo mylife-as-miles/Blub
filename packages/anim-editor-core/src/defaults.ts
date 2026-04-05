@@ -1,6 +1,6 @@
-import type { AnimationEditorDocument, EditorGraphNode } from "@ggez/anim-schema";
-import { ANIMATION_DOCUMENT_VERSION } from "@ggez/anim-schema";
-import { createStableId } from "@ggez/anim-utils";
+import type { AnimationEditorDocument, EditorGraphNode } from "@blud/anim-schema";
+import { ANIMATION_DOCUMENT_VERSION } from "@blud/anim-schema";
+import { createStableId } from "@blud/anim-utils";
 
 export function createDefaultNode(kind: EditorGraphNode["kind"], name?: string): EditorGraphNode {
   const id = createStableId(kind);

@@ -1,7 +1,7 @@
-import { computePolygonNormal, createEditableMeshFromPolygons } from "@ggez/geometry-kernel";
-import type { EditableMeshPolygon } from "@ggez/geometry-kernel";
-import type { GeometryNode, MeshNode, MetadataValue, Vec3 } from "@ggez/shared";
-import { dotVec3, makeTransform, vec3 } from "@ggez/shared";
+import { computePolygonNormal, createEditableMeshFromPolygons } from "@blud/geometry-kernel";
+import type { EditableMeshPolygon } from "@blud/geometry-kernel";
+import type { GeometryNode, MeshNode, MetadataValue, Vec3 } from "@blud/shared";
+import { dotVec3, makeTransform, vec3 } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import { createDuplicateNodeId } from "./helpers";

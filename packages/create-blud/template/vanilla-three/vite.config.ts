@@ -1,5 +1,5 @@
 import { defineConfig, searchForWorkspaceRoot } from "vite";
-import { createWebHammerGamePlugin } from "@ggez/game-dev";
+import { createWebHammerGamePlugin } from "@blud/game-dev";
 
 export default defineConfig({
   plugins: [createWebHammerGamePlugin({ initialSceneId: "main", projectName: "__PROJECT_NAME__" })],

@@ -1,4 +1,4 @@
-import type { Vec3 } from "@ggez/shared";
+import type { Vec3 } from "@blud/shared";
 
 /** Resolves a clip identifier to raw audio data the AudioManager can decode. */
 export type AudioClipResolver = (clipId: string) => Promise<ArrayBuffer> | ArrayBuffer;

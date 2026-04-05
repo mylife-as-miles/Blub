@@ -1,5 +1,5 @@
-import { createRigDefinition } from "@ggez/anim-core";
-import type { AnimationClipAsset, RigDefinition } from "@ggez/anim-core";
+import { createRigDefinition } from "@blud/anim-core";
+import type { AnimationClipAsset, RigDefinition } from "@blud/anim-core";
 import {
   ANIMATION_ARTIFACT_FORMAT,
   ANIMATION_ARTIFACT_VERSION,
@@ -14,7 +14,7 @@ import {
   type CompiledAnimatorGraph,
   type SerializableClip,
   type SerializableRig
-} from "@ggez/anim-schema";
+} from "@blud/anim-schema";
 
 const CLIP_DATA_MAGIC = new Uint8Array([0x47, 0x47, 0x45, 0x5a, 0x43, 0x4c, 0x49, 0x50]);
 const CLIP_DATA_VERSION = 1;

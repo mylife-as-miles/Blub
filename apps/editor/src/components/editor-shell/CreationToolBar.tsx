@@ -1,4 +1,4 @@
-import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@ggez/shared";
+import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
 import type { ComponentType, ReactNode } from "react";
 import { PackagePlus, Sparkles } from "lucide-react";
 import {
@@ -21,7 +21,7 @@ import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { ToolId } from "@ggez/tool-system";
+import type { ToolId } from "@blud/tool-system";
 
 export function CreationToolBar({
   activeBrushShape,

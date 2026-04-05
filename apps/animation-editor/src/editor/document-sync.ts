@@ -1,4 +1,4 @@
-import { parseAnimationEditorDocument, type AnimationEditorDocument, type ClipReference, type EditorGraphNode } from "@ggez/anim-schema";
+import { parseAnimationEditorDocument, type AnimationEditorDocument, type ClipReference, type EditorGraphNode } from "@blud/anim-schema";
 import type { ImportedPreviewClip } from "./preview-assets";
 
 function normalizeClipKey(value: string): string {

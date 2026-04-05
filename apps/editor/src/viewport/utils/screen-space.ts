@@ -1,4 +1,4 @@
-import { resolveTransformPivot, type GeometryNode, type Vec3 } from "@ggez/shared";
+import { resolveTransformPivot, type GeometryNode, type Vec3 } from "@blud/shared";
 import { Box3, Camera, Euler, Object3D, Vector2, Vector3 } from "three";
 
 export type ScreenRect = {

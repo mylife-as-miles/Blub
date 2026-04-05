@@ -1,5 +1,5 @@
-import type { Entity, MeshNode, NodeID, Vec3 } from "@ggez/shared";
-import { addVec3, isMeshNode } from "@ggez/shared";
+import type { Entity, MeshNode, NodeID, Vec3 } from "@blud/shared";
+import { addVec3, isMeshNode } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import type { TransformAxis } from "./transform-commands";

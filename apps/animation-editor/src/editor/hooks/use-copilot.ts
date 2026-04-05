@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import type { CopilotSession } from "@/lib/copilot/types";
 import { createCodexProvider } from "@/lib/copilot/codex-provider";
 import { loadCopilotSettings, isCopilotConfigured } from "@/lib/copilot/settings";

@@ -6,7 +6,7 @@ import {
   vec3,
   type GeometryNode,
   type Vec3
-} from "@ggez/shared";
+} from "@blud/shared";
 import type { BrushCreateBasis } from "@/viewport/types";
 import {
   Camera,

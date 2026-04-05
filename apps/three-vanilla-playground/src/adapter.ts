@@ -1,6 +1,6 @@
-import { deriveRenderScene, type DerivedRenderScene } from "@ggez/render-pipeline";
-import type { Material } from "@ggez/shared";
-import type { WebHammerEngineScene } from "@ggez/three-runtime";
+import { deriveRenderScene, type DerivedRenderScene } from "@blud/render-pipeline";
+import type { Material } from "@blud/shared";
+import type { WebHammerEngineScene } from "@blud/three-runtime";
 
 export function createPlaybackRenderScene(scene: WebHammerEngineScene): DerivedRenderScene {
   return deriveRenderScene(

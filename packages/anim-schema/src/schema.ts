@@ -3,9 +3,9 @@ import { z } from "zod";
 export const ANIMATION_DOCUMENT_VERSION = 1;
 export const ANIMATION_GRAPH_VERSION = 1;
 export const ANIMATION_ARTIFACT_VERSION = 1;
-export const ANIMATION_ARTIFACT_FORMAT = "ggez.animation.artifact";
+export const ANIMATION_ARTIFACT_FORMAT = "blud.animation.artifact";
 export const ANIMATION_BUNDLE_VERSION = 1;
-export const ANIMATION_BUNDLE_FORMAT = "ggez.animation.bundle";
+export const ANIMATION_BUNDLE_FORMAT = "blud.animation.bundle";
 
 export const animationParameterTypeSchema = z.enum(["float", "int", "bool", "trigger"]);
 export const animationBlendModeSchema = z.enum(["override", "additive"]);

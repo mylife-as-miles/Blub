@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import { importAnimationFiles, importCharacterFile, type ImportedCharacterAsset, type ImportedPreviewClip } from "../preview-assets";

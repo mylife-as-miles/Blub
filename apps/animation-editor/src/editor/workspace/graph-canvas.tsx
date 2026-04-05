@@ -14,7 +14,7 @@ import {
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
-import type { EditorGraphNode } from "@ggez/anim-schema";
+import type { EditorGraphNode } from "@blud/anim-schema";
 import { Boxes, Film, Layers3, MoveHorizontal, RotateCcw, SlidersHorizontal, Wind, Workflow } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";

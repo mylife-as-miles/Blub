@@ -1,4 +1,4 @@
-# @ggez/anim-core
+# @blud/anim-core
 
 Pure animation data structures and hot-path helpers with no React or Three.js dependency.
 

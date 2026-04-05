@@ -6,11 +6,11 @@
  * to import framework internals.
  */
 
-import type { GameplayRuntime, GameplayRuntimeSystemRegistration } from "@ggez/gameplay-runtime";
-import type { RuntimeScene } from "@ggez/runtime-format";
-import type { SceneSettings } from "@ggez/shared";
-import type { CrashcatPhysicsWorld } from "@ggez/runtime-physics-crashcat";
-import type { ThreeRuntimeSceneInstance } from "@ggez/three-runtime";
+import type { GameplayRuntime, GameplayRuntimeSystemRegistration } from "@blud/gameplay-runtime";
+import type { RuntimeScene } from "@blud/runtime-format";
+import type { SceneSettings } from "@blud/shared";
+import type { CrashcatPhysicsWorld } from "@blud/runtime-physics-crashcat";
+import type { ThreeRuntimeSceneInstance } from "@blud/three-runtime";
 import type { Group, PerspectiveCamera, Scene } from "three";
 import type { WebGPURenderer } from "three/webgpu";
 import type { CameraMode } from "../camera";

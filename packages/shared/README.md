@@ -1,4 +1,4 @@
-# @ggez/shared
+# @blud/shared
 
 Shared types and utilities used across the Web Hammer package set.
 
@@ -7,5 +7,5 @@ This package contains common scene contracts, transforms, graph helpers, and oth
 ## Install
 
 ```bash
-bun add @ggez/shared
+bun add @blud/shared
 ```

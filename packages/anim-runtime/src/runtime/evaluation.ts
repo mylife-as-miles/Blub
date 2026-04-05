@@ -1,6 +1,6 @@
-import { blendPoses, copyPose, createPoseBufferFromRig, estimateClipDuration, sampleClipPose, sampleClipPoseOnBase, sampleClipRootMotionDelta } from "@ggez/anim-core";
-import type { PoseBuffer, RootMotionDelta } from "@ggez/anim-core";
-import type { CompiledCondition, CompiledGraphNode, CompiledMotionGraph } from "@ggez/anim-schema";
+import { blendPoses, copyPose, createPoseBufferFromRig, estimateClipDuration, sampleClipPose, sampleClipPoseOnBase, sampleClipRootMotionDelta } from "@blud/anim-core";
+import type { PoseBuffer, RootMotionDelta } from "@blud/anim-core";
+import type { CompiledCondition, CompiledGraphNode, CompiledMotionGraph } from "@blud/anim-schema";
 import { applyBlendCurve, blendRootMotion, computeBlend2DChildren, evaluateCondition, findBlend1DChildren, findSelectorChild, forceRootMotionChainToBindPose, getEffectiveRootBoneIndex, getNodeDuration, getStateDuration, getSyncedTransitionTime, resolveSyncGroupTimes } from "./helpers";
 import { applyOrientationWarp, applyOrientationWarpToRootMotion } from "./orientation-warp";
 import { applySecondaryDynamics } from "./secondary-dynamics";

@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/runtime-format",
+  "name": "@blud/runtime-format",
   "version": "0.1.11",
   "description": "Renderer-agnostic runtime contracts, parsing, and validation for Web Hammer.",
   "license": "MIT",
@@ -26,14 +26,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/runtime-format"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/runtime-format",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/runtime-format",
   "dependencies": {
-    "@ggez/shared": "*"
+    "@blud/shared": "*"
   }
 }

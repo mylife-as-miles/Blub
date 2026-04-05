@@ -1,6 +1,6 @@
-import { createStableId } from "@ggez/anim-utils";
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { EditorGraph, ParameterDefinition } from "@ggez/anim-schema";
+import { createStableId } from "@blud/anim-utils";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { EditorGraph, ParameterDefinition } from "@blud/anim-schema";
 import {
   Background,
   Controls,

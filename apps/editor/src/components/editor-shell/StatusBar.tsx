@@ -1,6 +1,6 @@
-import type { GridSnapValue, ViewportState } from "@ggez/render-pipeline";
-import type { BrushShape, GeometryNode } from "@ggez/shared";
-import type { WorkerJob } from "@ggez/workers";
+import type { GridSnapValue, ViewportState } from "@blud/render-pipeline";
+import type { BrushShape, GeometryNode } from "@blud/shared";
+import type { WorkerJob } from "@blud/workers";
 import { JobStatus } from "@/components/editor-shell/JobStatus";
 import type { MeshEditMode } from "@/viewport/editing";
 import type { ViewportPaneId } from "@/viewport/viewports";

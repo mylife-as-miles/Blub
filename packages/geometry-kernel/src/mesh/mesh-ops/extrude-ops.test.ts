@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { vec3 } from "@ggez/shared";
+import { vec3 } from "@blud/shared";
 import { computePolygonNormal } from "../../polygon/polygon-utils";
 import { createEditableMeshFromPolygons, getFaceVertexIds, getFaceVertices, validateEditableMesh } from "../editable-mesh";
 import { scaleEditableMeshVertices, translateEditableMeshVertices } from "./deform-ops";

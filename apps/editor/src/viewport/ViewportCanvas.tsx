@@ -17,11 +17,11 @@ import {
   mergeEditableMeshVertices,
   sculptEditableMeshSamples,
   subdivideEditableMeshFace
-} from "@ggez/geometry-kernel";
+} from "@blud/geometry-kernel";
 import {
   applyWebHammerWorldSettings,
   clearWebHammerWorldSettings
-} from "@ggez/three-runtime";
+} from "@blud/three-runtime";
 import {
   addVec3,
   averageVec3,
@@ -39,7 +39,7 @@ import {
   type ScenePathDefinition,
   type EditableMesh,
   type Vec3
-} from "@ggez/shared";
+} from "@blud/shared";
 import {
   applyBrushEditTransform,
   applyMeshEditTransform,

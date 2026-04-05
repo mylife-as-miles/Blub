@@ -1,4 +1,4 @@
-# @ggez/anim-exporter
+# @blud/anim-exporter
 
 Serialization helpers for versioned animation artifacts.
 

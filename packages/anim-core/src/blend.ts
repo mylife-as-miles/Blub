@@ -1,4 +1,4 @@
-import { clamp, lerp } from "@ggez/anim-utils";
+import { clamp, lerp } from "@blud/anim-utils";
 import type { BoneMask, PoseBuffer, RigDefinition } from "./types";
 import { copyPose } from "./pose-buffer";
 

@@ -1,6 +1,6 @@
-import { inflateEditableMesh, offsetEditableMeshTop } from "@ggez/geometry-kernel";
-import type { MeshNode } from "@ggez/shared";
-import { isMeshNode } from "@ggez/shared";
+import { inflateEditableMesh, offsetEditableMeshTop } from "@blud/geometry-kernel";
+import type { MeshNode } from "@blud/shared";
+import { isMeshNode } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import { createMeshMutationCommand } from "./helpers";

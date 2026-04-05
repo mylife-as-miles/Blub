@@ -18,8 +18,8 @@ import {
   createTriggerSystemDefinition,
   createVfxEmitterSystemDefinition,
   type GameplayRuntimeSystemDefinition
-} from "@ggez/gameplay-runtime";
-import type { WebHammerEngineScene } from "@ggez/three-runtime";
+} from "@blud/gameplay-runtime";
+import type { WebHammerEngineScene } from "@blud/three-runtime";
 
 export type PlaybackGameplaySystemsState = {
   audio: boolean;

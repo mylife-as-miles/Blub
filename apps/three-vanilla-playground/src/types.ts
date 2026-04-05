@@ -1,7 +1,7 @@
-import type { GameplayRuntime } from "@ggez/gameplay-runtime";
-import type { DerivedRenderScene } from "@ggez/render-pipeline";
-import type { SceneSettings, Vec3 } from "@ggez/shared";
-import type { WebHammerEngineScene } from "@ggez/three-runtime";
+import type { GameplayRuntime } from "@blud/gameplay-runtime";
+import type { DerivedRenderScene } from "@blud/render-pipeline";
+import type { SceneSettings, Vec3 } from "@blud/shared";
+import type { WebHammerEngineScene } from "@blud/three-runtime";
 
 export type AssetPathResolver = (path: string) => Promise<string> | string;
 

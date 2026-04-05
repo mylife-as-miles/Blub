@@ -1,4 +1,4 @@
-import type { Entity, GeometryNode, GroupNode, InstancingNode, Vec3 } from "@ggez/shared";
+import type { Entity, GeometryNode, GroupNode, InstancingNode, Vec3 } from "@blud/shared";
 import {
   addVec3,
   isInstancingNode,
@@ -7,7 +7,7 @@ import {
   resolveInstancingSourceNode,
   resolveSceneGraph,
   vec3
-} from "@ggez/shared";
+} from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import {

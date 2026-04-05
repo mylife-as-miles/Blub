@@ -116,7 +116,7 @@ function registerApi(server: MiddlewareHost, service: OrchestratorService) {
 
       if (req.method === "POST" && pathname === "/api/orchestrator/view") {
         const body = await readJsonBody<{ view?: ViewId }>(req);
-        await service.setActiveView(body.view ?? "trident");
+        await service.setActiveView(body.view ?? "blob");
         return sendJson(res, 200, await service.getSnapshot());
       }
 
@@ -134,7 +134,7 @@ function registerApi(server: MiddlewareHost, service: OrchestratorService) {
       }
 
       if (req.method === "POST" && pathname === "/api/orchestrator/editors/restart") {
-        const body = await readJsonBody<{ editorId?: "trident" | "animation-studio" }>(req);
+        const body = await readJsonBody<{ editorId?: "blob" | "animation-studio" }>(req);
 
         if (!body.editorId) {
           throw new Error("Missing editor id.");

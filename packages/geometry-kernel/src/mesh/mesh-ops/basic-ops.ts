@@ -1,5 +1,5 @@
-import type { Brush, EditableMesh, FaceID, VertexID } from "@ggez/shared";
-import { averageVec3, dotVec3, normalizeVec3, vec3 } from "@ggez/shared";
+import type { Brush, EditableMesh, FaceID, VertexID } from "@blud/shared";
+import { averageVec3, dotVec3, normalizeVec3, vec3 } from "@blud/shared";
 import { reconstructBrushFaces } from "../../brush/brush-kernel";
 import { compactPolygonLoop, getMeshPolygons, makeUndirectedEdgeKey, orderBoundaryEdges, createEditableMeshFromPolygons } from "./shared";
 import type { EdgeBevelProfile } from "./types";

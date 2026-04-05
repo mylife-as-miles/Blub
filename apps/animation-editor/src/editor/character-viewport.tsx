@@ -1,9 +1,9 @@
-import { compileAnimationEditorDocument } from "@ggez/anim-compiler";
-import { copyPose, createPoseBufferFromRig, sampleClipPose } from "@ggez/anim-core";
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import { createAnimatorInstance } from "@ggez/anim-runtime";
-import type { AnimatorInstance } from "@ggez/anim-runtime";
-import type { AnimationEditorDocument } from "@ggez/anim-schema";
+import { compileAnimationEditorDocument } from "@blud/anim-compiler";
+import { copyPose, createPoseBufferFromRig, sampleClipPose } from "@blud/anim-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import { createAnimatorInstance } from "@blud/anim-runtime";
+import type { AnimatorInstance } from "@blud/anim-runtime";
+import type { AnimationEditorDocument } from "@blud/anim-schema";
 import { LocateFixed } from "lucide-react";
 import {
   ACESFilmicToneMapping,

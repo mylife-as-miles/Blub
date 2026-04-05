@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { createPoseBufferFromRig } from "@ggez/anim-core";
+import { createPoseBufferFromRig } from "@blud/anim-core";
 import { AnimationClip, AnimationMixer, Bone, LoopOnce, Matrix4, Object3D, QuaternionKeyframeTrack, Skeleton, Vector3, VectorKeyframeTrack } from "three";
 import { applyPoseBufferToSkeleton, createClipAssetFromThreeClip, createRigFromSkeleton } from "./bridge";
 
-describe("@ggez/anim-three", () => {
+describe("@blud/anim-three", () => {
   it("creates a rig definition from a three skeleton", () => {
     const root = new Bone();
     root.name = "root";

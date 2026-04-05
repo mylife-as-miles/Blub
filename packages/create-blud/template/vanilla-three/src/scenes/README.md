@@ -1,6 +1,6 @@
 ## Scene Folders
 
-`@ggez/game-dev` discovers scene folders under `src/scenes/<scene-id>/`.
+`@blud/game-dev` discovers scene folders under `src/scenes/<scene-id>/`.
 
 Each scene folder can contain:
 

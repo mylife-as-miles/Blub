@@ -1,4 +1,4 @@
-# @ggez/tool-system
+# @blud/tool-system
 
 Tool registry and tool state machine primitives for Web Hammer editors.
 
@@ -7,5 +7,5 @@ This package wraps the core tool lifecycle patterns used by editor interactions 
 ## Install
 
 ```bash
-bun add @ggez/tool-system
+bun add @blud/tool-system
 ```

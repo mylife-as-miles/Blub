@@ -1,7 +1,7 @@
 {
-  "name": "@ggez/anim-exporter",
+  "name": "@blud/anim-exporter",
   "version": "0.1.11",
-  "description": "Versioned import/export for compiled ggez animation runtime artifacts.",
+  "description": "Versioned import/export for compiled blud animation runtime artifacts.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -25,7 +25,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-core": "*",
-    "@ggez/anim-schema": "*"
+    "@blud/anim-core": "*",
+    "@blud/anim-schema": "*"
   }
 }

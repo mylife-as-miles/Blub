@@ -65,7 +65,7 @@ export function App() {
     [snapshot]
   );
   const gameIframeRef = useRef<HTMLIFrameElement | null>(null);
-  const activeEditor = snapshot?.activeView === "trident" || snapshot?.activeView === "animation-studio"
+  const activeEditor = snapshot?.activeView === "blob" || snapshot?.activeView === "animation-studio"
     ? snapshot.editors.find((editor) => editor.id === snapshot.activeView) ?? null
     : null;
   const activeEditorUrl = activeEditor?.status === "running" ? activeEditor.url : null;
@@ -239,7 +239,7 @@ export function App() {
     }
   };
 
-  const handleRestartEditor = async (editorId: "trident" | "animation-studio") => {
+  const handleRestartEditor = async (editorId: "blob" | "animation-studio") => {
     try {
       await runAction(`restart:${editorId}`, () =>
         requestJson("/api/orchestrator/editors/restart", {

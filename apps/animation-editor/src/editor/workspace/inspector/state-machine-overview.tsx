@@ -1,4 +1,4 @@
-import type { ParameterDefinition } from "@ggez/anim-schema";
+import type { ParameterDefinition } from "@blud/anim-schema";
 import type { StateMachineNode } from "./types";
 
 function formatCondition(condition: StateMachineNode["transitions"][number]["conditions"][number], parameters: ParameterDefinition[]): string {

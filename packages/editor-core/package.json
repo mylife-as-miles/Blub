@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/editor-core",
+  "name": "@blud/editor-core",
   "version": "0.1.11",
   "description": "Scene document, command stack, selection, and event bus primitives for Web Hammer editors.",
   "license": "MIT",
@@ -26,16 +26,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/editor-core"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/editor-core",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/editor-core",
   "dependencies": {
-    "@ggez/geometry-kernel": "*",
-    "@ggez/shared": "*",
+    "@blud/geometry-kernel": "*",
+    "@blud/shared": "*",
     "three": "^0.181.1"
   }
 }

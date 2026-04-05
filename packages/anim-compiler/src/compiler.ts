@@ -1,5 +1,5 @@
-import { createBoneMaskFromBranch, createRigDefinition, findBoneIndexByName } from "@ggez/anim-core";
-import type { RigDefinition } from "@ggez/anim-core";
+import { createBoneMaskFromBranch, createRigDefinition, findBoneIndexByName } from "@blud/anim-core";
+import type { RigDefinition } from "@blud/anim-core";
 import {
   ANIMATION_GRAPH_VERSION,
   animationEditorDocumentSchema,
@@ -9,7 +9,7 @@ import {
   type CompiledGraphNode,
   type CompiledMotionGraph,
   type CompiledSecondaryDynamicsProfile
-} from "@ggez/anim-schema";
+} from "@blud/anim-schema";
 
 export interface CompileDiagnostic {
   readonly severity: "error" | "warning";

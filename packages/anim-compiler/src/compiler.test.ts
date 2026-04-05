@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { compileAnimationEditorDocument } from "./compiler";
 
-describe("@ggez/anim-compiler", () => {
+describe("@blud/anim-compiler", () => {
   it("compiles a valid editor document to a runtime graph", () => {
     const result = compileAnimationEditorDocument({
       version: 1,

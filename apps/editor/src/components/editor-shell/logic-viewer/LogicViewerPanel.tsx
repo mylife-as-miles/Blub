@@ -1,6 +1,6 @@
 import { Cable, X } from "lucide-react";
 import { ReactFlowProvider } from "@xyflow/react";
-import type { Entity, GeometryNode, SceneHook } from "@ggez/shared";
+import type { Entity, GeometryNode, SceneHook } from "@blud/shared";
 import { LogicViewer } from "./LogicViewer";
 
 type LogicViewerPanelProps = {

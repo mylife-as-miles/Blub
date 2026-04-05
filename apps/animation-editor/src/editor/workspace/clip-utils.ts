@@ -1,5 +1,5 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { ClipReference, EditorGraphNode, SerializableRig } from "@ggez/anim-schema";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { ClipReference, EditorGraphNode, SerializableRig } from "@blud/anim-schema";
 import type { ImportedPreviewClip } from "../preview-assets";
 
 export function normalizeClipKey(value: string): string {

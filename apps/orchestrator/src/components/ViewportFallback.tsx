@@ -13,7 +13,7 @@ export function ViewportFallback({ snapshot }: { snapshot: OrchestratorSnapshot 
         <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/52">
           {isGame
             ? "Open Settings from the orb, select a game, and start its dev server."
-            : "The orchestrator expects Trident and Animation Studio to be built so their preview servers can start."}
+            : "The orchestrator expects Blob and Animation Studio to be built so their preview servers can start."}
         </p>
       </div>
     </div>

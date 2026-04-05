@@ -1,4 +1,4 @@
-# @ggez/game-dev
+# @blud/game-dev
 
 Vite development plugin utilities for Web Hammer game projects.
 
@@ -7,5 +7,5 @@ This package provides scene discovery and editor-sync helpers for local game dev
 ## Install
 
 ```bash
-bun add -d @ggez/game-dev
+bun add -d @blud/game-dev
 ```

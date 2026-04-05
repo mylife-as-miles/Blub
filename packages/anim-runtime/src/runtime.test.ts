@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { createRigDefinition } from "@ggez/anim-core";
-import type { AnimationClipAsset } from "@ggez/anim-core";
-import type { CompiledAnimatorGraph } from "@ggez/anim-schema";
+import { createRigDefinition } from "@blud/anim-core";
+import type { AnimationClipAsset } from "@blud/anim-core";
+import type { CompiledAnimatorGraph } from "@blud/anim-schema";
 import { createAnimatorInstance } from "./runtime/index";
 
 const rig = createRigDefinition({
@@ -351,7 +351,7 @@ function distanceBetween(a: [number, number, number], b: [number, number, number
   return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 }
 
-describe("@ggez/anim-runtime", () => {
+describe("@blud/anim-runtime", () => {
   it("evaluates 1d blends and root motion", () => {
     const graph: CompiledAnimatorGraph = {
       version: 1,

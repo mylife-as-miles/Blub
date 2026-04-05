@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadWebHammerEngineScene } from "./loader";
 import type { WebHammerEngineScene } from "./types";
-import { makeTransform, vec3 } from "@ggez/shared";
+import { makeTransform, vec3 } from "@blud/shared";
 import { InstancedMesh, LOD, Matrix4, Mesh, MeshStandardMaterial, Quaternion, Vector3 } from "three";
 
 describe("loadWebHammerEngineScene", () => {

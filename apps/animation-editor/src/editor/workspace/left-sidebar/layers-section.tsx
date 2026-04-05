@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

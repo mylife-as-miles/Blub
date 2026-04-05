@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 
 export function buildSystemPrompt(store: AnimationEditorStore): string {
   const document = store.getState().document;

@@ -1,5 +1,5 @@
 import "@xyflow/react/dist/style.css";
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { useEffect, useRef, useState } from "react";
 import { CharacterWorkspace } from "./character-workspace";
 import { ClipEditorWorkspace } from "./clip-editor-workspace";
@@ -119,7 +119,7 @@ export function AnimationEditorWorkspace(props: { store: AnimationEditorStore })
         copilotOpen={copilotOpen}
       />
 
-      <input ref={projectInputRef} type="file" accept=".zip,.json,.ggezanimproj.zip,.ggezanimproj.json" hidden onChange={(e) => void project.handleProjectLoad(e, assets)} />
+      <input ref={projectInputRef} type="file" accept=".zip,.json,.bludanimproj.zip,.bludanimproj.json" hidden onChange={(e) => void project.handleProjectLoad(e, assets)} />
       <input ref={characterInputRef} type="file" accept=".glb,.gltf,.fbx" hidden onChange={(e) => void assets.handleCharacterImport(e)} />
       <input ref={animationInputRef} type="file" accept=".glb,.gltf,.fbx" multiple hidden onChange={(e) => void assets.handleAnimationImport(e)} />
 

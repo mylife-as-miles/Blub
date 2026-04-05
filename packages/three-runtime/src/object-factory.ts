@@ -1,5 +1,5 @@
-import type { Asset, PropPhysics, Transform, Vec3 } from "@ggez/shared";
-import { resolveInstancingSourceNode, resolveSceneGraph, vec3 } from "@ggez/shared";
+import type { Asset, PropPhysics, Transform, Vec3 } from "@blud/shared";
+import { resolveInstancingSourceNode, resolveSceneGraph, vec3 } from "@blud/shared";
 import {
   AmbientLight,
   BackSide,

@@ -1,9 +1,9 @@
-import type { SceneDocumentSnapshot } from "@ggez/editor-core";
+import type { SceneDocumentSnapshot } from "@blud/editor-core";
 
 const DATABASE_NAME = "web-hammer-editor-drafts";
 const DATABASE_VERSION = 1;
 const STORE_NAME = "drafts";
-const ACTIVE_DRAFT_KEY = "trident:active";
+const ACTIVE_DRAFT_KEY = "blob:active";
 
 export type StoredSceneEditorDraft = {
   projectName: string;
@@ -33,7 +33,7 @@ export async function loadStoredSceneEditorDraft(): Promise<StoredSceneEditorDra
     };
     request.onerror = () => {
       database.close();
-      reject(request.error ?? new Error("Failed to load the Trident draft."));
+      reject(request.error ?? new Error("Failed to load the Blob draft."));
     };
   });
 }
@@ -55,7 +55,7 @@ export async function saveSceneEditorDraft(draft: StoredSceneEditorDraft): Promi
     };
     transaction.onerror = () => {
       database.close();
-      reject(transaction.error ?? new Error("Failed to save the Trident draft."));
+      reject(transaction.error ?? new Error("Failed to save the Blob draft."));
     };
 
     store.put(draft, ACTIVE_DRAFT_KEY);
@@ -75,6 +75,6 @@ function openDraftDatabase(): Promise<IDBDatabase> {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Failed to open the Trident draft database."));
+    request.onerror = () => reject(request.error ?? new Error("Failed to open the Blob draft database."));
   });
 }

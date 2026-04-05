@@ -1,7 +1,7 @@
 {
-  "name": "@ggez/anim-runtime",
+  "name": "@blud/anim-runtime",
   "version": "0.1.11",
-  "description": "Animator runtime evaluator for compiled ggez animation graphs.",
+  "description": "Animator runtime evaluator for compiled blud animation graphs.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -25,8 +25,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-core": "*",
-    "@ggez/anim-schema": "*",
-    "@ggez/anim-utils": "*"
+    "@blud/anim-core": "*",
+    "@blud/anim-schema": "*",
+    "@blud/anim-utils": "*"
   }
 }

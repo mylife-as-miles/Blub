@@ -50,7 +50,7 @@ interface SettingsSheetProps {
   onStartProject: (id: string) => void;
   onStopProject: (id: string) => void;
   onRemoveProject: (id: string) => void;
-  onRestartEditor: (id: "trident" | "animation-studio") => void;
+  onRestartEditor: (id: "blob" | "animation-studio") => void;
   onSetView: (view: ViewId) => void;
   onClose: () => void;
 }
@@ -91,7 +91,7 @@ export function SettingsSheet({
             <Settings size={10} className="inline-block" />
             Settings
           </p>
-          <h1 className="mt-3 text-xl font-semibold tracking-tight text-white">GGEZ</h1>
+          <h1 className="mt-3 text-xl font-semibold tracking-tight text-white">BLUD</h1>
           <p className="mt-1.5 text-xs leading-5 text-white/46">
             Manage editors, projects, and the live viewport.
           </p>
@@ -114,8 +114,8 @@ export function SettingsSheet({
           </SectionHeader>
           <p className="mb-4 mt-1 text-xs text-white/42">{snapshot?.viewport.subtitle}</p>
           <div className="flex flex-wrap gap-2">
-            <SheetButton icon={<Monitor size={12} />} onClick={() => onSetView("trident")}>
-              Trident
+            <SheetButton icon={<Monitor size={12} />} onClick={() => onSetView("blob")}>
+              Blob
             </SheetButton>
             <SheetButton
               icon={<Clapperboard size={12} />}
@@ -162,7 +162,7 @@ export function SettingsSheet({
                     className="icon-btn"
                     title="Restart"
                     onClick={() =>
-                      onRestartEditor(editor.id === "animation-studio" ? "animation-studio" : "trident")
+                      onRestartEditor(editor.id === "animation-studio" ? "animation-studio" : "blob")
                     }
                     disabled={busyKey === `restart:${editor.id}`}
                   >
@@ -173,7 +173,7 @@ export function SettingsSheet({
                     className="icon-btn"
                     title="Open"
                     onClick={() =>
-                      onSetView(editor.id === "animation-studio" ? "animation-studio" : "trident")
+                      onSetView(editor.id === "animation-studio" ? "animation-studio" : "blob")
                     }
                   >
                     <ArrowUpRight size={13} />
@@ -246,7 +246,7 @@ export function SettingsSheet({
         <section className="settings-block">
           <SectionHeader icon={<Wand2 size={13} />} title="Create New Game" />
           <p className="mb-4 mt-1 text-xs text-white/42">
-            Scaffolds a fresh game outside this repo using create-ggez.
+            Scaffolds a fresh game outside this repo using create-blud.
           </p>
           <form className="space-y-3" onSubmit={onCreateProject}>
             <label className="space-y-1.5">

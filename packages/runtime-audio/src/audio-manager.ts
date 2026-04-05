@@ -1,4 +1,4 @@
-import type { Vec3 } from "@ggez/shared";
+import type { Vec3 } from "@blud/shared";
 import type {
   AudioChannel,
   AudioClipResolver,

@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NodeInspector } from "./inspector";
 export function RightSidebar(props: { store: AnimationEditorStore }) {

@@ -13,8 +13,8 @@
  *  - updateCamera(variableDt)   — consume mouse delta, drive camera (variable-rate)
  */
 
-import type { GameplayRuntime } from "@ggez/gameplay-runtime";
-import { vec3, type SceneSettings, type Vec3 } from "@ggez/shared";
+import type { GameplayRuntime } from "@blud/gameplay-runtime";
+import { vec3, type SceneSettings, type Vec3 } from "@blud/shared";
 import {
   CRASHCAT_OBJECT_LAYER_MOVING,
   CastRayStatus,
@@ -29,7 +29,7 @@ import {
   rigidBody,
   type CrashcatPhysicsWorld,
   type CrashcatRigidBody
-} from "@ggez/runtime-physics-crashcat";
+} from "@blud/runtime-physics-crashcat";
 import {
   CapsuleGeometry,
   Group,

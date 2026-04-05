@@ -1,12 +1,12 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import type {
   AnimationEditorDocument,
   BoneMaskDefinition,
   EditorGraph,
   EditorGraphNode,
   ParameterDefinition
-} from "@ggez/anim-schema";
-import { createStableId } from "@ggez/anim-utils";
+} from "@blud/anim-schema";
+import { createStableId } from "@blud/anim-utils";
 import type { ImportedPreviewClip } from "@/editor/preview-assets";
 import { adjustClipMotion, createClip, createPoseClip, duplicateClipAsVariant, getClipTrackData, listClipBones, matchClipTransition, setClipTrackData } from "./clip-tools";
 import type { CopilotToolCall, CopilotToolResult } from "./types";

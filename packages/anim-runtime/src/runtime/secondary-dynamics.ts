@@ -1,6 +1,6 @@
-import { blendPoses, copyPose } from "@ggez/anim-core";
-import type { PoseBuffer } from "@ggez/anim-core";
-import type { CompiledSecondaryDynamicsNode } from "@ggez/anim-schema";
+import { blendPoses, copyPose } from "@blud/anim-core";
+import type { PoseBuffer } from "@blud/anim-core";
+import type { CompiledSecondaryDynamicsNode } from "@blud/anim-schema";
 import type { EvaluationContext, SecondaryDynamicsChainRuntimeState } from "./types";
 
 const EPSILON = 1e-5;

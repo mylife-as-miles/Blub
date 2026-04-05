@@ -5,8 +5,8 @@ import {
   polygonSignedArea,
   projectPolygonToPlane,
   reconstructBrushFaces
-} from "@ggez/geometry-kernel";
-import type { GeometryNode, MetadataValue, PrimitiveNode, Vec3 } from "@ggez/shared";
+} from "@blud/geometry-kernel";
+import type { GeometryNode, MetadataValue, PrimitiveNode, Vec3 } from "@blud/shared";
 import {
   averageVec3,
   isBrushNode,
@@ -18,7 +18,7 @@ import {
   subVec3,
   vec3,
   type Transform
-} from "@ggez/shared";
+} from "@blud/shared";
 import type { SceneDocument, SceneDocumentSnapshot } from "../document/scene-document";
 
 export type Bounds3 = {

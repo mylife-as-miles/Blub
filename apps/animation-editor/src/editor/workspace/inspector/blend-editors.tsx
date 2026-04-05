@@ -1,5 +1,5 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { EditorGraph } from "@ggez/anim-schema";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { EditorGraph } from "@blud/anim-schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PropertyField, editorInputClassName, sectionHintClassName } from "../shared";

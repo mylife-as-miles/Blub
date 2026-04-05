@@ -1,5 +1,5 @@
-import { createDefaultAnimationEditorDocument, type AnimationEditorStore } from "@ggez/anim-editor-core";
-import { slugifyProjectName } from "@ggez/dev-sync";
+import { createDefaultAnimationEditorDocument, type AnimationEditorStore } from "@blud/anim-editor-core";
+import { slugifyProjectName } from "@blud/dev-sync";
 import { useCallback, useState } from "react";
 import type { ImportedCharacterAsset, ImportedPreviewClip } from "../preview-assets";
 import { importCharacterFile } from "../preview-assets";
@@ -148,7 +148,7 @@ export function useProjectOperations(
       assets.setAssetStatus("Saving project bundle...");
       const editorDocument = synchronizeAnimationDocument(store.getState().document, assets.importedClips);
       const archive = await createProjectArchive();
-      const fileName = `${editorDocument.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "animation-graph"}.ggezanimproj.zip`;
+      const fileName = `${editorDocument.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "animation-graph"}.bludanimproj.zip`;
       const zipBytes = new Uint8Array(archive.byteLength);
       zipBytes.set(archive);
       const blob = new Blob([zipBytes], { type: "application/zip" });

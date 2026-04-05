@@ -1,18 +1,18 @@
-# GGEZ
+# BLUD
 
-GGEZ, pronounced "GG, Easy", is a framework for vibe-coding Three.js games.
+BLUD, pronounced "GG, Easy", is a framework for vibe-coding Three.js games.
 
-The shortest description is: GGEZ aims to be a "Next.js for Three.js games". It gives you an opinionated monorepo, runtime packages, editors, an orchestration layer and a path from rough worldbuilding to playable web game prototypes.
+The shortest description is: BLUD aims to be a "Next.js for Three.js games". It gives you an opinionated monorepo, runtime packages, editors, an orchestration layer and a path from rough worldbuilding to playable web game prototypes.
 
 ## Public Alpha
 
 This is the first public alpha release.
 
-Expect rapid iteration, breaking changes, renamed APIs, moved files, and workflow churn until at least beta. If you build on GGEZ today, assume you are building with a fast-moving alpha and plan accordingly.
+Expect rapid iteration, breaking changes, renamed APIs, moved files, and workflow churn until at least beta. If you build on BLUD today, assume you are building with a fast-moving alpha and plan accordingly.
 
-## What GGEZ Is
+## What BLUD Is
 
-GGEZ combines several layers that usually live in separate repos or are bundled in one big engine:
+BLUD combines several layers that usually live in separate repos or are bundled in one big engine:
 
 - A world editor for building runtime scenes
 - An animation editor for character and graph authoring
@@ -36,7 +36,7 @@ GGEZ combines several layers that usually live in separate repos or are bundled 
 ### Apps
 
 - `apps/orchestrator`: main local entrypoint that launches and coordinates the tools
-- `apps/editor`: the world editor, formerly referred to as Trident
+- `apps/editor`: the world editor, formerly referred to as Blob
 - `apps/animation-editor`: animation authoring tool
 - `apps/website`: docs and onboarding site
 - `apps/three-vanilla-playground`: isolated playground for runtime experimentation
@@ -69,14 +69,14 @@ GGEZ combines several layers that usually live in separate repos or are bundled 
 
 2. Run it:
 ```bash
-cd ggez
+cd blud
 bun install
 bun run start
 ```
 
 ## Quick Start
 
-The normal way to run GGEZ locally is through the orchestrator:
+The normal way to run BLUD locally is through the orchestrator:
 
 ```bash
 bun run start
@@ -142,7 +142,7 @@ bun run typecheck:orchestrator
 
 1. Use one of the sample projects as a reference or start from your own workspace package/app setup.
 2. Keep your runtime scenes under `src/scenes/<scene-id>/`.
-3. Let `@ggez/game-dev` discover scenes and wire editor-sync behavior during development.
+3. Let `@blud/game-dev` discover scenes and wire editor-sync behavior during development.
 4. Load exported runtime bundles with the runtime packages in your game code.
 
 ## Environment Variables
@@ -164,7 +164,7 @@ That key is used only by the local editor server routes and is not required for 
 
 ## Current Status
 
-GGEZ is usable, but it is still early.
+BLUD is usable, but it is still early.
 
 You should expect:
 

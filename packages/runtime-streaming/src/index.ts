@@ -1,5 +1,5 @@
-import type { RuntimeWorldChunk, RuntimeWorldIndex } from "@ggez/runtime-format";
-import type { Vec3 } from "@ggez/shared";
+import type { RuntimeWorldChunk, RuntimeWorldIndex } from "@blud/runtime-format";
+import type { Vec3 } from "@blud/shared";
 
 export type RuntimeChunkState = "error" | "idle" | "loaded" | "loading" | "unloading";
 

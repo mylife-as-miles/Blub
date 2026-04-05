@@ -1,7 +1,7 @@
-import { estimateClipDuration } from "@ggez/anim-core";
-import type { AnimationClipAsset, PoseBuffer, RigDefinition, RootMotionDelta } from "@ggez/anim-core";
-import type { CompiledCondition, CompiledGraphNode, CompiledTransition } from "@ggez/anim-schema";
-import { clamp } from "@ggez/anim-utils";
+import { estimateClipDuration } from "@blud/anim-core";
+import type { AnimationClipAsset, PoseBuffer, RigDefinition, RootMotionDelta } from "@blud/anim-core";
+import type { CompiledCondition, CompiledGraphNode, CompiledTransition } from "@blud/anim-schema";
+import { clamp } from "@blud/anim-utils";
 import type { AnimatorParameterStore } from "../parameters";
 import type { EvaluationContext } from "./types";
 

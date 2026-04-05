@@ -1,6 +1,6 @@
-import type { AnimationClipAsset, PoseBuffer } from "@ggez/anim-core";
-import { createRigDefinition } from "@ggez/anim-core";
-import type { AnimatorInstance } from "@ggez/anim-runtime";
+import type { AnimationClipAsset, PoseBuffer } from "@blud/anim-core";
+import { createRigDefinition } from "@blud/anim-core";
+import type { AnimatorInstance } from "@blud/anim-runtime";
 import {
   AnimationClip,
   AnimationMixer,

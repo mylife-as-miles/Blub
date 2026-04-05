@@ -13,15 +13,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 
 const workspaceAliases = {
-  "@ggez/dev-sync": path.resolve(repoRoot, "packages/dev-sync/src/index.ts"),
-  "@ggez/editor-core": path.resolve(repoRoot, "packages/editor-core/src/index.ts"),
-  "@ggez/geometry-kernel": path.resolve(repoRoot, "packages/geometry-kernel/src/index.ts"),
-  "@ggez/render-pipeline": path.resolve(repoRoot, "packages/render-pipeline/src/index.ts"),
-  "@ggez/runtime-build": path.resolve(repoRoot, "packages/runtime-build/src/index.ts"),
-  "@ggez/shared": path.resolve(repoRoot, "packages/shared/src/index.ts"),
-  "@ggez/three-runtime": path.resolve(repoRoot, "packages/three-runtime/src/index.ts"),
-  "@ggez/tool-system": path.resolve(repoRoot, "packages/tool-system/src/index.ts"),
-  "@ggez/workers": path.resolve(repoRoot, "packages/workers/src/index.ts")
+  "@blud/dev-sync": path.resolve(repoRoot, "packages/dev-sync/src/index.ts"),
+  "@blud/editor-core": path.resolve(repoRoot, "packages/editor-core/src/index.ts"),
+  "@blud/geometry-kernel": path.resolve(repoRoot, "packages/geometry-kernel/src/index.ts"),
+  "@blud/render-pipeline": path.resolve(repoRoot, "packages/render-pipeline/src/index.ts"),
+  "@blud/runtime-build": path.resolve(repoRoot, "packages/runtime-build/src/index.ts"),
+  "@blud/shared": path.resolve(repoRoot, "packages/shared/src/index.ts"),
+  "@blud/three-runtime": path.resolve(repoRoot, "packages/three-runtime/src/index.ts"),
+  "@blud/tool-system": path.resolve(repoRoot, "packages/tool-system/src/index.ts"),
+  "@blud/workers": path.resolve(repoRoot, "packages/workers/src/index.ts")
 } as const;
 
 export default defineConfig(({ mode }) => {

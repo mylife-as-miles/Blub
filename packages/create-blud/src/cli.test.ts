@@ -8,7 +8,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const cliPath = fileURLToPath(new URL("./cli.js", import.meta.url));
 
-describe("create-ggez cli", () => {
+describe("create-blud cli", () => {
   test("scaffolds a starter project with detected package manager commands", async () => {
     const targetDir = join("/tmp", `web-hammer-starter-${Date.now()}`);
     await mkdir(targetDir, { recursive: true });
@@ -31,9 +31,9 @@ describe("create-ggez cli", () => {
     const readme = await readFile(join(targetDir, "app/README.md"), "utf8");
 
     expect(packageJson).toContain("\"name\": \"app\"");
-    expect(packageJson).toContain("@ggez/three-runtime");
-    expect(packageJson).toContain("@ggez/runtime-physics-crashcat");
-    expect(packageJson).not.toContain("@ggez/runtime-physics-rapier");
+    expect(packageJson).toContain("@blud/three-runtime");
+    expect(packageJson).toContain("@blud/runtime-physics-crashcat");
+    expect(packageJson).not.toContain("@blud/runtime-physics-rapier");
     expect(mainFile).toContain("createGameApp");
     expect(sceneModule).toContain("createColocatedRuntimeSceneSource");
     expect(sceneDirectories.includes("arena")).toEqual(false);

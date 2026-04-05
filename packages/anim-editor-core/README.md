@@ -1,4 +1,4 @@
-# @ggez/anim-editor-core
+# @blud/anim-editor-core
 
 Command-driven editor store and document manipulation primitives for the animation graph editor.
 

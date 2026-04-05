@@ -6,8 +6,8 @@ import {
   createSequenceSystemDefinition,
   createTriggerSystemDefinition,
   type GameplayRuntimeSystemRegistration
-} from "@ggez/gameplay-runtime";
-import type { SceneSettings } from "@ggez/shared";
+} from "@blud/gameplay-runtime";
+import type { SceneSettings } from "@blud/shared";
 
 /**
  * Returns the default set of gameplay systems used by every scene.

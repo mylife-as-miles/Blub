@@ -1,5 +1,5 @@
-import { createPoseBufferFromRig, sampleClipPose } from "@ggez/anim-core";
-import { createClipAssetFromThreeClip, createRigFromSkeleton } from "@ggez/anim-three";
+import { createPoseBufferFromRig, sampleClipPose } from "@blud/anim-core";
+import { createClipAssetFromThreeClip, createRigFromSkeleton } from "@blud/anim-three";
 import { readFile } from "node:fs/promises";
 import {
   AnimationClip,

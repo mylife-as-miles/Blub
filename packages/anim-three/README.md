@@ -1,4 +1,4 @@
-# @ggez/anim-three
+# @blud/anim-three
 
 Three.js bridge helpers for importing rigs/clips and applying evaluated poses.
 

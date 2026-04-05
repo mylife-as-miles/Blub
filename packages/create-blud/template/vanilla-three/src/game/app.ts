@@ -18,14 +18,14 @@ import {
   createGameplayRuntimeSceneFromRuntimeScene,
   type GameplayRuntime,
   type GameplayRuntimeSystemRegistration
-} from "@ggez/gameplay-runtime";
+} from "@blud/gameplay-runtime";
 import {
   createCrashcatPhysicsWorld,
   ensureCrashcatRuntimePhysics,
   stepCrashcatPhysicsWorld,
   type CrashcatPhysicsWorld
-} from "@ggez/runtime-physics-crashcat";
-import { createThreeRuntimeSceneInstance, type ThreeRuntimeSceneInstance } from "@ggez/three-runtime";
+} from "@blud/runtime-physics-crashcat";
+import { createThreeRuntimeSceneInstance, type ThreeRuntimeSceneInstance } from "@blud/three-runtime";
 import * as THREE from "three";
 import { WebGPURenderer } from "three/webgpu";
 import { createCameraController, frameCameraOnObject } from "./camera";
@@ -416,7 +416,7 @@ import {
   ensureCrashcatRuntimePhysics,
   stepCrashcatPhysicsWorld,
   type CrashcatPhysicsWorld
-} from "@ggez/runtime-physics-crashcat";
-import { createThreeRuntimeSceneInstance, type ThreeRuntimeSceneInstance } from "@ggez/three-runtime";
+} from "@blud/runtime-physics-crashcat";
+import { createThreeRuntimeSceneInstance, type ThreeRuntimeSceneInstance } from "@blud/three-runtime";
 import * as THREE from "three";
 import { WebGPURenderer } from "three/webgpu";

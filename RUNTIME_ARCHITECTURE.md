@@ -45,7 +45,7 @@ The current runtime workflow works, but the architecture boundary is wrong.
 Today:
 
 - the editor exports a `scene.runtime.zip`
-- `@ggez/three-runtime` parses the bundle and creates Three objects
+- `@blud/three-runtime` parses the bundle and creates Three objects
 - playground applications provide the actual orchestration for runtime, gameplay, controls, physics, and asset resolution
 
 That is good enough for experimentation, but it creates several architectural problems:
@@ -119,7 +119,7 @@ That means the Three layer should not own:
 
 Gameplay logic should consume exported nodes, entities, hooks, and world transforms without requiring a specific renderer.
 
-The existing `@ggez/gameplay-runtime` direction is broadly correct and should remain headless.
+The existing `@blud/gameplay-runtime` direction is broadly correct and should remain headless.
 
 ### 6. The host application owns orchestration
 
@@ -270,7 +270,7 @@ Responsibilities:
 
 The repo should move toward the following package split.
 
-### `@ggez/runtime-format`
+### `@blud/runtime-format`
 
 Purpose:
 
@@ -300,7 +300,7 @@ Notes:
 
 - This package replaces the current renderer-owned type location.
 
-### `@ggez/runtime-build`
+### `@blud/runtime-build`
 
 Purpose:
 
@@ -330,7 +330,7 @@ Notes:
 - `packages/workers` should call into this package instead of owning the build logic.
 - A future CLI should also call into this package.
 
-### `@ggez/three-runtime`
+### `@blud/three-runtime`
 
 Purpose:
 
@@ -355,9 +355,9 @@ Exports should include:
 Notes:
 
 - The existing scene loader can remain as a convenience wrapper, but it should be built on top of the lower-level instance API.
-- The package should depend on `@ggez/runtime-format`, not own the format itself.
+- The package should depend on `@blud/runtime-format`, not own the format itself.
 
-### `@ggez/gameplay-runtime`
+### `@blud/gameplay-runtime`
 
 Purpose:
 
@@ -376,7 +376,7 @@ Notes:
 - This package should continue to consume runtime scene data without depending on Three.
 - It should become a first-class integration target in docs and starter kits.
 
-### `@ggez/runtime-streaming`
+### `@blud/runtime-streaming`
 
 Purpose:
 
@@ -402,7 +402,7 @@ Notes:
 - This must be optional.
 - It should orchestrate adapters, not replace them.
 
-### `@ggez/runtime-physics-rapier`
+### `@blud/runtime-physics-rapier`
 
 Purpose:
 
@@ -641,10 +641,10 @@ Goals:
 
 Work:
 
-- create `@ggez/runtime-format`
+- create `@blud/runtime-format`
 - move runtime scene and bundle types into it
 - move parse and validation helpers into it
-- make `@ggez/three-runtime` depend on it
+- make `@blud/three-runtime` depend on it
 - keep current public names available through compatibility re-exports
 
 Success criteria:
@@ -664,7 +664,7 @@ Goals:
 
 Work:
 
-- create `@ggez/runtime-build`
+- create `@blud/runtime-build`
 - move engine scene compilation from `packages/workers` into that package
 - move bundling and externalization orchestration there
 - keep `packages/workers` as transport and worker glue only

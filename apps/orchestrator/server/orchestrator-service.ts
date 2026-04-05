@@ -21,7 +21,7 @@ const SHUTDOWN_GRACE_MS = 3_000;
 const STARTUP_TIMEOUT_MS = 20_000;
 
 export type PackageManager = "bun" | "npm" | "pnpm" | "yarn";
-export type ViewId = "trident" | "animation-studio" | "game";
+export type ViewId = "blob" | "animation-studio" | "game";
 type RuntimeStatus = "stopped" | "starting" | "running" | "error";
 
 type StoredProject = {
@@ -150,11 +150,11 @@ export class OrchestratorService {
         label: "Animation Studio",
         port: ANIMATION_STUDIO_PORT
       }),
-      trident: createManagedRuntime({
+      blob: createManagedRuntime({
         cwd: join(repoRoot, "apps/editor"),
-        id: "trident",
+        id: "blob",
         kind: "editor",
-        label: "Trident",
+        label: "Blob",
         port: TRIDENT_PORT
       })
     };
@@ -177,7 +177,7 @@ export class OrchestratorService {
       (await listLiveGameRegistrations()).map((registration) => [registration.projectRoot, registration])
     );
     const selectedProject = state.projects.find((project) => project.id === state.activeProjectId) ?? null;
-    const editors = [this.editors.trident, this.editors["animation-studio"]]
+    const editors = [this.editors.blob, this.editors["animation-studio"]]
       .filter((editor): editor is ManagedRuntime => Boolean(editor))
       .map((editor) => ({
         id: editor.id as Exclude<ViewId, "game">,
@@ -262,7 +262,7 @@ export class OrchestratorService {
     }
 
     const targetRoot = resolvePath(input.destinationRoot, slugifyDirectoryName(normalizedName));
-    const cliPath = join(this.repoRoot, "packages/create-ggez/src/cli.js");
+    const cliPath = join(this.repoRoot, "packages/create-blud/src/cli.js");
     const command: RuntimeCommand = {
       args: [
         cliPath,
@@ -312,7 +312,7 @@ export class OrchestratorService {
     if (state.activeProjectId === projectId) {
       state.activeProjectId = state.projects[0]?.id ?? null;
       if (!state.activeProjectId && state.activeView === "game") {
-        state.activeView = "trident";
+        state.activeView = "blob";
       }
     }
 
@@ -485,7 +485,7 @@ export class OrchestratorService {
     await mkdir(dirname(this.statePath), { recursive: true });
     this.state = await this.readStateFile();
     this.registerCleanupHooks();
-    await Promise.allSettled([this.ensureEditorRunning("trident"), this.ensureEditorRunning("animation-studio")]);
+    await Promise.allSettled([this.ensureEditorRunning("blob"), this.ensureEditorRunning("animation-studio")]);
   }
 
   private async readStateFile(): Promise<StoredState> {
@@ -533,7 +533,7 @@ export class OrchestratorService {
     }
 
     const command =
-      editorId === "trident"
+      editorId === "blob"
         ? {
             args: [
               "run",
@@ -575,7 +575,7 @@ export class OrchestratorService {
     runtime: ManagedRuntime,
     distPath: string
   ) {
-    const appPath = editorId === "trident"
+    const appPath = editorId === "blob"
       ? join(this.repoRoot, "apps/editor")
       : join(this.repoRoot, "apps/animation-editor");
 
@@ -721,7 +721,7 @@ export class OrchestratorService {
 function createInitialState(): StoredState {
   return {
     activeProjectId: null,
-    activeView: "trident",
+    activeView: "blob",
     projects: [],
     version: STATE_VERSION
   };
@@ -731,9 +731,9 @@ function normalizeState(state: Partial<StoredState>): StoredState {
   return {
     activeProjectId: state.activeProjectId ?? null,
     activeView:
-      state.activeView === "animation-studio" || state.activeView === "game" || state.activeView === "trident"
+      state.activeView === "animation-studio" || state.activeView === "game" || state.activeView === "blob"
         ? state.activeView
-        : "trident",
+        : "blob",
     projects: Array.isArray(state.projects)
       ? state.projects.map((project) => ({
           createdAt: Number(project.createdAt) || Date.now(),
@@ -816,13 +816,13 @@ function resolveViewport(options: {
   editors: EditorSnapshot[];
   selectedProject: ProjectSnapshot | null;
 }): OrchestratorSnapshot["viewport"] {
-  if (options.activeView === "trident") {
-    const editor = options.editors.find((entry) => entry.id === "trident");
+  if (options.activeView === "blob") {
+    const editor = options.editors.find((entry) => entry.id === "blob");
     return {
-      label: "Trident",
+      label: "Blob",
       subtitle: editor?.status === "running" ? "World editing" : "Preview server unavailable",
       url: editor?.status === "running" ? editor.url : null,
-      view: "trident"
+      view: "blob"
     };
   }
 
@@ -864,7 +864,7 @@ async function readProjectMetadata(projectRootInput: string): Promise<ProjectMet
   }
 
   return {
-    hasGameDevSupport: Boolean(parsed.dependencies?.["@ggez/game-dev"] || parsed.devDependencies?.["@ggez/game-dev"]),
+    hasGameDevSupport: Boolean(parsed.dependencies?.["@blud/game-dev"] || parsed.devDependencies?.["@blud/game-dev"]),
     name: parsed.name?.trim() || basename(projectRoot),
     packageManager: await inferPackageManager(projectRoot, parsed.packageManager),
     projectRoot

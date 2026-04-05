@@ -1,4 +1,4 @@
-import { clamp, inverseLerp } from "@ggez/anim-utils";
+import { clamp, inverseLerp } from "@blud/anim-utils";
 import type { AnimationClipAsset, AnimationTrack, PoseBuffer, RigDefinition } from "./types";
 import { extractRootMotionDelta, type RootMotionMode } from "./root-motion";
 import { copyPose, copyRigBindPose } from "./pose-buffer";

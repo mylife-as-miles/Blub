@@ -1,5 +1,5 @@
-import type { Brush } from "@ggez/shared";
-import { vec3 } from "@ggez/shared";
+import type { Brush } from "@blud/shared";
+import { vec3 } from "@blud/shared";
 
 export type BrushAxis = "x" | "y" | "z";
 

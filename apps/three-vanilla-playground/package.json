@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/three-vanilla-playground",
+  "name": "@blud/three-vanilla-playground",
   "private": true,
   "version": "0.0.3",
   "license": "MIT",
@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.2",
-    "@ggez/gameplay-runtime": "*",
-    "@ggez/render-pipeline": "*",
-    "@ggez/runtime-audio": "*",
-    "@ggez/runtime-physics-rapier": "*",
-    "@ggez/shared": "*",
-    "@ggez/three-runtime": "*",
+    "@blud/gameplay-runtime": "*",
+    "@blud/render-pipeline": "*",
+    "@blud/runtime-audio": "*",
+    "@blud/runtime-physics-rapier": "*",
+    "@blud/shared": "*",
+    "@blud/three-runtime": "*",
     "three": "^0.181.1"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
-import { buildEditableMeshFaceSubdivisionPreview } from "@ggez/geometry-kernel";
-import { type EditableMesh, type GeometryNode } from "@ggez/shared";
+import { buildEditableMeshFaceSubdivisionPreview } from "@blud/geometry-kernel";
+import { type EditableMesh, type GeometryNode } from "@blud/shared";
 import { useMemo } from "react";
 import { NodeTransformGroup } from "@/viewport/components/NodeTransformGroup";
 import { BatchedHandleLineSegments, EditableFaceSelectionHitArea } from "@/viewport/components/SelectionVisuals";

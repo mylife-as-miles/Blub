@@ -1,4 +1,4 @@
-import type { EditorCore } from "@ggez/editor-core";
+import type { EditorCore } from "@blud/editor-core";
 
 export function buildSystemPrompt(editor: EditorCore): string {
   const materialCount = editor.scene.materials.size;
@@ -9,7 +9,7 @@ export function buildSystemPrompt(editor: EditorCore): string {
     Array.from(editor.scene.nodes.values()).reduce((count, node) => count + (node.hooks?.length ?? 0), 0) +
     Array.from(editor.scene.entities.values()).reduce((count, entity) => count + (entity.hooks?.length ?? 0), 0);
 
-  return `You are an expert level designer for Trident, a browser-based Source-2-style level editor.
+  return `You are an expert level designer for Blob, a browser-based Source-2-style level editor.
 You build and edit scenes by calling tools. Each tool call is one undoable action. Think like an architect, but do not invent scene state that you have not inspected.
 
 ## Working Mode

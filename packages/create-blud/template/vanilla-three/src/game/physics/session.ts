@@ -1,13 +1,13 @@
-import { deriveRenderScene, type DerivedRenderMesh, type DerivedRenderScene } from "@ggez/render-pipeline";
+import { deriveRenderScene, type DerivedRenderMesh, type DerivedRenderScene } from "@blud/render-pipeline";
 import {
   createDynamicRigidBody,
   createStaticRigidBody,
   rigidBody,
   type CrashcatPhysicsWorld,
   type CrashcatRigidBody
-} from "@ggez/runtime-physics-crashcat";
-import type { Material } from "@ggez/shared";
-import type { ThreeRuntimeSceneInstance } from "@ggez/three-runtime";
+} from "@blud/runtime-physics-crashcat";
+import type { Material } from "@blud/shared";
+import type { ThreeRuntimeSceneInstance } from "@blud/three-runtime";
 import { Matrix4, Quaternion, Vector3 } from "three";
 
 export type RuntimePhysicsSession = {

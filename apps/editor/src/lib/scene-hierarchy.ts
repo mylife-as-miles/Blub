@@ -1,4 +1,4 @@
-import { resolveSceneGraph, type Entity, type GeometryNode } from "@ggez/shared";
+import { resolveSceneGraph, type Entity, type GeometryNode } from "@blud/shared";
 
 export function resolveEffectiveSceneItemIds(
   nodes: GeometryNode[],

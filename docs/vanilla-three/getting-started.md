@@ -26,31 +26,31 @@ For production projects, prefer unpacked `scene.runtime.json` files plus normal 
 Minimum runtime setup:
 
 ```bash
-bun add three @ggez/three-runtime @ggez/runtime-format
+bun add three @blud/three-runtime @blud/runtime-format
 ```
 
 If you want to build runtime artifacts in your own app/toolchain:
 
 ```bash
-bun add @ggez/runtime-build
+bun add @blud/runtime-build
 ```
 
 If you want authored gameplay hooks:
 
 ```bash
-bun add @ggez/gameplay-runtime
+bun add @blud/gameplay-runtime
 ```
 
 If you want Rapier physics:
 
 ```bash
-bun add @ggez/runtime-physics-rapier @dimforge/rapier3d-compat
+bun add @blud/runtime-physics-rapier @dimforge/rapier3d-compat
 ```
 
 If you want chunk streaming:
 
 ```bash
-bun add @ggez/runtime-streaming
+bun add @blud/runtime-streaming
 ```
 
 ## Runtime Ownership Model

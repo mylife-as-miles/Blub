@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/anim-compiler",
+  "name": "@blud/anim-compiler",
   "version": "0.1.11",
   "description": "Compiler pipeline from editor documents to compiled runtime animation graphs.",
   "license": "MIT",
@@ -25,8 +25,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-core": "*",
-    "@ggez/anim-schema": "*",
-    "@ggez/anim-utils": "*"
+    "@blud/anim-core": "*",
+    "@blud/anim-schema": "*",
+    "@blud/anim-utils": "*"
   }
 }

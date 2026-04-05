@@ -1,4 +1,4 @@
-import type { EditorGraphNode } from "@ggez/anim-schema";
+import type { EditorGraphNode } from "@blud/anim-schema";
 
 export type Blend1DNode = Extract<EditorGraphNode, { kind: "blend1d" }>;
 export type Blend2DNode = Extract<EditorGraphNode, { kind: "blend2d" }>;

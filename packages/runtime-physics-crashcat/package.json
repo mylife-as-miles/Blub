@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/runtime-physics-crashcat",
+  "name": "@blud/runtime-physics-crashcat",
   "version": "0.1.11",
   "description": "Crashcat physics adapters for Web Hammer runtime scenes.",
   "license": "MIT",
@@ -26,20 +26,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/runtime-physics-crashcat"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/runtime-physics-crashcat",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/runtime-physics-crashcat",
   "devDependencies": {
     "@types/three": "^0.181.0"
   },
   "dependencies": {
-    "@ggez/render-pipeline": "*",
-    "@ggez/runtime-format": "*",
-    "@ggez/shared": "*",
+    "@blud/render-pipeline": "*",
+    "@blud/runtime-format": "*",
+    "@blud/shared": "*",
     "crashcat": "^0.0.3",
     "three": "^0.181.1"
   }

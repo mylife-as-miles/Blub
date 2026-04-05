@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/runtime-physics-rapier",
+  "name": "@blud/runtime-physics-rapier",
   "version": "0.1.11",
   "description": "Rapier physics adapters for Web Hammer runtime scenes.",
   "license": "MIT",
@@ -26,21 +26,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/runtime-physics-rapier"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/runtime-physics-rapier",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/runtime-physics-rapier",
   "devDependencies": {
     "@types/three": "^0.181.0"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.2",
-    "@ggez/render-pipeline": "*",
-    "@ggez/runtime-format": "*",
-    "@ggez/shared": "*",
+    "@blud/render-pipeline": "*",
+    "@blud/runtime-format": "*",
+    "@blud/shared": "*",
     "three": "^0.181.1"
   }
 }

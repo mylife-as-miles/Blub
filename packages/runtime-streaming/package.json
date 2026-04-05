@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/runtime-streaming",
+  "name": "@blud/runtime-streaming",
   "version": "0.1.11",
   "description": "Chunk and world streaming helpers for Web Hammer runtime content.",
   "license": "MIT",
@@ -26,15 +26,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/runtime-streaming"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/runtime-streaming",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/runtime-streaming",
   "dependencies": {
-    "@ggez/runtime-format": "*",
-    "@ggez/shared": "*"
+    "@blud/runtime-format": "*",
+    "@blud/shared": "*"
   }
 }

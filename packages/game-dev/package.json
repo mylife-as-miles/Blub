@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/game-dev",
+  "name": "@blud/game-dev",
   "version": "0.1.11",
   "description": "Vite development plugin for Web Hammer game projects with scene discovery and editor sync.",
   "license": "MIT",
@@ -24,11 +24,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/game-dev"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/game-dev"
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/game-dev"
 }

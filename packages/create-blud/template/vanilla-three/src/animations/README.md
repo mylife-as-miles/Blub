@@ -1,6 +1,6 @@
 ## Animation Bundle Folders
 
-`@ggez/game-dev` discovers animation bundle folders under `src/animations/<bundle-id>/`.
+`@blud/game-dev` discovers animation bundle folders under `src/animations/<bundle-id>/`.
 
 Generated animation bundle folders contain:
 

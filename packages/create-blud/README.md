@@ -1,10 +1,10 @@
-# create-ggez
+# create-blud
 
-Project bootstrap CLI for GGEZ and Web Hammer apps.
+Project bootstrap CLI for BLUD and Web Hammer apps.
 
 ## What It Does
 
-`create-ggez` is now intended to behave like a real framework entrypoint rather than a raw template copier.
+`create-blud` is now intended to behave like a real framework entrypoint rather than a raw template copier.
 
 It handles:
 
@@ -19,25 +19,25 @@ It handles:
 ## Usage
 
 ```bash
-bunx create-ggez
+bunx create-blud
 ```
 
 ```bash
-bunx create-ggez my-game
+bunx create-blud my-game
 ```
 
 ```bash
-npm create ggez@latest my-game -- --package-manager npm
+npm create blud@latest my-game -- --package-manager npm
 ```
 
 ```bash
-pnpm create ggez my-game --template vanilla-three --no-install
+pnpm create blud my-game --template vanilla-three --no-install
 ```
 
 ## Options
 
 ```text
-create-ggez [project-dir] [options]
+create-blud [project-dir] [options]
 
 Options:
 	-h, --help

@@ -3,7 +3,7 @@ import { FileTree, PageShell, Section, renderPage, siteHref } from "../site";
 const currentPath = window.location.pathname;
 
 renderPage(
-  "GGEZ | Project Layout",
+  "BLUD | Project Layout",
   <PageShell
     currentPath={currentPath}
     intro="The scaffold is intentionally vanilla, but it is organized like a real game app: runtime glue in one place, scene logic in another, and animation bundles isolated behind their own loading boundary."
@@ -67,7 +67,7 @@ renderPage(
       title="Typical day-to-day loop"
     >
       <ul>
-        <li>Author or update a world in Trident, then export the runtime scene into a scene folder.</li>
+        <li>Author or update a world in Blob, then export the runtime scene into a scene folder.</li>
         <li>Author or update animation bundles in Animation Studio, then unpack them into src/animations.</li>
         <li>Wire gameplay and transitions in the scene module and shared helpers under src/game.</li>
         <li>Run the Vite dev server and iterate inside the game, not inside a black-box engine runtime.</li>

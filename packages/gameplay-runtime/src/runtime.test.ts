@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { makeTransform, vec3, type Entity, type GeometryNode } from "@ggez/shared";
+import { makeTransform, vec3, type Entity, type GeometryNode } from "@blud/shared";
 import { GameplayGame, createGameplayRuntime } from "./runtime";
 import { GameplaySystem } from "./system";
 import {

@@ -9,7 +9,7 @@ import {
   MenubarShortcut,
   MenubarTrigger
 } from "@/components/ui/menubar";
-import { TridentIcon } from "@/components/editor-shell/icons";
+import { BlobIcon } from "@/components/editor-shell/icons";
 import type { ViewportQuality } from "@/state/ui-store";
 
 type EditorMenuBarProps = {
@@ -66,7 +66,7 @@ export function EditorMenuBar({
       <div className="flex min-w-0 items-center gap-3">
         <div className="glass-pill flex items-center gap-3 rounded-[20px] px-3.5 py-2">
           <span className="flex size-7 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <TridentIcon className="size-3.5" />
+            <BlobIcon className="size-3.5" />
           </span>
           <div className="flex flex-col leading-none">
             <span className="text-[11px] font-semibold tracking-[0.24em] text-foreground/96 uppercase">Blob</span>

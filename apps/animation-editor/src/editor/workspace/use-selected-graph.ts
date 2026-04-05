@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { useEditorStoreValue } from "../use-editor-store-value";
 
 export function useSelectedGraph(store: AnimationEditorStore) {

@@ -1,4 +1,4 @@
-import type { EditorCore } from "@ggez/editor-core";
+import type { EditorCore } from "@blud/editor-core";
 import {
   createAssignMaterialCommand,
   createAssignMaterialToBrushesCommand,
@@ -27,7 +27,7 @@ import {
   createSplitBrushNodesCommand,
   createTranslateNodesCommand,
   createUpsertMaterialCommand
-} from "@ggez/editor-core";
+} from "@blud/editor-core";
 import {
   arcEditableMeshEdges,
   bevelEditableMeshEdges,
@@ -46,9 +46,9 @@ import {
   scaleEditableMeshVertices,
   translateEditableMeshVertices,
   subdivideEditableMeshFace
-} from "@ggez/geometry-kernel";
-import { isBrushNode, isMeshNode, makeTransform, resolveSceneGraph, vec3 } from "@ggez/shared";
-import type { EditableMesh, GameplayObject, GameplayValue, Material, SceneHook, ScenePathDefinition, SceneSettings, Vec3 } from "@ggez/shared";
+} from "@blud/geometry-kernel";
+import { isBrushNode, isMeshNode, makeTransform, resolveSceneGraph, vec3 } from "@blud/shared";
+import type { EditableMesh, GameplayObject, GameplayValue, Material, SceneHook, ScenePathDefinition, SceneSettings, Vec3 } from "@blud/shared";
 import {
   createDefaultEntity,
   createDefaultLightData,

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { AnimationEditorStore, EditorTopic } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore, EditorTopic } from "@blud/anim-editor-core";
 
 const legacyStoreRevisions = new WeakMap<AnimationEditorStore, number>();
 

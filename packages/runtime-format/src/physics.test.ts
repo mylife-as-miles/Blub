@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { vec3 } from "@ggez/shared";
+import { vec3 } from "@blud/shared";
 import { getRuntimePhysicsDescriptors } from "./physics";
 
 describe("getRuntimePhysicsDescriptors", () => {

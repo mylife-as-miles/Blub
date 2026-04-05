@@ -1,9 +1,9 @@
-# @ggez/anim-runtime
+# @blud/anim-runtime
 
 Framework-agnostic animator instance and runtime graph evaluator.
 
 ```ts
-import { createAnimatorInstance } from "@ggez/anim-runtime";
+import { createAnimatorInstance } from "@blud/anim-runtime";
 
 const animator = createAnimatorInstance({ rig, graph, clips });
 animator.setFloat("speed", 1);

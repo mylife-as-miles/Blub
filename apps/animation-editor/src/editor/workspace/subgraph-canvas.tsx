@@ -1,4 +1,4 @@
-import type { EditorGraph, EditorGraphNode } from "@ggez/anim-schema";
+import type { EditorGraph, EditorGraphNode } from "@blud/anim-schema";
 import type { Connection, Edge, Node as FlowNode } from "@xyflow/react";
 import { ArrowLeft } from "lucide-react";
 import { useMemo } from "react";

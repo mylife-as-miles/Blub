@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { SceneDocumentSnapshot } from "@ggez/editor-core";
-import type { WebHammerEngineBundle } from "@ggez/three-runtime";
-import type { WorkerJob, WorkerRequest, WorkerResponse } from "@ggez/workers";
+import type { SceneDocumentSnapshot } from "@blud/editor-core";
+import type { WebHammerEngineBundle } from "@blud/three-runtime";
+import type { WorkerJob, WorkerRequest, WorkerResponse } from "@blud/workers";
 
 export type ExportWorkerRequest = WorkerRequest extends infer Request
   ? Request extends { id: string }

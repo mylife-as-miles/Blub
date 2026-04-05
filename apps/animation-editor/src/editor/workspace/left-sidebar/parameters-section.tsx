@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DragInput } from "@/components/ui/drag-input";

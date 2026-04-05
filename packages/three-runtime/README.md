@@ -1,21 +1,21 @@
-# @ggez/three-runtime
+# @blud/three-runtime
 
 Three.js adapter for Web Hammer runtime content.
 
-`@ggez/three-runtime` no longer owns the runtime format or build pipeline.
+`@blud/three-runtime` no longer owns the runtime format or build pipeline.
 
 Package split:
 
-- `@ggez/runtime-format`: runtime contracts, parsing, validation, migration
-- `@ggez/runtime-build`: `.whmap` compilation, asset externalization, bundle packing
-- `@ggez/three-runtime`: Three object creation and scene instances
-- `@ggez/runtime-streaming`: optional chunk/world orchestration
-- `@ggez/runtime-physics-rapier`: optional Rapier bindings
+- `@blud/runtime-format`: runtime contracts, parsing, validation, migration
+- `@blud/runtime-build`: `.whmap` compilation, asset externalization, bundle packing
+- `@blud/three-runtime`: Three object creation and scene instances
+- `@blud/runtime-streaming`: optional chunk/world orchestration
+- `@blud/runtime-physics-rapier`: optional Rapier bindings
 
 ## Install
 
 ```bash
-bun add @ggez/three-runtime three
+bun add @blud/three-runtime three
 ```
 
 ## Host Ownership
@@ -40,7 +40,7 @@ import {
   createThreeAssetResolver,
   createThreeRuntimeSceneInstance,
   parseWebHammerEngineBundleZip
-} from "@ggez/three-runtime";
+} from "@blud/three-runtime";
 
 const response = await fetch("/levels/tutorial.runtime.zip");
 const zipBytes = new Uint8Array(await response.arrayBuffer());
@@ -77,7 +77,7 @@ If you still want the old convenience surface, `loadWebHammerEngineScene()` rema
 ## Lower-Level Object Factory
 
 ```ts
-import { createThreeRuntimeObjectFactory } from "@ggez/three-runtime";
+import { createThreeRuntimeObjectFactory } from "@blud/three-runtime";
 
 const factory = createThreeRuntimeObjectFactory(scene, {
   lod: {
@@ -97,7 +97,7 @@ const instancingObjects = await factory.createInstancingObjects();
 import {
   applyRuntimeWorldSettingsToThreeScene,
   clearRuntimeWorldSettingsFromThreeScene
-} from "@ggez/three-runtime";
+} from "@blud/three-runtime";
 
 await applyRuntimeWorldSettingsToThreeScene(threeScene, {
   settings: runtimeScene.settings
@@ -118,11 +118,11 @@ For production worlds, prefer unpacked manifests plus normal asset hosting and o
 
 Recommended stack:
 
-1. Build runtime artifacts with `@ggez/runtime-build`.
-2. Parse or fetch runtime manifests with `@ggez/runtime-format`.
-3. Instantiate Three content with `@ggez/three-runtime`.
-4. Add physics with `@ggez/runtime-physics-rapier` if needed.
-5. Add streaming with `@ggez/runtime-streaming` if your world is chunked.
+1. Build runtime artifacts with `@blud/runtime-build`.
+2. Parse or fetch runtime manifests with `@blud/runtime-format`.
+3. Instantiate Three content with `@blud/three-runtime`.
+4. Add physics with `@blud/runtime-physics-rapier` if needed.
+5. Add streaming with `@blud/runtime-streaming` if your world is chunked.
 
 ## React Three Fiber Integration
 

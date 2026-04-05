@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { vec3, type GeometryNode } from "@ggez/shared";
+import { vec3, type GeometryNode } from "@blud/shared";
 import { createSceneDocument } from "../../document/scene-document";
 import { createDuplicateNodesCommand, createInstanceNodesCommand } from "./selection-commands";
 

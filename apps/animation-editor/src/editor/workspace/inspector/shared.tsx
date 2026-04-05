@@ -1,5 +1,5 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { EditorGraphNode, ParameterDefinition, TransitionOperator } from "@ggez/anim-schema";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { EditorGraphNode, ParameterDefinition, TransitionOperator } from "@blud/anim-schema";
 import { DragInput } from "@/components/ui/drag-input";
 import type { StateMachineNode, StateMachineTransition } from "./types";
 

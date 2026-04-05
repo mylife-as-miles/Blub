@@ -1,5 +1,5 @@
-import { createAnimationArtifact, createAnimationBundle, serializeAnimationArtifact, serializeAnimationBundle, serializeClipDataBinary } from "@ggez/anim-exporter";
-import { compileAnimationEditorDocumentOrThrow } from "@ggez/anim-compiler";
+import { createAnimationArtifact, createAnimationBundle, serializeAnimationArtifact, serializeAnimationBundle, serializeClipDataBinary } from "@blud/anim-exporter";
+import { compileAnimationEditorDocumentOrThrow } from "@blud/anim-compiler";
 import { strToU8, zipSync } from "fflate";
 import type { EquipmentBundle } from "./character-equipment";
 import { synchronizeAnimationDocument } from "./document-sync";
@@ -235,7 +235,7 @@ export async function createRuntimeBundleZip(input: {
   );
 
   return {
-    fileName: `${folderName}.ggezanim.zip`,
+    fileName: `${folderName}.bludanim.zip`,
     bytes: zipSync(prefixedFiles, { level: 6 }),
     folderName
   };

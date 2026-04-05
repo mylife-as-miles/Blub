@@ -1,5 +1,5 @@
-import type { Transform, Vec3 } from "@ggez/shared";
-import { isInstancingNode, scaleVec3, vec3 } from "@ggez/shared";
+import type { Transform, Vec3 } from "@blud/shared";
+import { isInstancingNode, scaleVec3, vec3 } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import { applyPositionDelta, flipScaleAxis } from "./helpers";

@@ -1,6 +1,6 @@
-import type { AnimationClipAsset, BoneMask, RootMotionDelta } from "@ggez/anim-core";
-import type { CompiledAnimatorGraph } from "@ggez/anim-schema";
-import type { PoseBuffer } from "@ggez/anim-core";
+import type { AnimationClipAsset, BoneMask, RootMotionDelta } from "@blud/anim-core";
+import type { CompiledAnimatorGraph } from "@blud/anim-schema";
+import type { PoseBuffer } from "@blud/anim-core";
 import type { EvaluationContext } from "./types";
 
 export function createMasks(graph: CompiledAnimatorGraph): BoneMask[] {

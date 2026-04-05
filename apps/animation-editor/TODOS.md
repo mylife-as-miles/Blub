@@ -2,15 +2,15 @@
 
 ## Package Layout
 
-- [x] Create `packages/anim-schema` as `@ggez/anim-schema`
-- [x] Create `packages/anim-core` as `@ggez/anim-core`
-- [x] Create `packages/anim-runtime` as `@ggez/anim-runtime`
-- [x] Create `packages/anim-three` as `@ggez/anim-three`
-- [x] Create `packages/anim-compiler` as `@ggez/anim-compiler`
-- [x] Create `packages/anim-exporter` as `@ggez/anim-exporter`
-- [x] Create `packages/anim-editor-core` as `@ggez/anim-editor-core`
-- [x] Create `packages/anim-editor-react` as `@ggez/anim-editor-react`
-- [x] Create `packages/anim-utils` as `@ggez/anim-utils`
+- [x] Create `packages/anim-schema` as `@blud/anim-schema`
+- [x] Create `packages/anim-core` as `@blud/anim-core`
+- [x] Create `packages/anim-runtime` as `@blud/anim-runtime`
+- [x] Create `packages/anim-three` as `@blud/anim-three`
+- [x] Create `packages/anim-compiler` as `@blud/anim-compiler`
+- [x] Create `packages/anim-exporter` as `@blud/anim-exporter`
+- [x] Create `packages/anim-editor-core` as `@blud/anim-editor-core`
+- [x] Create `packages/anim-editor-react` as `@blud/anim-editor-react`
+- [x] Create `packages/anim-utils` as `@blud/anim-utils`
 - [x] Wire root `tsconfig.base.json` path aliases for all new animation packages
 
 ## Runtime And Data Model

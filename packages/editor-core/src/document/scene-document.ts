@@ -11,8 +11,8 @@ import type {
   NodeID,
   SceneSettings,
   TextureRecord
-} from "@ggez/shared";
-import { createDefaultSceneSettings, isInstancingNode, makeTransform, normalizeSceneSettings, vec3 } from "@ggez/shared";
+} from "@blud/shared";
+import { createDefaultSceneSettings, isInstancingNode, makeTransform, normalizeSceneSettings, vec3 } from "@blud/shared";
 
 export type SceneDocument = {
   nodes: Map<NodeID, GeometryNode>;

@@ -311,12 +311,27 @@ export type WorldLodSettings = {
   midDetailRatio: number;
 };
 
+export type WorldGrassSettings = {
+  baseColor: string;
+  bladeHeight: number;
+  bladeWidth: number;
+  density: number;
+  enabled: boolean;
+  interactionRadius: number;
+  interactionStrength: number;
+  radius: number;
+  tipColor: string;
+  windSpeed: number;
+  windStrength: number;
+};
+
 export type WorldSettings = {
   ambientColor: string;
   ambientIntensity: number;
   fogColor: string;
   fogFar: number;
   fogNear: number;
+  grass: WorldGrassSettings;
   gravity: Vec3;
   lod: WorldLodSettings;
   physicsEnabled: boolean;

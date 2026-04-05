@@ -1,7 +1,7 @@
 import {
   createEditableMeshFromPolygons,
   type EditableMeshPolygon
-} from "@ggez/geometry-kernel";
+} from "@blud/geometry-kernel";
 import {
   vec2,
   vec3,
@@ -9,7 +9,7 @@ import {
   type PrimitiveNodeData,
   type MeshNode,
   type PrimitiveNode
-} from "@ggez/shared";
+} from "@blud/shared";
 import {
   BoxGeometry,
   ConeGeometry,

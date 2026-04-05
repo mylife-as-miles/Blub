@@ -2,8 +2,8 @@ import {
   createOrthographicViewportState,
   createViewportState,
   type ViewportState
-} from "@ggez/render-pipeline";
-import { addVec3, subVec3, vec3, type Vec3 } from "@ggez/shared";
+} from "@blud/render-pipeline";
+import { addVec3, subVec3, vec3, type Vec3 } from "@blud/shared";
 
 export type ViewportPaneId = "perspective" | "top" | "front" | "side";
 export type ViewModeId = "3d-only" | "split-top" | "split-front" | "split-side" | "quad";

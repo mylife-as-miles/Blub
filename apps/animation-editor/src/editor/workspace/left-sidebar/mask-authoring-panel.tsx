@@ -1,5 +1,5 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { BoneMaskDefinition, SerializableRig } from "@ggez/anim-schema";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { BoneMaskDefinition, SerializableRig } from "@blud/anim-schema";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

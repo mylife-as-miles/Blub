@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createAnimationEditorStore } from "@ggez/anim-editor-core";
+import { createAnimationEditorStore } from "@blud/anim-editor-core";
 import { AnimationEditorWorkspace } from "./editor/animation-editor-workspace";
 
 function App() {

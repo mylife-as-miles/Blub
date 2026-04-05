@@ -1,7 +1,7 @@
-import type { AnimationClipAsset, RigDefinition } from "@ggez/anim-core";
-import { loadClipsFromArtifact, loadRigFromArtifact, parseAnimationArtifactJson, parseClipDataBinary } from "@ggez/anim-exporter";
-import { parseAnimationBundle, type AnimationArtifact, type AnimationBundle } from "@ggez/anim-schema";
-import { createClipAssetFromThreeClip, createRigFromSkeleton } from "@ggez/anim-three";
+import type { AnimationClipAsset, RigDefinition } from "@blud/anim-core";
+import { loadClipsFromArtifact, loadRigFromArtifact, parseAnimationArtifactJson, parseClipDataBinary } from "@blud/anim-exporter";
+import { parseAnimationBundle, type AnimationArtifact, type AnimationBundle } from "@blud/anim-schema";
+import { createClipAssetFromThreeClip, createRigFromSkeleton } from "@blud/anim-three";
 import type { AnimationClip, Object3D, Skeleton } from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";

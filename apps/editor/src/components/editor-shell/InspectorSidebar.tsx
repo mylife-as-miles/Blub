@@ -17,8 +17,8 @@ import {
   type TextureRecord,
   type Transform,
   type Vec3
-} from "@ggez/shared";
-import type { ToolId } from "@ggez/tool-system";
+} from "@blud/shared";
+import type { ToolId } from "@blud/tool-system";
 import { Button } from "@/components/ui/button";
 import { DragInput } from "@/components/ui/drag-input";
 import { Input } from "@/components/ui/input";
@@ -527,6 +527,231 @@ export function InspectorSidebar({
                     step={0.05}
                     value={draftWorldSettings.ambientIntensity}
                   />
+                </ToolSection>
+
+                <ToolSection title="Grass">
+                  <BooleanField
+                    label="Enabled"
+                    onCheckedChange={(checked) =>
+                      setDraftWorldSettingsState((current) => ({
+                        ...current,
+                        grass: {
+                          ...current.grass,
+                          enabled: checked
+                        }
+                      }))
+                    }
+                    checked={draftWorldSettings.grass.enabled}
+                  />
+                  <div className="rounded-xl border border-white/8 bg-white/4 px-3 py-2 text-[11px] text-foreground/56">
+                    Grass is rendered as an editor viewport preview right now. It follows the scene center, sways in the wind,
+                    and bends away from your pointer in perspective view.
+                  </div>
+                  {draftWorldSettings.grass.enabled ? (
+                    <>
+                      <DragInput
+                        className="w-full"
+                        compact
+                        label="Density"
+                        max={2.5}
+                        min={0}
+                        onChange={(value) =>
+                          setDraftWorldSettingsState((current) => ({
+                            ...current,
+                            grass: {
+                              ...current.grass,
+                              density: Math.max(0, value)
+                            }
+                          }))
+                        }
+                        onValueCommit={commitWorldSettings}
+                        precision={2}
+                        step={0.05}
+                        value={draftWorldSettings.grass.density}
+                      />
+                      <DragInput
+                        className="w-full"
+                        compact
+                        label="Radius"
+                        max={60}
+                        min={4}
+                        onChange={(value) =>
+                          setDraftWorldSettingsState((current) => ({
+                            ...current,
+                            grass: {
+                              ...current.grass,
+                              radius: Math.max(4, value)
+                            }
+                          }))
+                        }
+                        onValueCommit={commitWorldSettings}
+                        precision={2}
+                        step={0.5}
+                        value={draftWorldSettings.grass.radius}
+                      />
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <DragInput
+                          className="min-w-0"
+                          compact
+                          label="Blade H"
+                          max={2}
+                          min={0.2}
+                          onChange={(value) =>
+                            setDraftWorldSettingsState((current) => ({
+                              ...current,
+                              grass: {
+                                ...current.grass,
+                                bladeHeight: Math.max(0.2, value)
+                              }
+                            }))
+                          }
+                          onValueCommit={commitWorldSettings}
+                          precision={2}
+                          step={0.05}
+                          value={draftWorldSettings.grass.bladeHeight}
+                        />
+                        <DragInput
+                          className="min-w-0"
+                          compact
+                          label="Blade W"
+                          max={0.22}
+                          min={0.02}
+                          onChange={(value) =>
+                            setDraftWorldSettingsState((current) => ({
+                              ...current,
+                              grass: {
+                                ...current.grass,
+                                bladeWidth: Math.max(0.02, value)
+                              }
+                            }))
+                          }
+                          onValueCommit={commitWorldSettings}
+                          precision={3}
+                          step={0.01}
+                          value={draftWorldSettings.grass.bladeWidth}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <DragInput
+                          className="min-w-0"
+                          compact
+                          label="Wind Speed"
+                          max={6}
+                          min={0}
+                          onChange={(value) =>
+                            setDraftWorldSettingsState((current) => ({
+                              ...current,
+                              grass: {
+                                ...current.grass,
+                                windSpeed: Math.max(0, value)
+                              }
+                            }))
+                          }
+                          onValueCommit={commitWorldSettings}
+                          precision={2}
+                          step={0.05}
+                          value={draftWorldSettings.grass.windSpeed}
+                        />
+                        <DragInput
+                          className="min-w-0"
+                          compact
+                          label="Wind Force"
+                          max={1.5}
+                          min={0}
+                          onChange={(value) =>
+                            setDraftWorldSettingsState((current) => ({
+                              ...current,
+                              grass: {
+                                ...current.grass,
+                                windStrength: Math.max(0, value)
+                              }
+                            }))
+                          }
+                          onValueCommit={commitWorldSettings}
+                          precision={2}
+                          step={0.01}
+                          value={draftWorldSettings.grass.windStrength}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <DragInput
+                          className="min-w-0"
+                          compact
+                          label="Push Radius"
+                          max={5}
+                          min={0}
+                          onChange={(value) =>
+                            setDraftWorldSettingsState((current) => ({
+                              ...current,
+                              grass: {
+                                ...current.grass,
+                                interactionRadius: Math.max(0, value)
+                              }
+                            }))
+                          }
+                          onValueCommit={commitWorldSettings}
+                          precision={2}
+                          step={0.05}
+                          value={draftWorldSettings.grass.interactionRadius}
+                        />
+                        <DragInput
+                          className="min-w-0"
+                          compact
+                          label="Push Force"
+                          max={2}
+                          min={0}
+                          onChange={(value) =>
+                            setDraftWorldSettingsState((current) => ({
+                              ...current,
+                              grass: {
+                                ...current.grass,
+                                interactionStrength: Math.max(0, value)
+                              }
+                            }))
+                          }
+                          onValueCommit={commitWorldSettings}
+                          precision={2}
+                          step={0.05}
+                          value={draftWorldSettings.grass.interactionStrength}
+                        />
+                      </div>
+                      <ColorField
+                        label="Base Color"
+                        onChange={(value) =>
+                          setDraftWorldSettingsState((current) => ({
+                            ...current,
+                            grass: {
+                              ...current.grass,
+                              baseColor: value
+                            }
+                          }))
+                        }
+                        value={draftWorldSettings.grass.baseColor}
+                      />
+                      <ColorField
+                        label="Tip Color"
+                        onChange={(value) =>
+                          setDraftWorldSettingsState((current) => ({
+                            ...current,
+                            grass: {
+                              ...current.grass,
+                              tipColor: value
+                            }
+                          }))
+                        }
+                        value={draftWorldSettings.grass.tipColor}
+                      />
+                    </>
+                  ) : (
+                    <div className="glass-section rounded-xl px-3 py-2 text-[11px] text-foreground/52">
+                      Turn grass on to preview a soft instanced field around the current scene.
+                    </div>
+                  )}
+                  <div className="flex justify-end">
+                    <Button onClick={commitWorldSettings} size="xs" variant="ghost">
+                      Save Grass
+                    </Button>
+                  </div>
                 </ToolSection>
 
                 <ToolSection title="LOD Bake">

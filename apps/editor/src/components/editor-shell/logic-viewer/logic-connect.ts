@@ -1,4 +1,4 @@
-import type { Entity, GeometryNode, SceneHook } from "@ggez/shared";
+import type { Entity, GeometryNode, SceneHook } from "@blud/shared";
 import { createGameplayId, isGameplayObject, toObjectArray } from "@/lib/gameplay";
 
 /**

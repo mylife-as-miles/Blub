@@ -1,5 +1,5 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import type { EditorGraphNode } from "@ggez/anim-schema";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import type { EditorGraphNode } from "@blud/anim-schema";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDownRight, GripHorizontal } from "lucide-react";

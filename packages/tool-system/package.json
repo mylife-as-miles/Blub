@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/tool-system",
+  "name": "@blud/tool-system",
   "version": "0.1.11",
   "description": "Tool registry and state machine primitives for Web Hammer editors.",
   "license": "MIT",
@@ -26,15 +26,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/tool-system"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/tool-system",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/tool-system",
   "dependencies": {
-    "@ggez/shared": "*",
+    "@blud/shared": "*",
     "xstate": "^5.24.0"
   }
 }

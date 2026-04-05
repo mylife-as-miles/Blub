@@ -17,8 +17,8 @@ import {
   Sparkles,
   User
 } from "lucide-react";
-import type { Entity, GeometryNode } from "@ggez/shared";
-import { resolveSceneGraph } from "@ggez/shared";
+import type { Entity, GeometryNode } from "@blud/shared";
+import { resolveSceneGraph } from "@blud/shared";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";

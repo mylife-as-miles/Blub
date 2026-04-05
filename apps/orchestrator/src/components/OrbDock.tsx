@@ -69,13 +69,13 @@ export function OrbDock({
             onClick={() => closeAndCall(onOpenGames)}
           />
           <DockButton
-            active={activeDockMode === "trident"}
+            active={activeDockMode === "blob"}
             disabled={!snapshot}
             icon={<Monitor size={14} />}
-            label="Trident"
+            label="Blob"
             subtitle="World editor"
-            onClick={() => closeAndCall(() => onSetView("trident"))}
-            busy={busyKey === "view:trident"}
+            onClick={() => closeAndCall(() => onSetView("blob"))}
+            busy={busyKey === "view:blob"}
           />
           <DockButton
             active={activeDockMode === "animation-studio"}

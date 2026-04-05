@@ -1,4 +1,4 @@
-import type { TextureKind, TextureSource, TextureRecord } from "@ggez/shared";
+import type { TextureKind, TextureSource, TextureRecord } from "@blud/shared";
 
 export type TextureGenerationModelId = "nano-banana-2";
 

@@ -8,8 +8,8 @@ import type {
   PrimitiveNode,
   Transform,
   Vec3
-} from "@ggez/shared";
-import { vec3 } from "@ggez/shared";
+} from "@blud/shared";
+import { vec3 } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import { createDuplicateNodeId } from "./helpers";

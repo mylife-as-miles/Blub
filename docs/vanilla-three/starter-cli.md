@@ -9,30 +9,30 @@ Related guides:
 
 ## CLI Package
 
-- package: `create-ggez`
-- command: `create-ggez`
+- package: `create-blud`
+- command: `create-blud`
 
 ## Create A Starter Project
 
 Using Bun:
 
 ```bash
-bunx create-ggez my-game
+bunx create-blud my-game
 ```
 
 Using npm:
 
 ```bash
-npx create-ggez my-game --package-manager npm
+npx create-blud my-game --package-manager npm
 ```
 
 Using pnpm:
 
 ```bash
-pnpm dlx create-ggez my-game --package-manager pnpm
+pnpm dlx create-blud my-game --package-manager pnpm
 ```
 
-Inside this repository, create starters under `samples/*` so Bun can resolve the local `@ggez/*` workspace packages.
+Inside this repository, create starters under `samples/*` so Bun can resolve the local `@blud/*` workspace packages.
 
 ## What It Generates
 
@@ -42,10 +42,10 @@ The starter includes:
 - TypeScript
 - Three.js
 - Rapier
-- `@ggez/three-runtime`
-- `@ggez/runtime-format`
-- `@ggez/gameplay-runtime`
-- `@ggez/runtime-physics-crashcat`
+- `@blud/three-runtime`
+- `@blud/runtime-format`
+- `@blud/gameplay-runtime`
+- `@blud/runtime-physics-crashcat`
 - a scaffold-owned starter player controller that reads runtime camera/player settings
 - scene modules with `mount`, `systems`, `player`, and `gotoScene(...)`
 

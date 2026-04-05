@@ -1,4 +1,4 @@
-import type { BoneMaskDefinition, SerializableRig } from "@ggez/anim-schema";
+import type { BoneMaskDefinition, SerializableRig } from "@blud/anim-schema";
 
 export type RigBoneEntry = {
   index: number;

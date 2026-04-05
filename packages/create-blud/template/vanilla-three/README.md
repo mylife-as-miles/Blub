@@ -35,13 +35,13 @@ __PACKAGE_MANAGER__ run build
 
 ## Runtime Packages
 
-- `@ggez/three-runtime`
-- `@ggez/runtime-format`
-- `@ggez/gameplay-runtime`
-- `@ggez/runtime-physics-crashcat`
-- `@ggez/anim-runtime`
-- `@ggez/anim-three`
-- `@ggez/anim-exporter`
+- `@blud/three-runtime`
+- `@blud/runtime-format`
+- `@blud/gameplay-runtime`
+- `@blud/runtime-physics-crashcat`
+- `@blud/anim-runtime`
+- `@blud/anim-three`
+- `@blud/anim-exporter`
 
 ## Notes
 
@@ -65,7 +65,7 @@ src/animations/player-locomotion/
 Typical usage:
 
 ```ts
-import { createAnimatorInstance } from "@ggez/anim-runtime";
+import { createAnimatorInstance } from "@blud/anim-runtime";
 import { animations } from "./animations";
 
 const locomotionBundle = await animations["player-locomotion"].source.load();

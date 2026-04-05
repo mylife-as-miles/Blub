@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Entity, GeometryNode, SceneHook } from "@ggez/shared";
+import type { Entity, GeometryNode, SceneHook } from "@blud/shared";
 import { cn } from "@/lib/utils";
 import { LogicViewerPanel } from "./LogicViewerPanel";
 

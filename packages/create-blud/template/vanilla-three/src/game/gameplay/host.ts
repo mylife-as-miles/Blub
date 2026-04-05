@@ -1,7 +1,7 @@
-import { type GameplayRuntimeHost } from "@ggez/gameplay-runtime";
-import { MotionType, rigidBody, type CrashcatPhysicsWorld } from "@ggez/runtime-physics-crashcat";
-import type { Transform } from "@ggez/shared";
-import type { ThreeRuntimeSceneInstance } from "@ggez/three-runtime";
+import { type GameplayRuntimeHost } from "@blud/gameplay-runtime";
+import { MotionType, rigidBody, type CrashcatPhysicsWorld } from "@blud/runtime-physics-crashcat";
+import type { Transform } from "@blud/shared";
+import type { ThreeRuntimeSceneInstance } from "@blud/three-runtime";
 import { Euler, Matrix4, Quaternion, Vector3, type Object3D } from "three";
 import type { RuntimePhysicsSession } from "../physics/session";
 

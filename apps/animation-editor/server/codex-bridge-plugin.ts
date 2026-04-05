@@ -64,11 +64,11 @@ function registerCodexWebSocket(server: Pick<ViteDevServer, "httpServer"> | Pick
 
   const httpServer = server.httpServer;
 
-  if ((httpServer as { __ggezCodexBridgeRegistered?: boolean }).__ggezCodexBridgeRegistered) {
+  if ((httpServer as { __bludCodexBridgeRegistered?: boolean }).__bludCodexBridgeRegistered) {
     return;
   }
 
-  (httpServer as { __ggezCodexBridgeRegistered?: boolean }).__ggezCodexBridgeRegistered = true;
+  (httpServer as { __bludCodexBridgeRegistered?: boolean }).__bludCodexBridgeRegistered = true;
 
   const wss = new WebSocketServer({ noServer: true });
 

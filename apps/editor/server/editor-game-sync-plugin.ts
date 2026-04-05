@@ -158,7 +158,7 @@ function registerEditorPresence(server: ViteDevServer | PreviewServer) {
     await upsertDevSyncRegistration({
       id: registrationId,
       kind: "editor",
-      name: "Trident Editor",
+      name: "Blob Editor",
       pid: process.pid,
       projectRoot: server.config.root,
       updatedAt: Date.now(),

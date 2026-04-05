@@ -28,7 +28,7 @@ import {
   type TextureKind,
   type TextureRecord,
   type Vec2
-} from "@ggez/shared";
+} from "@blud/shared";
 import { AnimatePresence, motion } from "motion/react";
 import { MeshFaceUvEditorDialog } from "@/components/editor-shell/MeshFaceUvEditorDialog";
 import { TextureBrowserOverlay } from "@/components/editor-shell/TextureBrowserOverlay";

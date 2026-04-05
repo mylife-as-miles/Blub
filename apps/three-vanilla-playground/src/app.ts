@@ -1,12 +1,12 @@
-import { createGameplayRuntime, createGameplayRuntimeSceneFromRuntimeScene } from "@ggez/gameplay-runtime";
-import { createAudioManager, type AudioManager } from "@ggez/runtime-audio";
-import { normalizeSceneSettings } from "@ggez/shared";
+import { createGameplayRuntime, createGameplayRuntimeSceneFromRuntimeScene } from "@blud/gameplay-runtime";
+import { createAudioManager, type AudioManager } from "@blud/runtime-audio";
+import { normalizeSceneSettings } from "@blud/shared";
 import {
   createWebHammerBundleAssetResolver,
   parseWebHammerEngineBundleZip,
   parseWebHammerEngineScene,
   type WebHammerEngineScene
-} from "@ggez/three-runtime";
+} from "@blud/three-runtime";
 import { createPlaybackRenderScene } from "./adapter";
 import { createPlaybackGameplayHost } from "./gameplay-host";
 import { createPlaybackGameplaySystems } from "./gameplay-systems";

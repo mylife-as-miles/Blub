@@ -1,5 +1,5 @@
-import type { Brush, EditableMesh, Face, Material, PrimitiveNodeData, Vec2 } from "@ggez/shared";
-import { isBrushNode, isMeshNode, isPrimitiveNode } from "@ggez/shared";
+import type { Brush, EditableMesh, Face, Material, PrimitiveNodeData, Vec2 } from "@blud/shared";
+import { isBrushNode, isMeshNode, isPrimitiveNode } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 

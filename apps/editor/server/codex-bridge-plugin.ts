@@ -69,11 +69,11 @@ function registerCodexWebSocket(server: Pick<ViteDevServer, "httpServer"> | Pick
 
   const httpServer = server.httpServer;
 
-  if ((httpServer as { __ggezCodexBridgeRegistered?: boolean }).__ggezCodexBridgeRegistered) {
+  if ((httpServer as { __bludCodexBridgeRegistered?: boolean }).__bludCodexBridgeRegistered) {
     return;
   }
 
-  (httpServer as { __ggezCodexBridgeRegistered?: boolean }).__ggezCodexBridgeRegistered = true;
+  (httpServer as { __bludCodexBridgeRegistered?: boolean }).__bludCodexBridgeRegistered = true;
 
   const wss = new WebSocketServer({ noServer: true });
 
@@ -225,7 +225,7 @@ async function startCodexSession(
 
   // 1. Handshake
   await sendCodexRequest(session, "initialize", {
-    clientInfo: { name: "trident-editor", title: "Trident Editor", version: "0.1.0" },
+    clientInfo: { name: "blob-editor", title: "Blob Editor", version: "0.1.0" },
     capabilities: { experimentalApi: true }
   });
   sendToCodex(session, { method: "initialized", params: {} });
@@ -245,7 +245,7 @@ async function startCodexSession(
       model: config.model,
       baseInstructions: config.systemPrompt,
       dynamicTools,
-      serviceName: "trident-editor"
+      serviceName: "blob-editor"
     }
   ) as { thread?: { id?: string } };
 

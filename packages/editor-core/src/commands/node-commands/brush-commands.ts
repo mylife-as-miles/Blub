@@ -5,9 +5,9 @@ import {
   splitAxisAlignedBrush,
   splitAxisAlignedBrushAtCoordinate,
   type BrushAxis
-} from "@ggez/geometry-kernel";
-import type { BrushNode, Transform } from "@ggez/shared";
-import { isBrushNode } from "@ggez/shared";
+} from "@blud/geometry-kernel";
+import type { BrushNode, Transform } from "@blud/shared";
+import { isBrushNode } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 import { createSetBrushDataCommand } from "./data-commands";

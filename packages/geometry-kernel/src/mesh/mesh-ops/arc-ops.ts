@@ -1,4 +1,4 @@
-import type { EditableMesh, Vec3, VertexID } from "@ggez/shared";
+import type { EditableMesh, Vec3, VertexID } from "@blud/shared";
 import {
   addVec3,
   averageVec3,
@@ -9,7 +9,7 @@ import {
   scaleVec3,
   subVec3,
   vec3
-} from "@ggez/shared";
+} from "@blud/shared";
 import {
   createEditableMeshFromPolygons,
   findEdgeIndex,

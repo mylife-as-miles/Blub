@@ -1,5 +1,5 @@
-import type { EdgeBevelProfile } from "@ggez/geometry-kernel";
-import type { DerivedRenderScene, ViewportState } from "@ggez/render-pipeline";
+import type { EdgeBevelProfile } from "@blud/geometry-kernel";
+import type { DerivedRenderScene, ViewportState } from "@blud/render-pipeline";
 import type {
   BrushShape,
   Brush,
@@ -10,8 +10,8 @@ import type {
   SceneSettings,
   Transform,
   Vec3
-} from "@ggez/shared";
-import type { ToolId } from "@ggez/tool-system";
+} from "@blud/shared";
+import type { ToolId } from "@blud/tool-system";
 import type { BrushExtrudeHandle, MeshEditMode, MeshExtrudeHandle } from "@/viewport/editing";
 import type { ConstructionPlane, ViewportPaneId, ViewportRenderMode } from "@/viewport/viewports";
 import type { Plane, Vector2 } from "three";

@@ -1,5 +1,5 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
-import { createStableId } from "@ggez/anim-utils";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
+import { createStableId } from "@blud/anim-utils";
 import { GripHorizontal, Plus, Trash2 } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useMemo } from "react";

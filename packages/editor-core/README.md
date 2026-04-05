@@ -1,4 +1,4 @@
-# @ggez/editor-core
+# @blud/editor-core
 
 Editor-domain primitives for Web Hammer.
 
@@ -7,5 +7,5 @@ This package contains the scene document model, command stack, selection state, 
 ## Install
 
 ```bash
-bun add @ggez/editor-core
+bun add @blud/editor-core
 ```

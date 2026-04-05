@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/anim-schema",
+  "name": "@blud/anim-schema",
   "version": "0.1.11",
   "description": "Animation graph document, compiled graph, and artifact schemas.",
   "license": "MIT",

@@ -1,7 +1,7 @@
 {
-  "name": "@ggez/anim-utils",
+  "name": "@blud/anim-utils",
   "version": "0.1.11",
-  "description": "Shared animation utilities for the ggez animation toolchain.",
+  "description": "Shared animation utilities for the blud animation toolchain.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

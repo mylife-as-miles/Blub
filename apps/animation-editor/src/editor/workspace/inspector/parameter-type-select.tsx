@@ -1,4 +1,4 @@
-import type { ParameterDefinition } from "@ggez/anim-schema";
+import type { ParameterDefinition } from "@blud/anim-schema";
 import { editorSelectClassName } from "../shared";
 
 export function ParameterTypeSelect(props: {

@@ -1,4 +1,4 @@
-# @ggez/geometry-kernel
+# @blud/geometry-kernel
 
 Geometry editing primitives for Web Hammer.
 
@@ -7,5 +7,5 @@ This package contains brush operations, polygon helpers, editable mesh structure
 ## Install
 
 ```bash
-bun add @ggez/geometry-kernel
+bun add @blud/geometry-kernel
 ```

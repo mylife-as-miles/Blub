@@ -1,6 +1,6 @@
 import { strFromU8, unzipSync } from "fflate";
-import type { AnimationEditorDocument } from "@ggez/anim-schema";
-import { parseAnimationArtifactJson, parseClipDataBinary } from "@ggez/anim-exporter";
+import type { AnimationEditorDocument } from "@blud/anim-schema";
+import { parseAnimationArtifactJson, parseClipDataBinary } from "@blud/anim-exporter";
 import type { ImportedPreviewClip } from "./preview-assets";
 import { createRuntimeBundleSyncResult, createRuntimeBundleZip } from "./runtime-bundle";
 

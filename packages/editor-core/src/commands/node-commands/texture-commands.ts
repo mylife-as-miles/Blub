@@ -1,4 +1,4 @@
-import type { Material, TextureRecord } from "@ggez/shared";
+import type { Material, TextureRecord } from "@blud/shared";
 import type { Command } from "../command-stack";
 import type { SceneDocument } from "../../document/scene-document";
 

@@ -1,6 +1,6 @@
-import { createRigDefinition, type AnimationClipAsset, type PoseBuffer, type RigDefinition } from "@ggez/anim-core";
-import type { ClipReference, SerializableRig } from "@ggez/anim-schema";
-import { createClipAssetFromThreeClip } from "@ggez/anim-three";
+import { createRigDefinition, type AnimationClipAsset, type PoseBuffer, type RigDefinition } from "@blud/anim-core";
+import type { ClipReference, SerializableRig } from "@blud/anim-schema";
+import { createClipAssetFromThreeClip } from "@blud/anim-three";
 import { Bone, Matrix4, Quaternion, Skeleton, Vector3, type AnimationClip, type Object3D } from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { createConfiguredGLTFLoader } from "./gltf-loader";

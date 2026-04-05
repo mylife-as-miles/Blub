@@ -1,4 +1,4 @@
-import type { CompiledAnimatorGraph } from "@ggez/anim-schema";
+import type { CompiledAnimatorGraph } from "@blud/anim-schema";
 
 type RuntimeParameterValue = number | boolean;
 

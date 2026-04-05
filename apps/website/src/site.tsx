@@ -102,7 +102,7 @@ export function PageShell({ eyebrow, title, intro, currentPath, stats, children 
                   G
                 </span>
                 <div>
-                  <div className="text-sm font-semibold tracking-[0.24em] text-emerald-100/90">GGEZ</div>
+                  <div className="text-sm font-semibold tracking-[0.24em] text-emerald-100/90">BLUD</div>
                   <div className="text-xs text-white/55">Game Framework to vibe code games</div>
                 </div>
               </a>
@@ -146,10 +146,10 @@ export function PageShell({ eyebrow, title, intro, currentPath, stats, children 
               </div>
               <div className="mt-6 space-y-3 text-sm text-white/68">
                 <div className="rounded-[1.35rem] bg-white/6 px-4 py-4">
-                  GGEZ is for developers who want a lightweight runtime shell, a world editor, and an animation pipeline without committing to a giant engine.
+                  BLUD is for developers who want a lightweight runtime shell, a world editor, and an animation pipeline without committing to a giant engine.
                 </div>
                 <div className="rounded-[1.35rem] bg-white/6 px-4 py-4">
-                  The CLI scaffolds a real game project. Trident authors worlds. Animation Studio authors graphs and bundles.
+                  The CLI scaffolds a real game project. Blob authors worlds. Animation Studio authors graphs and bundles.
                 </div>
               </div>
               {stats ? (
@@ -170,7 +170,7 @@ export function PageShell({ eyebrow, title, intro, currentPath, stats, children 
 
         <footer className="surface-quiet mt-12 rounded-4xl px-6 py-6 text-sm text-white/60">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p>GGEZ ships fast, changes fast, and is not stable yet. Treat every release as a moving target.</p>
+            <p>BLUD ships fast, changes fast, and is not stable yet. Treat every release as a moving target.</p>
             <div className="flex flex-wrap gap-3 text-white/72">
               <a className="page-link rounded-full bg-white/6 px-4 py-2" href={siteHref("")}>Overview</a>
               <a className="page-link rounded-full bg-white/6 px-4 py-2" href={siteHref("getting-started/")}>CLI</a>

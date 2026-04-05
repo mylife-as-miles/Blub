@@ -1,5 +1,5 @@
-import { getFaceVertices, triangulateMeshFace } from "@ggez/geometry-kernel";
-import { type EditableMesh, type GeometryNode, type Vec3 } from "@ggez/shared";
+import { getFaceVertices, triangulateMeshFace } from "@blud/geometry-kernel";
+import { type EditableMesh, type GeometryNode, type Vec3 } from "@blud/shared";
 import { useEffect, useRef, useState } from "react";
 import { BufferGeometry, DoubleSide, Float32BufferAttribute, Uint32BufferAttribute } from "three";
 import { NodeTransformGroup } from "@/viewport/components/NodeTransformGroup";

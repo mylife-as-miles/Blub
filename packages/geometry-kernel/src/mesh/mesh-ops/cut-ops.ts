@@ -1,5 +1,5 @@
-import type { EditableMesh, FaceID, Vec3, VertexID } from "@ggez/shared";
-import { snapValue, vec3 } from "@ggez/shared";
+import type { EditableMesh, FaceID, Vec3, VertexID } from "@blud/shared";
+import { snapValue, vec3 } from "@blud/shared";
 import {
   areAdjacentEdgeIndices,
   createEditableMeshFromPolygons,

@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/geometry-kernel",
+  "name": "@blud/geometry-kernel",
   "version": "0.1.11",
   "description": "Brush, polygon, and editable mesh operations for Web Hammer.",
   "license": "MIT",
@@ -26,15 +26,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vibe-stack/trident.git",
+    "url": "git+https://github.com/vibe-stack/blob.git",
     "directory": "packages/geometry-kernel"
   },
   "bugs": {
-    "url": "https://github.com/vibe-stack/trident/issues"
+    "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/trident/tree/main/packages/geometry-kernel",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/geometry-kernel",
   "dependencies": {
-    "@ggez/shared": "*",
+    "@blud/shared": "*",
     "clipper2-ts": "latest",
     "earcut": "^3.0.2"
   }

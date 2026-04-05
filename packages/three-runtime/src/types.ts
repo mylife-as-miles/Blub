@@ -29,4 +29,4 @@ export type {
   WebHammerExportModelLod,
   WebHammerExportPrimitive,
   WebHammerLodLevel
-} from "@ggez/runtime-format";
+} from "@blud/runtime-format";

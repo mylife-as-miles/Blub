@@ -1,4 +1,4 @@
-import { snapValue, vec3 } from "@ggez/shared";
+import { snapValue, vec3 } from "@blud/shared";
 import { useMemo } from "react";
 import type { ViewportCanvasProps } from "@/viewport/types";
 import { createIndexedGeometry } from "@/viewport/utils/geometry";

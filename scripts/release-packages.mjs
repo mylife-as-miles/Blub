@@ -131,7 +131,7 @@ function collectInternalDependencies(manifest) {
     ...Object.keys(manifest.dependencies ?? {}),
     ...Object.keys(manifest.optionalDependencies ?? {}),
     ...Object.keys(manifest.peerDependencies ?? {})
-  ].filter((dependencyName) => dependencyName === "create-ggez" || dependencyName.startsWith("@ggez/"));
+  ].filter((dependencyName) => dependencyName === "create-blud" || dependencyName.startsWith("@blud/"));
 }
 
 function sortPackages(packagesToSort) {

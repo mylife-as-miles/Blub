@@ -1,4 +1,4 @@
-import type { AnimationEditorStore } from "@ggez/anim-editor-core";
+import type { AnimationEditorStore } from "@blud/anim-editor-core";
 import { useMemo, useRef, useState } from "react";
 import type { ImportedPreviewClip } from "../preview-assets";
 import { useEditorStoreValue } from "../use-editor-store-value";

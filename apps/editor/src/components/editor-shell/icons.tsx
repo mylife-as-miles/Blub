@@ -7,9 +7,9 @@ import {
   Scaling,
   Scissors
 } from "lucide-react";
-import type { ToolId } from "@ggez/tool-system";
+import type { ToolId } from "@blud/tool-system";
 
-export function TridentIcon(props: SVGProps<SVGSVGElement>) {
+export function BlobIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg fill="none" viewBox="0 0 24 24" {...props}>
       <path
@@ -386,7 +386,7 @@ export function toolIconFor(toolId: ToolId) {
     case "select":
       return MousePointer2;
     case "transform":
-      return TridentIcon;
+      return BlobIcon;
     case "brush":
       return BrushCreateIcon;
     case "clip":

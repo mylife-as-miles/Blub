@@ -1,4 +1,4 @@
-import type { EditableMesh, FaceID, Vec3, VertexID } from "@ggez/shared";
+import type { EditableMesh, FaceID, Vec3, VertexID } from "@blud/shared";
 import {
   createEditableMeshFromPolygons,
   getMeshPolygons,

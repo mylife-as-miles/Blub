@@ -1,5 +1,5 @@
 {
-  "name": "@ggez/anim-core",
+  "name": "@blud/anim-core",
   "version": "0.1.11",
   "description": "Pure animation runtime primitives: rigs, clips, poses, masks, blending, and root motion.",
   "license": "MIT",
@@ -25,6 +25,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@ggez/anim-utils": "*"
+    "@blud/anim-utils": "*"
   }
 }

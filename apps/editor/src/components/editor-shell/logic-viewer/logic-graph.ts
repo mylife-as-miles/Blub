@@ -1,4 +1,4 @@
-import type { Entity, GameplayObject, GeometryNode } from "@ggez/shared";
+import type { Entity, GameplayObject, GeometryNode } from "@blud/shared";
 import { HOOK_DEFINITION_MAP, isGameplayObject, toObjectArray } from "@/lib/gameplay";
 import type { LogicCluster, LogicGraph, LogicGraphEdge, LogicGraphHook, LogicGraphNode } from "./types";
 
