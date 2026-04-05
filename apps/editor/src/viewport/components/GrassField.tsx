@@ -9,7 +9,6 @@ import {
   Object3D,
   Plane,
   PlaneGeometry,
-  Shader,
   Vector3
 } from "three";
 import type { SceneSettings, Vec3 } from "@blud/shared";
@@ -22,6 +21,8 @@ type GrassFieldProps = {
   center: Vec3;
   settings: SceneSettings["world"]["grass"];
 };
+
+type GrassShader = Parameters<NonNullable<MeshStandardMaterial["onBeforeCompile"]>>[0];
 
 export function GrassField({ center, settings }: GrassFieldProps) {
   const domElement = useThree((state) => state.gl.domElement);
@@ -77,7 +78,7 @@ export function GrassField({ center, settings }: GrassFieldProps) {
   }, [domElement]);
 
   useFrame((state) => {
-    const shader = material.userData.grassShader as Shader | undefined;
+    const shader = material.userData.grassShader as GrassShader | undefined;
 
     if (!shader) {
       return;
