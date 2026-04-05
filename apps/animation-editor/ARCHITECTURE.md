@@ -2,7 +2,7 @@
 
 ## Overview
 
-The animation stack is split into reusable packages under `@ggez/*` with three hard boundaries:
+The animation stack is split into reusable packages under `@blud/*` with three hard boundaries:
 
 1. Authoring lives in the editor document model.
 2. Shipping/runtime data lives in a compiled graph format.
@@ -30,40 +30,40 @@ packages/
 
 ## Responsibilities
 
-- `@ggez/anim-schema`
+- `@blud/anim-schema`
   Defines the stable editor document schema, compiled graph schema, and versioned export artifact schema with Zod validation.
-- `@ggez/anim-core`
+- `@blud/anim-core`
   Owns rigs, pose buffers, bone masks, clip sampling, pose blending, additive blending, and root motion helpers.
-- `@ggez/anim-runtime`
+- `@blud/anim-runtime`
   Evaluates compiled graphs into typed-array pose buffers. Supports parameters, clip nodes, subgraphs, state machines, 1D/2D blend nodes, layers, masks, and root motion output.
-- `@ggez/anim-three`
+- `@blud/anim-three`
   Bridges Three.js `Skeleton` and `AnimationClip` into the core/runtime model and applies evaluated poses back to bones.
-- `@ggez/anim-compiler`
+- `@blud/anim-compiler`
   Validates editor documents, resolves references, compiles masks, indexes runtime nodes, assigns state machine runtime ids, and emits deterministic compiled graphs plus diagnostics.
-- `@ggez/anim-exporter`
+- `@blud/anim-exporter`
   Wraps compiled graphs in a versioned artifact format and converts rig/clip data to and from JSON-safe structures.
-- `@ggez/anim-editor-core`
+- `@blud/anim-editor-core`
   Provides the React-independent editor store, selection model, history, clipboard, compile trigger, and document editing actions.
-- `@ggez/anim-editor-react`
+- `@blud/anim-editor-react`
   Binds the external store into React, renders the graph canvas and side panels, and exposes an `AnimationEditorWorkspace`.
 
 ## Data Flow
 
 ```text
 Editor Document
-  -> @ggez/anim-compiler
+  -> @blud/anim-compiler
 Compiled Graph
-  -> @ggez/anim-exporter
+  -> @blud/anim-exporter
 Versioned Artifact JSON
-  -> @ggez/anim-runtime
+  -> @blud/anim-runtime
 PoseBuffer + RootMotionDelta
-  -> @ggez/anim-three
+  -> @blud/anim-three
 Three.js Skeleton/Bones
 ```
 
 ## Editor State Model
 
-`@ggez/anim-editor-core` uses an explicit external store instead of React state or Zustand:
+`@blud/anim-editor-core` uses an explicit external store instead of React state or Zustand:
 
 - topic-based subscriptions
 - command-style mutations
@@ -76,8 +76,8 @@ React only subscribes to the slices it renders.
 ## Runtime API
 
 ```ts
-import { createAnimatorInstance } from "@ggez/anim-runtime";
-import { applyPoseToSkeleton, createRigFromSkeleton } from "@ggez/anim-three";
+import { createAnimatorInstance } from "@blud/anim-runtime";
+import { applyPoseToSkeleton, createRigFromSkeleton } from "@blud/anim-three";
 
 const rig = createRigFromSkeleton(skeleton);
 const animator = createAnimatorInstance({
@@ -99,7 +99,7 @@ console.log(result.rootMotion.translation, result.rootMotion.yaw);
 
 ```json
 {
-  "format": "ggez.animation.artifact",
+  "format": "blud.animation.artifact",
   "version": 1,
   "graph": {
     "version": 1,
