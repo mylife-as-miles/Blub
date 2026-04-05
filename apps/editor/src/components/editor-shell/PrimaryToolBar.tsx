@@ -30,9 +30,8 @@ export function PrimaryToolBar({
               render={
                 <Button
                   className={cn(
-                    "size-7 rounded-xl text-foreground/58 transition-colors hover:text-foreground",
-                    active &&
-                      "bg-emerald-500/18 text-emerald-300 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.18)]",
+                    "size-8 rounded-[16px] text-foreground/58 hover:text-foreground",
+                    active && "glass-button-active text-emerald-50",
                   )}
                   onClick={() => onSetToolId(tool.id)}
                   size="icon-sm"

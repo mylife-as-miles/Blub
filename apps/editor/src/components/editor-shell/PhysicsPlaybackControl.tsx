@@ -16,7 +16,7 @@ export function PhysicsPlaybackControl({
   onStop: () => void;
 }) {
   return (
-    <FloatingPanel className="flex h-11 items-center gap-1.5 px-2">
+    <FloatingPanel className="glass-panel-subtle flex h-12 items-center gap-1.5 px-2">
       <PlaybackButton active={mode === "running"} icon={Play} label="Run Physics" onClick={onPlay} />
       <PlaybackButton active={mode === "paused"} icon={Pause} label="Pause Physics" onClick={onPause} />
       <PlaybackButton active={mode === "stopped"} icon={Square} label="Stop Physics" onClick={onStop} />
@@ -42,8 +42,8 @@ function PlaybackButton({
           <Button
             aria-label={label}
             className={cn(
-              "size-7 rounded-xl text-foreground/58 transition-colors hover:text-foreground",
-              active && "bg-emerald-500/18 text-emerald-300 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.18)]"
+              "size-8 rounded-[16px] text-foreground/58 hover:text-foreground",
+              active && "glass-button-active text-emerald-50"
             )}
             onClick={onClick}
             size="icon-sm"

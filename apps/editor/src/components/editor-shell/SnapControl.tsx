@@ -22,7 +22,7 @@ export function SnapControl({
   snapEnabled: boolean;
 }) {
   return (
-    <FloatingPanel className="flex h-11 items-center gap-2.5 px-3 text-[11px] text-foreground/72">
+    <FloatingPanel className="glass-panel-subtle flex h-12 items-center gap-2.5 px-3.5 text-[11px] text-foreground/72">
       <Grid3X3 className="size-3.5 text-emerald-300" />
       <Tooltip>
         <TooltipTrigger
@@ -30,10 +30,8 @@ export function SnapControl({
             <Button
               aria-pressed={snapEnabled}
               className={cn(
-                "h-7 min-w-11 rounded-xl px-2 text-[10px] font-semibold tracking-[0.14em] uppercase",
-                snapEnabled
-                  ? "bg-emerald-500/18 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.18)]"
-                  : "text-foreground/48"
+                "h-8 min-w-12 rounded-[16px] px-2.5 text-[10px] font-semibold tracking-[0.16em] uppercase",
+                snapEnabled ? "glass-button-active text-emerald-50" : "text-foreground/48"
               )}
               onClick={() => onSetSnapEnabled(!snapEnabled)}
               size="sm"
@@ -47,16 +45,16 @@ export function SnapControl({
           <TooltipLabel label="Toggle snapping" />
         </TooltipContent>
       </Tooltip>
-      <div className="h-5 w-px bg-white/8" />
+      <div className="h-5 w-px bg-white/10" />
       <Popover>
         <PopoverTrigger
           render={
-            <Button className="h-7 rounded-xl px-2.5 text-[11px] font-medium" size="sm" variant="ghost">
+            <Button className="h-8 rounded-[16px] px-3 text-[11px] font-medium text-foreground/82" size="sm" variant="ghost">
               {formatSnapValue(currentSnapSize)}
             </Button>
           }
         />
-        <PopoverContent align="start" className="w-56 rounded-2xl bg-popover/96 p-2 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl">
+        <PopoverContent align="start" className="w-60 rounded-[24px] p-3">
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
               <span className="text-[10px] font-medium tracking-[0.18em] text-foreground/45 uppercase">Grid Snap</span>
@@ -64,9 +62,7 @@ export function SnapControl({
                 aria-pressed={snapEnabled}
                 className={cn(
                   "h-6 min-w-10 rounded-lg px-2 text-[10px] font-semibold tracking-[0.14em] uppercase",
-                  snapEnabled
-                    ? "bg-emerald-500/18 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.18)]"
-                    : "text-foreground/48"
+                  snapEnabled ? "glass-button-active text-emerald-50" : "text-foreground/48"
                 )}
                 onClick={() => onSetSnapEnabled(!snapEnabled)}
                 size="xs"
@@ -89,7 +85,7 @@ export function SnapControl({
                 <Button
                   className={cn(
                     "h-6 rounded-lg px-0 text-[10px] font-medium",
-                    snapValue === currentSnapSize && "bg-emerald-500/18 text-emerald-200"
+                    snapValue === currentSnapSize && "glass-button-active text-emerald-50"
                   )}
                   key={snapValue}
                   onClick={() => onSetSnapSize(snapValue)}

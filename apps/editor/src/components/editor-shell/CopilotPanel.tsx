@@ -50,9 +50,9 @@ export function CopilotPanel({
   const visibleMessages = session.messages.filter((m) => m.role !== "tool");
 
   return (
-    <div className="flex h-full flex-col border-l border-white/8 bg-[#08110e]/94 backdrop-blur-xl">
+    <div className="glass-panel glass-panel-strong flex h-full flex-col overflow-hidden rounded-[32px]">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-3 py-2">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-3">
         <div className="flex items-center gap-2 text-[11px] font-medium tracking-[0.18em] text-foreground/52 uppercase">
           <Bot className="size-3.5 text-emerald-400" />
           AI Vibe
@@ -82,7 +82,7 @@ export function CopilotPanel({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto px-4 py-4" ref={scrollRef}>
         {visibleMessages.length === 0 && !isActive ? (
           <div className="flex h-full items-center justify-center">
             <div className="space-y-2 text-center">
@@ -101,7 +101,7 @@ export function CopilotPanel({
             ))}
             {isActive && <ThinkingIndicator session={session} />}
             {session.status === "error" && session.error && (
-              <div className="rounded-xl bg-rose-500/10 px-2.5 py-1.5 text-[11px] text-rose-300">
+              <div className="rounded-xl border border-rose-400/14 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-300">
                 {session.error}
               </div>
             )}
@@ -110,7 +110,7 @@ export function CopilotPanel({
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-white/8 p-3">
+      <div className="shrink-0 border-t border-white/8 p-4">
         <div className="flex gap-2">
           <Input
             autoFocus
@@ -156,7 +156,7 @@ function MessageBubble({ message }: { message: CopilotMessage }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-emerald-600/20 px-2.5 py-1.5 text-xs text-foreground/88">
+        <div className="max-w-[85%] rounded-2xl rounded-br-md border border-emerald-300/14 bg-[linear-gradient(180deg,rgba(52,211,153,0.24),rgba(5,150,105,0.12)_100%)] px-3 py-2 text-xs text-foreground/92 shadow-[0_14px_30px_rgba(4,18,15,0.18)]">
           {message.content}
         </div>
       </div>
@@ -169,7 +169,7 @@ function MessageBubble({ message }: { message: CopilotMessage }) {
         <div className="flex flex-wrap gap-1">
           {message.toolCalls.map((tc) => (
             <div
-              className="flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[9px] text-emerald-300"
+              className="glass-pill flex items-center gap-1 rounded-full px-2 py-1 text-[9px] text-emerald-200"
               key={tc.id}
             >
               <Wrench className="size-2" />
@@ -188,7 +188,7 @@ function MarkdownContent({ content }: { content: string }) {
 
   return (
     <div
-      className="copilot-markdown max-w-[95%] rounded-2xl rounded-bl-md bg-white/[0.04] px-2.5 py-1.5 text-xs leading-relaxed text-foreground/72"
+      className="copilot-markdown glass-section max-w-[95%] rounded-2xl rounded-bl-md px-3 py-2 text-xs leading-relaxed text-foreground/74"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

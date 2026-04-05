@@ -28,7 +28,7 @@ export function StatusBar({
   viewModeLabel,
   viewport
 }: StatusBarProps) {
-  const snapText = viewport.grid.enabled ? `snap ${viewport.grid.snapSize}` : `snap off (${viewport.grid.snapSize})`;
+  const snapText = viewport.grid.enabled ? `snap ${viewport.grid.snapSize}` : `snap off`;
   const focusText = selectedNode
     ? `focus ${selectedNode.name} @ ${selectedNode.transform.position.x}, ${selectedNode.transform.position.y}, ${selectedNode.transform.position.z}`
     : "focus none";
@@ -44,17 +44,33 @@ export function StatusBar({
       : "click select / double-click focus / Shift-drag marquee / empty click clear";
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex h-8 items-center justify-between gap-4 overflow-hidden bg-[linear-gradient(180deg,rgba(5,11,10,0),rgba(5,11,10,0.82))] px-4 text-[10px] tracking-[0.06em] text-foreground/55">
-      <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-        <span>tool {activeToolLabel.toLowerCase()}</span>
-        {activeToolLabel === "Mesh Edit" ? (
-          <>
-            <span className="text-foreground/25">/</span>
-            <span>{meshEditMode} mode</span>
-          </>
-        ) : null}
+    <div className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex items-end justify-between gap-3">
+      <div className="glass-panel glass-panel-subtle pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-[24px] px-3 py-2.5 text-[10px] tracking-[0.08em] text-foreground/58">
+        <StatusMetric label="Tool" value={activeToolLabel} />
+        {activeToolLabel === "Mesh Edit" ? <StatusMetric label="Mode" value={meshEditMode} /> : null}
+        <StatusMetric label="View" value={viewModeLabel} />
+        <StatusMetric label="Viewport" value={activeViewportId} />
+        <StatusMetric label="Snap" value={snapText} />
+        <StatusMetric label="Grid" value={`${gridSnapValues.length} presets`} />
+        <div className="min-w-0 flex-1 truncate text-foreground/44">{focusText}</div>
+        <div className="hidden max-w-[24rem] truncate text-foreground/36 xl:block">{interactionHint}</div>
       </div>
       <JobStatus jobs={jobs} />
+    </div>
+  );
+}
+
+function StatusMetric({
+  label,
+  value
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="glass-pill flex items-center gap-1.5 rounded-full px-2.5 py-1.5">
+      <span className="text-foreground/38 uppercase">{label}</span>
+      <span className="text-foreground/72 uppercase">{value}</span>
     </div>
   );
 }

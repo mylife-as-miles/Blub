@@ -93,9 +93,8 @@ type InspectorSidebarProps = {
 
 const AXES = ["x", "y", "z"] as const;
 const RIGHT_PANEL_TAB_TRIGGER_CLASS =
-  "!h-12 !gap-0.5 !px-0 !py-1 !text-foreground/70 data-active:!bg-emerald-500/14 data-active:!text-emerald-300 [&_svg]:size-3.5 [&_svg]:shrink-0 data-active:[&_svg]:!text-emerald-300";
-const RIGHT_PANEL_TAB_LABEL_CLASS =
-  "!text-[7px] !leading-none !font-medium !tracking-normal !text-foreground/50 data-active:!text-emerald-300";
+  "glass-tabs-trigger !h-12 !gap-0.5 !px-0 !py-1.5 !text-foreground/70 [&_svg]:size-3.5 [&_svg]:shrink-0";
+const RIGHT_PANEL_TAB_LABEL_CLASS = "glass-tabs-label";
 
 function inferSkyboxFormat(file: File): SceneSettings["world"]["skybox"]["format"] {
   return file.name.toLowerCase().endsWith(".hdr") ? "hdr" : "image";
@@ -396,7 +395,7 @@ export function InspectorSidebar({
           value={activeRightPanel ?? ""}
         >
           <div className={cn("px-3 pt-3", collapsed ? "pb-3" : "pb-2")}>
-            <TabsList className="!grid !h-14 !w-full !grid-cols-7 !items-stretch rounded-xl bg-white/5 p-0.5" variant="default">
+            <TabsList className="glass-panel-subtle !grid !h-14 !w-full !grid-cols-7 !items-stretch !rounded-[22px] !p-1" variant="default">
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="scene" onClick={() => handleTabClick("scene")}>
                 <FolderTree />
                 <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Scene</span>
@@ -432,7 +431,7 @@ export function InspectorSidebar({
             <div className="flex h-full min-h-0 flex-col gap-3">
               <div className="grid grid-cols-2 gap-1.5 px-1">
                 <Button
-                  className={cn(sceneSection === "hierarchy" && "bg-emerald-500/18 text-emerald-200")}
+                  className={cn(sceneSection === "hierarchy" && "glass-button-active text-emerald-50")}
                   onClick={() => setSceneSection("hierarchy")}
                   size="xs"
                   variant="ghost"
@@ -440,7 +439,7 @@ export function InspectorSidebar({
                   Hierarchy
                 </Button>
                 <Button
-                  className={cn(sceneSection === "paths" && "bg-emerald-500/18 text-emerald-200")}
+                  className={cn(sceneSection === "paths" && "glass-button-active text-emerald-50")}
                   onClick={() => setSceneSection("paths")}
                   size="xs"
                   variant="ghost"
@@ -1242,7 +1241,7 @@ function MeshPhysicsInspector({
           }
         />
       ) : (
-        <div className="rounded-xl border border-white/8 bg-white/4 px-3 py-2 text-[11px] text-foreground/52">
+        <div className="glass-section rounded-xl px-3 py-2 text-[11px] text-foreground/52">
           Enable physics to simulate this mesh at runtime.
         </div>
       )}
@@ -1257,7 +1256,7 @@ function InstancingInspector({
 }) {
   return (
     <ToolSection title="Instancing">
-      <div className="rounded-xl border border-white/8 bg-white/4 px-3 py-2 text-[11px] text-foreground/56">
+      <div className="glass-section rounded-xl px-3 py-2 text-[11px] text-foreground/56">
         This node instances <span className="font-mono text-foreground/72">{node.data.sourceNodeId}</span>. Only transform
         values are editable here.
       </div>
@@ -1494,7 +1493,7 @@ function EnumGrid({
     <div className="grid grid-cols-3 gap-1.5">
       {entries.map((entry) => (
         <Button
-          className={cn(activeValue === entry.value && "bg-emerald-500/18 text-emerald-200")}
+          className={cn(activeValue === entry.value && "glass-button-active text-emerald-50")}
           key={entry.value}
           onClick={() => onSelect(entry.value)}
           size="xs"
@@ -1517,7 +1516,7 @@ function BooleanField({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-white/3 px-3 py-2">
+    <div className="glass-section flex items-center justify-between gap-3 rounded-xl px-3 py-2">
       <span className="text-xs text-foreground/72">{label}</span>
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-medium tracking-[0.16em] text-foreground/36 uppercase">
@@ -1579,7 +1578,7 @@ function ColorField({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/3 px-3 py-2">
+    <div className="glass-section flex items-center gap-3 rounded-xl px-3 py-2">
       <span className="text-xs text-foreground/72">{label}</span>
       <Input
         className="h-8 flex-1 rounded-lg border-white/8 bg-white/5 text-xs"
@@ -1622,10 +1621,10 @@ function InteractKeyField({
   const displayLabel = value.replace(/^Key/, "").replace(/^Digit/, "");
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-white/3 px-3 py-2">
+    <div className="glass-section flex items-center justify-between gap-3 rounded-xl px-3 py-2">
       <span className="text-xs text-foreground/72">Interact Key</span>
       <Button
-        className={cn(listening && "bg-emerald-500/18 text-emerald-200")}
+        className={cn(listening && "glass-button-active text-emerald-50")}
         onClick={() => setListening((current) => !current)}
         size="xs"
         variant="ghost"

@@ -166,8 +166,8 @@ function CreationGroup({
 }) {
   return (
     <div className="flex flex-col items-start gap-1">
-      <div className="pl-2 text-[9px] font-medium tracking-[0.2em] text-foreground/34 uppercase">{label}</div>
-      <FloatingPanel className="flex h-10 items-center gap-1 p-1.5">{children}</FloatingPanel>
+      <div className="pl-2 text-[9px] font-medium tracking-[0.22em] text-foreground/40 uppercase">{label}</div>
+      <FloatingPanel className="glass-panel-subtle flex h-11 items-center gap-1.5 p-1.5">{children}</FloatingPanel>
     </div>
   );
 }
@@ -191,8 +191,8 @@ function CreationButton({
         render={
           <Button
             className={cn(
-              "size-7 rounded-xl text-foreground/58 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-35",
-              active && "bg-emerald-500/18 text-emerald-300 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.18)]"
+              "size-8 rounded-[16px] text-foreground/58 hover:text-foreground disabled:pointer-events-none disabled:opacity-35",
+              active && "glass-button-active text-emerald-50"
             )}
             disabled={disabled}
             onClick={onClick}

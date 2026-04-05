@@ -17,8 +17,8 @@ export function JobStatus({ jobs }: JobStatusProps) {
         render={
           <button
             className={cn(
-              "pointer-events-auto inline-flex h-6 items-center gap-1.5 rounded-full px-2 text-[10px] tracking-[0.08em] transition-colors",
-              hasActiveJobs ? "text-foreground/70 hover:bg-white/5" : "text-foreground/42 hover:bg-white/5"
+              "glass-pill pointer-events-auto inline-flex h-9 items-center gap-2 rounded-full px-3 text-[10px] font-medium tracking-[0.12em] uppercase transition-[transform,background-color,color,border-color,box-shadow] duration-200 [transition-timing-function:var(--ease-out-strong)] hover:-translate-y-px",
+              hasActiveJobs ? "text-foreground/78" : "text-foreground/48"
             )}
             type="button"
           >
@@ -29,7 +29,7 @@ export function JobStatus({ jobs }: JobStatusProps) {
       />
       <PopoverContent
         align="end"
-        className="w-72 rounded-2xl bg-popover/96 p-2 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl"
+        className="w-80 rounded-[24px] p-3"
         side="top"
       >
         <div className="space-y-2">
@@ -38,7 +38,7 @@ export function JobStatus({ jobs }: JobStatusProps) {
             <div className="space-y-1">
               {activeJobs.map((job) => (
                 <div
-                  className="flex items-center justify-between rounded-xl bg-white/4 px-2.5 py-2 text-[11px] text-foreground/60"
+                  className="glass-section flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] text-foreground/60"
                   key={job.id}
                 >
                   <div className="min-w-0">
@@ -52,7 +52,7 @@ export function JobStatus({ jobs }: JobStatusProps) {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl bg-white/3 px-2.5 py-3 text-[11px] text-foreground/44">No active jobs.</div>
+            <div className="glass-section rounded-xl px-3 py-3 text-[11px] text-foreground/44">No active jobs.</div>
           )}
         </div>
       </PopoverContent>
