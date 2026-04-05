@@ -1,6 +1,7 @@
 import type { GridSnapValue } from "@blud/render-pipeline";
 import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
+import type { FloorPresetId } from "@/lib/floor-presets";
 import { AnimatePresence, motion } from "motion/react";
 import { CreationToolBar } from "@/components/editor-shell/CreationToolBar";
 import { MeshEditToolBars } from "@/components/editor-shell/MeshEditToolBars";
@@ -25,6 +26,7 @@ type ToolPaletteProps = {
   onPausePhysics: () => void;
   onImportGlb: () => void;
   onPlaceEntity: (type: EntityType) => void;
+  onPlaceFloorPreset: (presetId: FloorPresetId) => void;
   onPlaceLight: (type: LightType) => void;
   onPlaceBlockoutOpenRoom: () => void;
   onPlaceBlockoutPlatform: () => void;
@@ -69,6 +71,7 @@ export function ToolPalette({
   onPausePhysics,
   onImportGlb,
   onPlaceEntity,
+  onPlaceFloorPreset,
   onPlaceLight,
   onPlaceBlockoutOpenRoom,
   onPlaceBlockoutPlatform,
@@ -122,6 +125,7 @@ export function ToolPalette({
               disabled={physicsPlayback !== "stopped"}
               onImportGlb={onImportGlb}
               onPlaceEntity={onPlaceEntity}
+              onPlaceFloorPreset={onPlaceFloorPreset}
               onPlaceLight={onPlaceLight}
               onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
               onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}

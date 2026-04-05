@@ -17,6 +17,7 @@ import type {
 } from "@blud/shared";
 import type { PrimitiveNodeData, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
+import type { FloorPresetId } from "@/lib/floor-presets";
 import type { WorkerJob } from "@blud/workers";
 import type { ReactNode } from "react";
 import type { CopilotSession } from "@/lib/copilot/types";
@@ -99,6 +100,7 @@ type EditorShellProps = {
   onPausePhysics: () => void;
   onMeshEditToolbarAction: (action: MeshEditToolbarActionRequest["kind"]) => void;
   onPlaceEntity: (type: EntityType) => void;
+  onPlaceFloorPreset: (presetId: FloorPresetId) => void;
   onPlaceLight: (type: LightType) => void;
   onPlaceBlockoutOpenRoom: () => void;
   onPlaceBlockoutPlatform: () => void;
@@ -228,6 +230,7 @@ export function EditorShell({
   onPausePhysics,
   onMeshEditToolbarAction,
   onPlaceEntity,
+  onPlaceFloorPreset,
   onPlaceLight,
   onPlaceBlockoutOpenRoom,
   onPlaceBlockoutPlatform,
@@ -441,6 +444,7 @@ export function EditorShell({
           onMeshEditToolbarAction={onMeshEditToolbarAction}
           onImportGlb={onImportGlb}
           onPlaceEntity={onPlaceEntity}
+          onPlaceFloorPreset={onPlaceFloorPreset}
           onPlaceLight={onPlaceLight}
           onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
           onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}

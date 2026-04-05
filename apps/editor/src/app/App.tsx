@@ -109,6 +109,7 @@ import {
   createPrimitiveNodeData,
   createPrimitiveNodeLabel
 } from "@/lib/authoring";
+import { getFloorPreset, type FloorPresetId } from "@/lib/floor-presets";
 import type { ObjectGenerationResponse } from "@/lib/object-generation-contract";
 import { convertPrimitiveNodeToMeshNode } from "@/lib/primitive-to-mesh";
 import {
@@ -1065,6 +1066,37 @@ export function App() {
     enqueueWorkerJob("Blockout stairs", { task: "brush-rebuild", worker: "geometryWorker" }, 850);
   };
 
+  const handlePlaceFloorPreset = (presetId: FloorPresetId) => {
+    const preset = getFloorPreset(presetId);
+    if (!preset) return;
+
+    const target = resolvePlacementTarget();
+    const materialId = `material:floor:${preset.id}`;
+
+    const material = {
+      id: materialId,
+      name: preset.name,
+      category: "custom" as const,
+      color: preset.color,
+      roughness: preset.roughness,
+      metalness: preset.metalness
+    };
+
+    editor.execute(createUpsertMaterialCommand(editor.scene, material));
+
+    const { command, nodeId } = createPlaceBlockoutPlatformCommand(editor.scene, {
+      materialId,
+      name: `${preset.name} Floor`,
+      position: vec3(target.x, target.y, target.z),
+      size: vec3(20, 0.15, 20),
+      tags: ["floor", preset.id]
+    });
+
+    editor.execute(command);
+    editor.select([nodeId], "object");
+    enqueueWorkerJob(`${preset.name} floor`, { task: "brush-rebuild", worker: "geometryWorker" }, 650);
+  };
+
   const handleCreateBrush = () => {
     if (activeBrushShape === "custom-polygon" || activeBrushShape === "stairs" || activeBrushShape === "ramp") {
       setActiveToolId("brush");
@@ -1748,6 +1780,7 @@ export function App() {
         onPlaceBlockoutRoom={() => handlePlaceBlockoutRoom()}
         onPlaceBlockoutStairs={handlePlaceBlockoutStairs}
         onPlaceEntity={handlePlaceEntity}
+        onPlaceFloorPreset={handlePlaceFloorPreset}
         onPlaceLight={handlePlaceLight}
         onPlacePrimitiveNode={handlePlacePrimitiveNode}
         onPlaceProp={handlePlaceProp}
