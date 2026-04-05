@@ -239,7 +239,7 @@ export function DragInput({
           ref={inputRef}
           type="text"
           className={cn(
-            "h-7 min-w-0 flex-1 rounded-xl bg-white/6 px-2 text-[11px] text-foreground outline-none placeholder:text-foreground/20",
+            "h-7 min-w-0 flex-1 rounded-xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03)_100%)] px-2.5 text-[11px] text-foreground/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] outline-none placeholder:text-foreground/20",
             disabled && "cursor-not-allowed text-foreground/28"
           )}
           onChange={handleInputChange}
@@ -253,11 +253,11 @@ export function DragInput({
           ref={displayRef}
           tabIndex={disabled ? -1 : 0}
           className={cn(
-            "flex h-7 min-w-0 flex-1 select-none items-center justify-between rounded-xl bg-white/5 px-2 text-[11px] text-foreground/78 transition-colors",
+            "flex h-7 min-w-0 flex-1 select-none items-center justify-between rounded-xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02)_100%)] px-2.5 text-[11px] text-foreground/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-[background-color,border-color,color,box-shadow] duration-200 [transition-timing-function:var(--ease-out-strong)]",
             disabled 
               ? "cursor-not-allowed text-foreground/28"
-              : "cursor-ew-resize hover:bg-white/8 focus:outline-none",
-            isDragging && !disabled && "bg-emerald-500/16 text-emerald-200"
+              : "cursor-ew-resize hover:border-white/12 hover:bg-white/[0.08] focus:outline-none",
+            isDragging && !disabled && "glass-button-active text-emerald-50"
           )}
           onMouseDown={handleMouseDown}
           onClick={handleClick}

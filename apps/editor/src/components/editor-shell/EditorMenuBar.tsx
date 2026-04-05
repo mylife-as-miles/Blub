@@ -62,19 +62,24 @@ export function EditorMenuBar({
   onUndo
 }: EditorMenuBarProps) {
   return (
-    <div className="flex h-9 items-center justify-between gap-3 px-2.5">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex items-center gap-2 px-2 text-[11px] font-medium tracking-[0.22em] text-foreground/92 uppercase">
-          <TridentIcon className="size-3.5 text-emerald-400" />
-          <span>Blob</span>
+    <div className="flex h-14 items-center justify-between gap-4 px-3.5">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="glass-pill flex items-center gap-3 rounded-[20px] px-3.5 py-2">
+          <span className="flex size-7 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <TridentIcon className="size-3.5" />
+          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-[11px] font-semibold tracking-[0.24em] text-foreground/96 uppercase">Blob</span>
+            <span className="mt-1 text-[9px] tracking-[0.2em] text-foreground/42 uppercase">World Editor</span>
+          </div>
         </div>
 
-        <Menubar className="h-7 rounded-xl bg-transparent p-0 text-[11px] shadow-none">
+        <Menubar className="h-10 rounded-[20px] bg-transparent p-0 text-[11px] shadow-none">
           <MenubarMenu>
-            <MenubarTrigger className="h-7 rounded-lg px-2.5 text-[11px] text-foreground/70 hover:bg-white/5 hover:text-foreground">
+            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
               File
             </MenubarTrigger>
-            <MenubarContent className="min-w-44 rounded-xl bg-popover/96 p-1.5 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl">
+            <MenubarContent className="min-w-44 p-1.5">
               <MenubarItem className="rounded-lg text-xs" onClick={onNewFile}>
                 New File
               </MenubarItem>
@@ -98,10 +103,10 @@ export function EditorMenuBar({
           </MenubarMenu>
 
           <MenubarMenu>
-            <MenubarTrigger className="h-7 rounded-lg px-2.5 text-[11px] text-foreground/70 hover:bg-white/5 hover:text-foreground">
+            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
               Edit
             </MenubarTrigger>
-            <MenubarContent className="min-w-44 rounded-xl bg-popover/96 p-1.5 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl">
+            <MenubarContent className="min-w-44 p-1.5">
               <MenubarItem className="rounded-lg text-xs" disabled={!canUndo} onClick={onUndo}>
                 Undo
                 <MenubarShortcut>Cmd+Z</MenubarShortcut>
@@ -129,10 +134,10 @@ export function EditorMenuBar({
           </MenubarMenu>
 
           <MenubarMenu>
-            <MenubarTrigger className="h-7 rounded-lg px-2.5 text-[11px] text-foreground/70 hover:bg-white/5 hover:text-foreground">
+            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
               Render
             </MenubarTrigger>
-            <MenubarContent className="min-w-44 rounded-xl bg-popover/96 p-1.5 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl">
+            <MenubarContent className="min-w-44 p-1.5">
               <MenubarItem className="rounded-lg text-xs" onClick={onFocusSelection}>
                 Focus Selection
               </MenubarItem>
@@ -140,10 +145,10 @@ export function EditorMenuBar({
           </MenubarMenu>
 
           <MenubarMenu>
-            <MenubarTrigger className="h-7 rounded-lg px-2.5 text-[11px] text-foreground/70 hover:bg-white/5 hover:text-foreground">
+            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
               View
             </MenubarTrigger>
-            <MenubarContent className="min-w-48 rounded-xl bg-popover/96 p-1.5 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl">
+            <MenubarContent className="min-w-48 p-1.5">
               <MenubarItem className="rounded-lg text-xs" onClick={onToggleLogicViewer}>
                 {logicViewerOpen ? "Hide" : "Show"} Logic Graph
                 <MenubarShortcut>Cmd+Shift+L</MenubarShortcut>
@@ -156,10 +161,10 @@ export function EditorMenuBar({
           </MenubarMenu>
 
           <MenubarMenu>
-            <MenubarTrigger className="h-7 rounded-lg px-2.5 text-[11px] text-foreground/70 hover:bg-white/5 hover:text-foreground">
+            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
               Help
             </MenubarTrigger>
-            <MenubarContent className="min-w-52 rounded-xl bg-popover/96 p-1.5 shadow-[0_18px_48px_rgba(4,12,10,0.46)] backdrop-blur-xl">
+            <MenubarContent className="min-w-52 p-1.5">
               <MenubarItem className="rounded-lg text-xs">
                 Click to select
                 <MenubarShortcut>Mouse 1</MenubarShortcut>
@@ -177,39 +182,41 @@ export function EditorMenuBar({
         </Menubar>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3 px-2">
+      <div className="flex shrink-0 items-center gap-2">
         {gameConnectionControl}
-        <Button
-          aria-label={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
-          className="text-[11px] text-foreground/65 hover:text-foreground flex flex-row gap-1 px-2"
-          onClick={onToggleViewportQuality}
-          size="icon-xs"
-          title={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
-          variant="ghost"
-        >
-          <Gauge className="size-3.5" />
-          {viewportQuality.toFixed(2)}
-        </Button>
-        <Button
-          aria-label="Logic Graph"
-          className={`size-7 rounded-lg ${logicViewerOpen ? "text-emerald-400 hover:text-emerald-300" : "text-foreground/65 hover:text-foreground"}`}
-          onClick={onToggleLogicViewer}
-          title="Logic Graph (Cmd+Shift+L)"
-          size="icon-sm"
-          variant="ghost"
-        >
-          <Cable className="size-3.5" />
-        </Button>
-        <Button
-          aria-label="AI Vibe"
-          className={`size-7 rounded-lg ${copilotOpen ? "text-emerald-400 hover:text-emerald-300" : "text-foreground/65 hover:text-foreground"}`}
-          onClick={onToggleCopilot}
-          title="AI Vibe (Cmd+L)"
-          size="icon-sm"
-          variant="ghost"
-        >
-          <Bot className="size-3.5" />
-        </Button>
+        <div className="glass-pill flex items-center gap-1.5 rounded-[20px] px-1.5 py-1.5">
+          <Button
+            aria-label={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
+            className="min-w-[4.75rem] justify-center gap-1.5 px-3 text-[11px] text-foreground/72 hover:text-foreground"
+            onClick={onToggleViewportQuality}
+            size="sm"
+            title={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
+            variant="ghost"
+          >
+            <Gauge className="size-3.5" />
+            {viewportQuality.toFixed(2)}
+          </Button>
+          <Button
+            aria-label="Logic Graph"
+            className={logicViewerOpen ? "glass-button-active size-8 rounded-[16px] text-emerald-50" : "size-8 rounded-[16px] text-foreground/65 hover:text-foreground"}
+            onClick={onToggleLogicViewer}
+            title="Logic Graph (Cmd+Shift+L)"
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Cable className="size-3.5" />
+          </Button>
+          <Button
+            aria-label="AI Vibe"
+            className={copilotOpen ? "glass-button-active size-8 rounded-[16px] text-emerald-50" : "size-8 rounded-[16px] text-foreground/65 hover:text-foreground"}
+            onClick={onToggleCopilot}
+            title="AI Vibe (Cmd+L)"
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Bot className="size-3.5" />
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -388,40 +388,42 @@ export function EditorShell({
   };
 
   return (
-    <div className="flex h-screen flex-col bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_24%),linear-gradient(180deg,#08100d_0%,#050807_100%)] text-foreground">
-      <header className="shrink-0 bg-black/18 backdrop-blur-xl">
-        <EditorMenuBar
-          canRedo={canRedo}
-          canUndo={canUndo}
-          copilotOpen={copilotPanelOpen}
-          gameConnectionControl={gameConnectionControl}
-          logicViewerOpen={logicViewerOpen}
-          onClearSelection={onClearSelection}
-          onCreateBrush={onCreateBrush}
-          onDeleteSelection={onDeleteSelection}
-          onDuplicateSelection={onDuplicateSelection}
-          onGroupSelection={onGroupSelection}
-          onExportEngine={onExportEngine}
-          onExportGltf={onExportGltf}
-          onFocusSelection={() => {
-            if (selectedObjectId) {
-              onFocusNode(selectedObjectId);
-            }
-          }}
-          onLoadWhmap={onLoadWhmap}
-          onNewFile={onNewFile}
-          onRedo={onRedo}
-          onSaveWhmap={onSaveWhmap}
-          onToggleCopilot={onToggleCopilot}
-          onToggleLogicViewer={onToggleLogicViewer}
-          onToggleViewportQuality={onToggleViewportQuality}
-          onUndo={onUndo}
-          viewportQuality={viewportQuality}
-        />
+    <div className="editor-shell flex h-screen flex-col text-foreground">
+      <header className="relative z-20 shrink-0 px-3 pt-3">
+        <div className="glass-panel glass-panel-strong rounded-[28px]">
+          <EditorMenuBar
+            canRedo={canRedo}
+            canUndo={canUndo}
+            copilotOpen={copilotPanelOpen}
+            gameConnectionControl={gameConnectionControl}
+            logicViewerOpen={logicViewerOpen}
+            onClearSelection={onClearSelection}
+            onCreateBrush={onCreateBrush}
+            onDeleteSelection={onDeleteSelection}
+            onDuplicateSelection={onDuplicateSelection}
+            onGroupSelection={onGroupSelection}
+            onExportEngine={onExportEngine}
+            onExportGltf={onExportGltf}
+            onFocusSelection={() => {
+              if (selectedObjectId) {
+                onFocusNode(selectedObjectId);
+              }
+            }}
+            onLoadWhmap={onLoadWhmap}
+            onNewFile={onNewFile}
+            onRedo={onRedo}
+            onSaveWhmap={onSaveWhmap}
+            onToggleCopilot={onToggleCopilot}
+            onToggleLogicViewer={onToggleLogicViewer}
+            onToggleViewportQuality={onToggleViewportQuality}
+            onUndo={onUndo}
+            viewportQuality={viewportQuality}
+          />
+        </div>
       </header>
 
-      <main className="relative min-h-0 flex-1 flex">
-        <div className="relative min-w-0 flex-1">
+      <main className="relative flex min-h-0 flex-1 gap-3 px-3 pb-3 pt-2">
+        <div className="editor-stage relative min-w-0 flex-1 rounded-[32px]">
           <div className="absolute inset-0">
             <ViewportLayout renderViewportPane={renderViewportPane} viewMode={viewMode} />
           </div>
@@ -571,7 +573,7 @@ export function EditorShell({
         </div>
 
         {copilotPanelOpen && (
-          <div className="w-80 shrink-0">
+          <div className="w-[22rem] shrink-0">
             <CopilotPanel
               isConfigured={copilot.isConfigured}
               onAbort={copilot.abort}
@@ -657,9 +659,11 @@ function ViewportPaneFrame({
 }) {
   return (
     <div
-      className={cn("relative size-full overflow-hidden bg-[#071016]")}
+      className={cn("relative size-full overflow-hidden bg-[#040b10]")}
     >
-      <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-full bg-black/36 px-2.5 py-1 text-[10px] font-medium tracking-[0.18em] text-foreground/72 uppercase">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(52,211,153,0.08),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0)_22%)]" />
+      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/6" />
+      <div className="glass-pill pointer-events-none absolute left-4 top-4 z-20 rounded-full px-3 py-1.5 text-[10px] font-medium tracking-[0.22em] text-foreground/72 uppercase">
         {label}
       </div>
       {children}
@@ -670,7 +674,7 @@ function ViewportPaneFrame({
 function ViewportSplitHandle({ direction = "vertical" }: { direction?: "horizontal" | "vertical" }) {
   return (
     <ResizableHandle
-      className="bg-white/8 after:bg-transparent hover:bg-emerald-400/22 data-[dragging]:bg-emerald-400/28"
+      className="bg-white/[0.04] after:bg-white/[0.08] hover:bg-emerald-400/14 data-[dragging]:bg-emerald-400/20"
       withHandle={direction === "vertical"}
     />
   );

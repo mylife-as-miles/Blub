@@ -6,7 +6,7 @@ export const FloatingPanel = forwardRef<HTMLDivElement, ComponentProps<"div">>(
     return (
       <div
         className={cn(
-          "pointer-events-auto rounded-2xl bg-background/74 shadow-[0_18px_60px_rgba(4,12,10,0.42)] backdrop-blur-xl",
+          "glass-panel pointer-events-auto rounded-[22px]",
           className
         )}
         ref={ref}
