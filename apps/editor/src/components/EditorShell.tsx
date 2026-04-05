@@ -388,9 +388,9 @@ export function EditorShell({
   };
 
   return (
-    <div className="editor-shell flex h-screen flex-col text-foreground">
-      <header className="relative z-20 shrink-0 px-3 pt-3">
-        <div className="glass-panel glass-panel-strong rounded-[28px]">
+    <div className="editor-shell flex flex-col text-foreground" style={{ height: "100dvh" }}>
+      <header className="relative z-20 shrink-0 px-2 pt-2 sm:px-3 sm:pt-3">
+        <div className="glass-panel glass-panel-strong rounded-[20px] sm:rounded-[28px]">
           <EditorMenuBar
             canRedo={canRedo}
             canUndo={canUndo}
@@ -422,7 +422,7 @@ export function EditorShell({
         </div>
       </header>
 
-      <main className="relative flex min-h-0 flex-1 gap-3 px-3 pb-3 pt-2">
+      <main className="relative flex min-h-0 flex-1 gap-2 px-2 pb-2 pt-1.5 sm:gap-3 sm:px-3 sm:pb-3 sm:pt-2">
         <div className="editor-stage relative min-w-0 flex-1 rounded-[32px]">
           <div className="absolute inset-0">
             <ViewportLayout renderViewportPane={renderViewportPane} viewMode={viewMode} />
@@ -573,7 +573,7 @@ export function EditorShell({
         </div>
 
         {copilotPanelOpen && (
-          <div className="w-[22rem] shrink-0">
+          <div className="w-64 shrink-0 sm:w-80 lg:w-[22rem]">
             <CopilotPanel
               isConfigured={copilot.isConfigured}
               onAbort={copilot.abort}

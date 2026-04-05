@@ -44,15 +44,15 @@ export function StatusBar({
       : "click select / double-click focus / Shift-drag marquee / empty click clear";
 
   return (
-    <div className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex items-end justify-between gap-3">
-      <div className="glass-panel glass-panel-subtle pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-[24px] px-3 py-2.5 text-[10px] tracking-[0.08em] text-foreground/58">
+    <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex items-end justify-between gap-2 sm:inset-x-4 sm:bottom-4 sm:gap-3">
+      <div className="glass-panel glass-panel-subtle pointer-events-auto flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto rounded-[24px] px-2.5 py-2 text-[10px] tracking-[0.08em] text-foreground/58 sm:gap-2 sm:px-3 sm:py-2.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <StatusMetric label="Tool" value={activeToolLabel} />
         {activeToolLabel === "Mesh Edit" ? <StatusMetric label="Mode" value={meshEditMode} /> : null}
-        <StatusMetric label="View" value={viewModeLabel} />
-        <StatusMetric label="Viewport" value={activeViewportId} />
+        <StatusMetric className="hidden md:flex" label="View" value={viewModeLabel} />
+        <StatusMetric className="hidden lg:flex" label="Viewport" value={activeViewportId} />
         <StatusMetric label="Snap" value={snapText} />
-        <StatusMetric label="Grid" value={`${gridSnapValues.length} presets`} />
-        <div className="min-w-0 flex-1 truncate text-foreground/44">{focusText}</div>
+        <StatusMetric className="hidden md:flex" label="Grid" value={`${gridSnapValues.length} presets`} />
+        <div className="hidden min-w-0 flex-1 truncate text-foreground/44 sm:block">{focusText}</div>
         <div className="hidden max-w-[24rem] truncate text-foreground/36 xl:block">{interactionHint}</div>
       </div>
       <JobStatus jobs={jobs} />
@@ -61,14 +61,16 @@ export function StatusBar({
 }
 
 function StatusMetric({
+  className,
   label,
   value
 }: {
+  className?: string;
   label: string;
   value: string;
 }) {
   return (
-    <div className="glass-pill flex items-center gap-1.5 rounded-full px-2.5 py-1.5">
+    <div className={`glass-pill flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5${className ? ` ${className}` : ""}`}>
       <span className="text-foreground/38 uppercase">{label}</span>
       <span className="text-foreground/72 uppercase">{value}</span>
     </div>

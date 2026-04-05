@@ -100,8 +100,8 @@ export function ToolPalette({
   viewMode
 }: ToolPaletteProps) {
   return (
-    <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 flex-col items-center gap-2">
-      <div className="flex items-stretch gap-3">
+    <div className="pointer-events-none absolute left-1/2 top-3 z-20 flex w-[calc(100%-2rem)] max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col items-center gap-2 sm:top-4 sm:w-auto sm:max-w-none">
+      <div className="flex w-full items-stretch gap-1.5 overflow-x-auto sm:w-auto sm:gap-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
         <PrimaryToolBar activeToolId={activeToolId} onSetToolId={onSetToolId} tools={tools} />
         <SnapControl currentSnapSize={currentSnapSize} gridSnapValues={gridSnapValues} onSetSnapEnabled={onSetSnapEnabled} onSetSnapSize={onSetSnapSize} snapEnabled={snapEnabled} />

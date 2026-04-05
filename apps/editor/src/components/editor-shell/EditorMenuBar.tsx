@@ -62,21 +62,23 @@ export function EditorMenuBar({
   onUndo
 }: EditorMenuBarProps) {
   return (
-    <div className="flex h-14 items-center justify-between gap-4 px-3.5">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="glass-pill flex items-center gap-3 rounded-[20px] px-3.5 py-2">
+    <div className="flex h-12 items-center justify-between gap-2 px-3 sm:h-14 sm:gap-4 sm:px-3.5">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <div className="glass-pill flex items-center gap-2 rounded-[20px] px-2.5 py-1.5 sm:gap-3 sm:px-3.5 sm:py-2">
           <span className="flex size-7 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <BlobIcon className="size-3.5" />
           </span>
-          <div className="flex flex-col leading-none">
+          <div className="hidden flex-col leading-none sm:flex">
             <span className="text-[11px] font-semibold tracking-[0.24em] text-foreground/96 uppercase">Blob</span>
             <span className="mt-1 text-[9px] tracking-[0.2em] text-foreground/42 uppercase">World Editor</span>
           </div>
+          <span className="text-[11px] font-semibold tracking-[0.24em] text-foreground/96 uppercase sm:hidden">Blob</span>
         </div>
 
+        <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Menubar className="h-10 rounded-[20px] bg-transparent p-0 text-[11px] shadow-none">
           <MenubarMenu>
-            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
+            <MenubarTrigger className="h-8 rounded-[16px] px-2.5 text-[11px] sm:px-3">
               File
             </MenubarTrigger>
             <MenubarContent className="min-w-44 p-1.5">
@@ -180,6 +182,7 @@ export function EditorMenuBar({
             </MenubarContent>
           </MenubarMenu>
         </Menubar>
+        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
@@ -187,7 +190,7 @@ export function EditorMenuBar({
         <div className="glass-pill flex items-center gap-1.5 rounded-[20px] px-1.5 py-1.5">
           <Button
             aria-label={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
-            className="min-w-[4.75rem] justify-center gap-1.5 px-3 text-[11px] text-foreground/72 hover:text-foreground"
+            className="hidden min-w-[4.75rem] justify-center gap-1.5 px-3 text-[11px] text-foreground/72 hover:text-foreground sm:flex"
             onClick={onToggleViewportQuality}
             size="sm"
             title={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
