@@ -66,7 +66,7 @@ export function EditorMenuBar({
       <div className="flex min-w-0 items-center gap-2.5">
         <div className="flex items-center gap-2 px-2 text-[11px] font-medium tracking-[0.22em] text-foreground/92 uppercase">
           <TridentIcon className="size-3.5 text-emerald-400" />
-          <span>Trident</span>
+          <span>Blob</span>
         </div>
 
         <Menubar className="h-7 rounded-xl bg-transparent p-0 text-[11px] shadow-none">
