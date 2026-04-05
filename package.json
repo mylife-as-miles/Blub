@@ -1,5 +1,5 @@
 {
-  "name": "ggez-gaming",
+  "name": "blud-gaming",
   "private": true,
   "license": "MIT",
   "workspaces": [
@@ -7,17 +7,17 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @ggez/editor",
-    "dev:all": "npm run dev -w @ggez/editor -w @ggez/three-vanilla-playground",
-    "start": "npm run dev -w @ggez/orchestrator",
+    "dev": "npm run dev -w @blud/editor",
+    "dev:all": "npm run dev -w @blud/editor -w @blud/three-vanilla-playground",
+    "start": "npm run dev -w @blud/orchestrator",
     "changeset": "changeset",
-    "build": "npm run build -w @ggez/editor",
-    "build:orchestrator": "npm run build -w @ggez/orchestrator",
-    "typecheck": "npm run typecheck -w @ggez/editor",
-    "typecheck:orchestrator": "npm run typecheck -w @ggez/orchestrator",
-    "dev:website": "npm run dev -w @ggez/website",
-    "build:website": "npm run build -w @ggez/website",
-    "typecheck:website": "npm run typecheck -w @ggez/website",
+    "build": "npm run build -w @blud/editor",
+    "build:orchestrator": "npm run build -w @blud/orchestrator",
+    "typecheck": "npm run typecheck -w @blud/editor",
+    "typecheck:orchestrator": "npm run typecheck -w @blud/orchestrator",
+    "dev:website": "npm run dev -w @blud/website",
+    "build:website": "npm run build -w @blud/website",
+    "typecheck:website": "npm run typecheck -w @blud/website",
     "dev:animation-editor": "npm run dev -w animation-editor",
     "build:animation-editor": "npm run build -w animation-editor",
     "typecheck:animation-editor": "tsc -p apps/animation-editor/tsconfig.json --noEmit",
@@ -25,9 +25,9 @@
     "version:packages": "changeset version",
     "publish:packages:dry-run": "node ./scripts/release-packages.mjs publish --dry-run",
     "publish:packages": "node ./scripts/release-packages.mjs publish",
-    "dev:three-vanilla": "npm run dev -w @ggez/three-vanilla-playground",
-    "build:three-vanilla": "npm run build -w @ggez/three-vanilla-playground",
-    "typecheck:three-vanilla": "npm run typecheck -w @ggez/three-vanilla-playground"
+    "dev:three-vanilla": "npm run dev -w @blud/three-vanilla-playground",
+    "build:three-vanilla": "npm run build -w @blud/three-vanilla-playground",
+    "typecheck:three-vanilla": "npm run typecheck -w @blud/three-vanilla-playground"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
