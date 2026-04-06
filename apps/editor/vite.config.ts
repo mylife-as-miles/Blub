@@ -6,6 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import { createCodexBridgePlugin } from "./server/codex-bridge-plugin";
 import { createEditorGameSyncPlugin } from "./server/editor-game-sync-plugin";
+import { createElevenLabsApiPlugin } from "./server/elevenlabs-api";
 import { createObjectGenerationApiPlugin } from "./server/object-generation-api";
 import { createTextureGenerationApiPlugin } from "./server/texture-generation-api";
 
@@ -48,6 +49,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       createCodexBridgePlugin(),
       createEditorGameSyncPlugin(),
+      createElevenLabsApiPlugin(),
       createObjectGenerationApiPlugin(),
       createTextureGenerationApiPlugin()
     ],

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Send, Square, Trash2, Wrench, X } from "lucide-react";
+import { Bot, Loader2, Send, Square, Trash2, Volume2, VolumeX, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CopilotSettingsDialog } from "@/components/editor-shell/CopilotSettingsDialog";
 import type { CopilotMessage, CopilotSession } from "@/lib/copilot/types";
 import { cn } from "@/lib/utils";
+import { useTts } from "@/hooks/useTts";
 
 type CopilotPanelProps = {
   onClose: () => void;
@@ -178,8 +179,33 @@ function MessageBubble({ message }: { message: CopilotMessage }) {
           ))}
         </div>
       )}
-      {message.content && <MarkdownContent content={message.content} />}
+      {message.content && (
+        <div className="group relative">
+          <MarkdownContent content={message.content} />
+          <SpeakButton text={message.content} />
+        </div>
+      )}
     </div>
+  );
+}
+
+function SpeakButton({ text }: { text: string }) {
+  const { speak, speaking, cancel } = useTts();
+
+  return (
+    <button
+      aria-label={speaking ? "Stop speaking" : "Read aloud"}
+      className={cn(
+        "absolute -bottom-1 right-1 flex size-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100",
+        "text-foreground/40 hover:text-emerald-400",
+        speaking && "opacity-100 text-emerald-400"
+      )}
+      onClick={() => (speaking ? cancel() : speak(text))}
+      title={speaking ? "Stop" : "Read aloud"}
+      type="button"
+    >
+      {speaking ? <VolumeX className="size-3" /> : <Volume2 className="size-3" />}
+    </button>
   );
 }
 
