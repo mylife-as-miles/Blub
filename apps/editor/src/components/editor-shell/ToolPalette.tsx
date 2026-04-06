@@ -2,9 +2,12 @@ import type { GridSnapValue } from "@blud/render-pipeline";
 import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
+import { useState } from "react";
+import { ChevronDown, Layers } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { CreationToolBar } from "@/components/editor-shell/CreationToolBar";
 import { FloorPresetsPanel } from "@/components/editor-shell/FloorPresetsPanel";
+import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { MeshEditToolBars } from "@/components/editor-shell/MeshEditToolBars";
 import { PhysicsPlaybackControl } from "@/components/editor-shell/PhysicsPlaybackControl";
 import { PrimaryToolBar } from "@/components/editor-shell/PrimaryToolBar";
@@ -13,6 +16,7 @@ import { ViewModeControl } from "@/components/editor-shell/ViewModeControl";
 import type { MeshEditMode } from "@/viewport/editing";
 import type { MeshEditToolbarActionRequest } from "@/viewport/types";
 import type { ViewModeId } from "@/viewport/viewports";
+import { cn } from "@/lib/utils";
 
 type ToolPaletteProps = {
   activeBrushShape: BrushShape;
@@ -103,78 +107,114 @@ export function ToolPalette({
   tools,
   viewMode
 }: ToolPaletteProps) {
+  const [open, setOpen] = useState(true);
+
   return (
-    <div className="pointer-events-none absolute left-1/2 top-3 z-30 flex w-[calc(100%-2rem)] max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col items-center gap-2 sm:top-4 sm:w-auto sm:max-w-none">
-      <div className="flex w-full items-stretch gap-1.5 overflow-x-auto sm:w-auto sm:gap-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
-        <PrimaryToolBar activeToolId={activeToolId} onSetToolId={onSetToolId} tools={tools} />
-        <SnapControl currentSnapSize={currentSnapSize} gridSnapValues={gridSnapValues} onSetSnapEnabled={onSetSnapEnabled} onSetSnapSize={onSetSnapSize} snapEnabled={snapEnabled} />
-        <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
-        <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
-      </div>
+    <div className="pointer-events-none absolute left-1/2 top-3 z-30 flex -translate-x-1/2 flex-col items-center gap-2 sm:top-4">
+
+      {/* Toggle button — always visible */}
+      <FloatingPanel className="glass-panel-subtle flex h-11 items-center p-1">
+        <button
+          className="pointer-events-auto flex items-center gap-1.5 rounded-[16px] px-3 py-1.5 text-[11px] font-medium text-foreground/70 transition-colors hover:text-foreground"
+          onClick={() => setOpen((v) => !v)}
+          type="button"
+        >
+          <Layers className="size-3.5 text-emerald-400/70" />
+          <span>Tools</span>
+          <ChevronDown className={cn("size-3 transition-transform duration-200", open && "rotate-180")} />
+        </button>
+      </FloatingPanel>
+
+      {/* Collapsible palette content */}
       <AnimatePresence initial={false}>
-        {activeToolId === "brush" ? (
+        {open && (
           <motion.div
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.97 }}
-            initial={{ opacity: 0, y: -10, scale: 0.97 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-2"
+            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
           >
-            <CreationToolBar
-              activeBrushShape={activeBrushShape}
-              aiModelPlacementActive={aiModelPlacementActive}
-              activeToolId={activeToolId}
-              disabled={physicsPlayback !== "stopped"}
-              onImportGlb={onImportGlb}
-              onPlaceEntity={onPlaceEntity}
-              onPlaceLight={onPlaceLight}
-              onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
-              onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
-              onPlaceBlockoutRoom={onPlaceBlockoutRoom}
-              onPlaceBlockoutStairs={onPlaceBlockoutStairs}
-              onPlaceProp={onPlaceProp}
-              onStartAiModelPlacement={onStartAiModelPlacement}
-              onSelectBrushShape={onSelectBrushShape}
-            />
+            {/* Main toolbar row */}
+            <div className="flex max-w-[calc(100vw-2rem)] items-stretch gap-1.5 overflow-x-auto sm:w-auto sm:gap-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
+              <PrimaryToolBar activeToolId={activeToolId} onSetToolId={onSetToolId} tools={tools} />
+              <SnapControl currentSnapSize={currentSnapSize} gridSnapValues={gridSnapValues} onSetSnapEnabled={onSetSnapEnabled} onSetSnapSize={onSetSnapSize} snapEnabled={snapEnabled} />
+              <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
+              <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
+            </div>
+
+            {/* Creation toolbar — brush mode */}
+            <AnimatePresence initial={false}>
+              {activeToolId === "brush" ? (
+                <motion.div
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <div className="max-w-[calc(100vw-2rem)] overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <CreationToolBar
+                      activeBrushShape={activeBrushShape}
+                      aiModelPlacementActive={aiModelPlacementActive}
+                      activeToolId={activeToolId}
+                      disabled={physicsPlayback !== "stopped"}
+                      onImportGlb={onImportGlb}
+                      onPlaceEntity={onPlaceEntity}
+                      onPlaceLight={onPlaceLight}
+                      onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
+                      onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
+                      onPlaceBlockoutRoom={onPlaceBlockoutRoom}
+                      onPlaceBlockoutStairs={onPlaceBlockoutStairs}
+                      onPlaceProp={onPlaceProp}
+                      onStartAiModelPlacement={onStartAiModelPlacement}
+                      onSelectBrushShape={onSelectBrushShape}
+                    />
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+
+            {/* Mesh-edit toolbar */}
+            <AnimatePresence initial={false}>
+              {activeToolId === "mesh-edit" ? (
+                <motion.div
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <MeshEditToolBars
+                    onArc={() => onMeshEditToolbarAction("arc")}
+                    onBevel={() => onMeshEditToolbarAction("bevel")}
+                    onCut={() => onMeshEditToolbarAction("cut")}
+                    onDelete={() => onMeshEditToolbarAction("delete")}
+                    onExtrude={() => onMeshEditToolbarAction("extrude")}
+                    meshEditMode={meshEditMode}
+                    onFillFace={() => onMeshEditToolbarAction("fill-face")}
+                    onDeflate={() => onMeshEditToolbarAction("deflate")}
+                    onInflate={() => onMeshEditToolbarAction("inflate")}
+                    onInvertNormals={() => onMeshEditToolbarAction("invert-normals")}
+                    onLowerTop={onLowerTop}
+                    onMerge={() => onMeshEditToolbarAction("merge")}
+                    onRaiseTop={onRaiseTop}
+                    onSetSculptBrushRadius={onSetSculptBrushRadius}
+                    onSetSculptBrushStrength={onSetSculptBrushStrength}
+                    onSetMeshEditMode={onSetMeshEditMode}
+                    onSubdivide={() => onMeshEditToolbarAction("subdivide")}
+                    onSetTransformMode={onSetTransformMode}
+                    sculptMode={sculptMode}
+                    sculptBrushRadius={sculptBrushRadius}
+                    sculptBrushStrength={sculptBrushStrength}
+                    selectedGeometry={selectedGeometry}
+                    selectedMesh={selectedMesh}
+                    transformMode={transformMode}
+                  />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </motion.div>
-        ) : null}
-      </AnimatePresence>
-      <AnimatePresence initial={false}>
-        {activeToolId === "mesh-edit" ? (
-          <motion.div
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.97 }}
-            initial={{ opacity: 0, y: -10, scale: 0.97 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <MeshEditToolBars
-              onArc={() => onMeshEditToolbarAction("arc")}
-              onBevel={() => onMeshEditToolbarAction("bevel")}
-              onCut={() => onMeshEditToolbarAction("cut")}
-              onDelete={() => onMeshEditToolbarAction("delete")}
-              onExtrude={() => onMeshEditToolbarAction("extrude")}
-              meshEditMode={meshEditMode}
-              onFillFace={() => onMeshEditToolbarAction("fill-face")}
-              onDeflate={() => onMeshEditToolbarAction("deflate")}
-              onInflate={() => onMeshEditToolbarAction("inflate")}
-              onInvertNormals={() => onMeshEditToolbarAction("invert-normals")}
-              onLowerTop={onLowerTop}
-              onMerge={() => onMeshEditToolbarAction("merge")}
-              onRaiseTop={onRaiseTop}
-              onSetSculptBrushRadius={onSetSculptBrushRadius}
-              onSetSculptBrushStrength={onSetSculptBrushStrength}
-              onSetMeshEditMode={onSetMeshEditMode}
-              onSubdivide={() => onMeshEditToolbarAction("subdivide")}
-              onSetTransformMode={onSetTransformMode}
-              sculptMode={sculptMode}
-              sculptBrushRadius={sculptBrushRadius}
-              sculptBrushStrength={sculptBrushStrength}
-              selectedGeometry={selectedGeometry}
-              selectedMesh={selectedMesh}
-              transformMode={transformMode}
-            />
-          </motion.div>
-        ) : null}
+        )}
       </AnimatePresence>
     </div>
   );
