@@ -158,7 +158,9 @@ export function CreationToolBar({
         <CreationButton disabled={disabled} icon={StairBlockoutIcon} label="Blockout Stairs" onClick={onPlaceBlockoutStairs} />
       </CreationGroup>
 
-      <FloorPresetsPanel disabled={disabled} onPlaceFloorPreset={onPlaceFloorPreset} />
+      <CreationGroup label="Floors">
+        <FloorPresetsPanel disabled={disabled} onPlaceFloorPreset={onPlaceFloorPreset} />
+      </CreationGroup>
     </div>
   );
 }
