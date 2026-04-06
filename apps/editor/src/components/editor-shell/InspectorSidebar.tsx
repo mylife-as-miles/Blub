@@ -386,16 +386,13 @@ export function InspectorSidebar({
 
   return (
     <div className={cn(
-      "pointer-events-none absolute z-10 flex flex-col gap-2",
-      "bottom-2 left-2 w-[calc(100%-1rem)] max-h-[38vh]",
-      "sm:bottom-auto sm:left-4 sm:top-4 sm:z-20 sm:max-h-[calc(100%-7rem)]",
-      sidebarOpen
-        ? "sm:w-72 md:w-80 lg:w-88"
-        : "sm:w-auto",
-      !sidebarOpen ? "h-auto" : collapsed ? "h-auto" : "h-[clamp(18rem,45vh,42rem)] sm:h-[clamp(26rem,58vh,42rem)]"
+      "pointer-events-none absolute z-20 flex flex-col gap-2",
+      /* Always a left sidebar — from just below menu bar to near bottom */
+      "left-2 top-16",
+      sidebarOpen ? ["bottom-2 w-56 sm:w-72 md:w-80 lg:w-88"] : "w-auto",
     )}>
-      {/* Collapse toggle — always visible, sticks to top of the sidebar area */}
-      <div className="hidden sm:flex sm:justify-start">
+      {/* Collapse toggle — always visible at all screen sizes */}
+      <div className="flex justify-start">
         <button
           className="pointer-events-auto flex size-8 items-center justify-center rounded-full glass-panel text-foreground/60 hover:text-foreground transition-colors duration-150"
           onClick={() => setSidebarOpen((v) => !v)}
@@ -406,16 +403,17 @@ export function InspectorSidebar({
         </button>
       </div>
 
-      {/* Panel body — hidden when collapsed on desktop */}
+      {/* Panel body */}
       {sidebarOpen && (
-      <FloatingPanel className="flex min-h-0 w-full flex-col overflow-hidden">
+      <FloatingPanel className="flex min-h-0 flex-1 w-full flex-col overflow-hidden">
         <Tabs
           className="flex min-h-0 flex-1 flex-col gap-0"
           onValueChange={(value) => onChangeRightPanel(value as RightPanelId)}
           value={activeRightPanel ?? ""}
         >
-          <div className={cn("px-3 pt-3", collapsed ? "pb-3" : "pb-2")}>
-            <TabsList className="glass-panel-subtle !grid !h-14 !w-full !grid-cols-7 !items-stretch !rounded-[22px] !p-1" variant="default">
+          <div className={cn("px-2 pt-2 sm:px-3 sm:pt-3", collapsed ? "pb-2 sm:pb-3" : "pb-1 sm:pb-2")}>
+            <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsList className="glass-panel-subtle !grid !h-12 sm:!h-14 !min-w-max !w-full !grid-cols-7 !items-stretch !rounded-[18px] sm:!rounded-[22px] !p-1" variant="default">
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="scene" onClick={() => handleTabClick("scene")}>
                 <FolderTree />
                 <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Scene</span>
@@ -445,6 +443,7 @@ export function InspectorSidebar({
                 <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Mats</span>
               </TabsTrigger>
             </TabsList>
+            </div>
           </div>
 
           <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="scene">

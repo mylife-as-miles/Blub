@@ -14,10 +14,10 @@ export function ToolIconSidebar({ activeToolId, onSetToolId }: ToolIconSidebarPr
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="pointer-events-none absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col items-end gap-2">
+    <div className="pointer-events-none absolute right-2 top-16 z-20 flex flex-col items-end gap-2">
       {/* Collapse toggle */}
       <button
-        className="pointer-events-auto hidden sm:flex size-8 items-center justify-center rounded-full glass-panel text-foreground/60 hover:text-foreground transition-colors duration-150"
+        className="pointer-events-auto flex size-8 items-center justify-center rounded-full glass-panel text-foreground/60 hover:text-foreground transition-colors duration-150"
         onClick={() => setOpen((v) => !v)}
         title={open ? "Collapse tools" : "Expand tools"}
         type="button"
