@@ -2,21 +2,16 @@ import type { GridSnapValue } from "@blud/render-pipeline";
 import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
-import { useState } from "react";
-import { ChevronDown, Layers } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { CreationToolBar } from "@/components/editor-shell/CreationToolBar";
 import { FloorPresetsPanel } from "@/components/editor-shell/FloorPresetsPanel";
-import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { MeshEditToolBars } from "@/components/editor-shell/MeshEditToolBars";
 import { PhysicsPlaybackControl } from "@/components/editor-shell/PhysicsPlaybackControl";
-import { PrimaryToolBar } from "@/components/editor-shell/PrimaryToolBar";
 import { SnapControl } from "@/components/editor-shell/SnapControl";
 import { ViewModeControl } from "@/components/editor-shell/ViewModeControl";
 import type { MeshEditMode } from "@/viewport/editing";
 import type { MeshEditToolbarActionRequest } from "@/viewport/types";
 import type { ViewModeId } from "@/viewport/viewports";
-import { cn } from "@/lib/utils";
 
 type ToolPaletteProps = {
   activeBrushShape: BrushShape;
