@@ -4,6 +4,7 @@ import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import { AnimatePresence, motion } from "motion/react";
 import { CreationToolBar } from "@/components/editor-shell/CreationToolBar";
+import { FloorPresetsPanel } from "@/components/editor-shell/FloorPresetsPanel";
 import { MeshEditToolBars } from "@/components/editor-shell/MeshEditToolBars";
 import { PhysicsPlaybackControl } from "@/components/editor-shell/PhysicsPlaybackControl";
 import { PrimaryToolBar } from "@/components/editor-shell/PrimaryToolBar";
@@ -109,6 +110,7 @@ export function ToolPalette({
         <PrimaryToolBar activeToolId={activeToolId} onSetToolId={onSetToolId} tools={tools} />
         <SnapControl currentSnapSize={currentSnapSize} gridSnapValues={gridSnapValues} onSetSnapEnabled={onSetSnapEnabled} onSetSnapSize={onSetSnapSize} snapEnabled={snapEnabled} />
         <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
+        <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
       </div>
       <AnimatePresence initial={false}>
         {activeToolId === "brush" ? (
@@ -125,7 +127,6 @@ export function ToolPalette({
               disabled={physicsPlayback !== "stopped"}
               onImportGlb={onImportGlb}
               onPlaceEntity={onPlaceEntity}
-              onPlaceFloorPreset={onPlaceFloorPreset}
               onPlaceLight={onPlaceLight}
               onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
               onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}

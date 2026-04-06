@@ -18,12 +18,10 @@ import {
   SpotLightIcon
 } from "@/components/editor-shell/icons";
 import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
-import { FloorPresetsPanel } from "@/components/editor-shell/FloorPresetsPanel";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { ToolId } from "@blud/tool-system";
-import type { FloorPresetId } from "@/lib/floor-presets";
 
 export function CreationToolBar({
   activeBrushShape,
@@ -32,7 +30,6 @@ export function CreationToolBar({
   disabled = false,
   onImportGlb,
   onPlaceEntity,
-  onPlaceFloorPreset,
   onPlaceLight,
   onPlaceBlockoutOpenRoom,
   onPlaceBlockoutPlatform,
@@ -48,7 +45,6 @@ export function CreationToolBar({
   disabled?: boolean;
   onImportGlb: () => void;
   onPlaceEntity: (type: EntityType) => void;
-  onPlaceFloorPreset: (presetId: FloorPresetId) => void;
   onPlaceLight: (type: LightType) => void;
   onPlaceBlockoutOpenRoom: () => void;
   onPlaceBlockoutPlatform: () => void;
@@ -158,9 +154,6 @@ export function CreationToolBar({
         <CreationButton disabled={disabled} icon={StairBlockoutIcon} label="Blockout Stairs" onClick={onPlaceBlockoutStairs} />
       </CreationGroup>
 
-      <CreationGroup label="Floors">
-        <FloorPresetsPanel disabled={disabled} onPlaceFloorPreset={onPlaceFloorPreset} />
-      </CreationGroup>
     </div>
   );
 }
