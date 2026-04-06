@@ -1095,6 +1095,13 @@ export function App() {
     editor.execute(command);
     editor.select([nodeId], "object");
     enqueueWorkerJob(`${preset.name} floor`, { task: "brush-rebuild", worker: "geometryWorker" }, 650);
+
+    const currentSettings = editor.scene.settings;
+    const nextSettings: SceneSettings = {
+      ...currentSettings,
+      world: { ...currentSettings.world, floorPresetId: preset.id }
+    };
+    editor.execute(createSetSceneSettingsCommand(editor.scene, nextSettings, currentSettings));
   };
 
   const handleCreateBrush = () => {

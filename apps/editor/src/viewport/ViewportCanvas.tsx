@@ -3031,7 +3031,7 @@ export function ViewportCanvas({
           viewport={viewport}
         />
         {editorInteractionEnabled ? (
-          <ConstructionGrid activeToolId={activeToolId} onPlaceAsset={onPlaceAsset} viewport={viewport} viewportPlane={viewportPlane} />
+          <ConstructionGrid activeToolId={activeToolId} onPlaceAsset={onPlaceAsset} sceneSettings={sceneSettings} viewport={viewport} viewportPlane={viewportPlane} />
         ) : null}
         {renderMode === "lit" && editorInteractionEnabled ? <axesHelper args={[3]} /> : null}
         <ScenePreview

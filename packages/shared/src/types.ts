@@ -334,6 +334,7 @@ export type WorldSettings = {
   ambientAudio?: WorldAmbientAudio;
   ambientColor: string;
   ambientIntensity: number;
+  floorPresetId?: string;
   fogColor: string;
   fogFar: number;
   fogNear: number;
