@@ -27,6 +27,7 @@ import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
 import { InspectorSidebar } from "@/components/editor-shell/InspectorSidebar";
 import { SpatialAnalysisPanel } from "@/components/editor-shell/SpatialAnalysisPanel";
 import { StatusBar } from "@/components/editor-shell/StatusBar";
+import { ToolIconSidebar } from "@/components/editor-shell/ToolIconSidebar";
 import { ToolPalette } from "@/components/editor-shell/ToolPalette";
 import { LogicViewerSheet } from "@/components/editor-shell/logic-viewer/LogicViewerSheet";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -476,6 +477,8 @@ export function EditorShell({
           transformMode={transformMode}
           viewMode={viewMode}
         />
+
+        <ToolIconSidebar activeToolId={activeToolId} onSetToolId={onSetToolId} />
 
         <AiModelPromptBar
           active={aiModelPlacementActive}

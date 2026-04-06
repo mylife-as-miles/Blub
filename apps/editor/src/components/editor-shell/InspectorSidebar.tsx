@@ -18,7 +18,7 @@ import {
   type Transform,
   type Vec3
 } from "@blud/shared";
-import { defaultTools, type ToolId } from "@blud/tool-system";
+import type { ToolId } from "@blud/tool-system";
 import { Button } from "@/components/ui/button";
 import { DragInput } from "@/components/ui/drag-input";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
-import { toolIconFor } from "@/components/editor-shell/icons";
 import { EventsPanel, HooksPanel, PathsPanel } from "@/components/editor-shell/GameplayPanels";
 import { MaterialLibraryPanel } from "@/components/editor-shell/MaterialLibraryPanel";
 import { SceneHierarchyPanel } from "@/components/editor-shell/SceneHierarchyPanel";
@@ -399,29 +398,7 @@ export function InspectorSidebar({
           onValueChange={(value) => onChangeRightPanel(value as RightPanelId)}
           value={activeRightPanel ?? ""}
         >
-          {/* Primary tool selector embedded in the Inspector panel */}
-          <div className="flex items-center gap-1.5 overflow-x-auto px-3 pt-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {defaultTools.map((tool) => {
-              const Icon = toolIconFor(tool.id);
-              const active = tool.id === activeToolId;
-              return (
-                <button
-                  key={tool.id}
-                  className={cn(
-                    "pointer-events-auto flex size-9 shrink-0 items-center justify-center rounded-[14px] text-foreground/55 transition-colors hover:text-foreground",
-                    active && "glass-button-active text-emerald-50"
-                  )}
-                  onClick={() => onSetToolId(tool.id)}
-                  title={tool.label}
-                  type="button"
-                >
-                  <Icon className="size-4" />
-                </button>
-              );
-            })}
-          </div>
-
-          <div className={cn("px-3 pt-1.5", collapsed ? "pb-3" : "pb-2")}>
+          <div className={cn("px-3 pt-3", collapsed ? "pb-3" : "pb-2")}>
             <TabsList className="glass-panel-subtle !grid !h-14 !w-full !grid-cols-7 !items-stretch !rounded-[22px] !p-1" variant="default">
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="scene" onClick={() => handleTabClick("scene")}>
                 <FolderTree />

@@ -99,23 +99,26 @@ export function ToolPalette({
   viewMode
 }: ToolPaletteProps) {
   return (
-    <div className="pointer-events-none absolute left-1/2 top-3 z-30 flex w-[calc(100%-2rem)] max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col items-center gap-2 sm:top-4 sm:w-auto sm:max-w-none">
-      <div className="flex w-full items-stretch gap-1.5 overflow-x-auto sm:w-auto sm:gap-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <>
+      {/* LEFT vertical sidebar — viewport controls */}
+      <div className="pointer-events-none absolute left-2 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-2">
         <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
         <SnapControl currentSnapSize={currentSnapSize} gridSnapValues={gridSnapValues} onSetSnapEnabled={onSetSnapEnabled} onSetSnapSize={onSetSnapSize} snapEnabled={snapEnabled} />
         <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
         <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
       </div>
 
+      {/* Creation toolbar — floats top-center when brush is active */}
       <AnimatePresence initial={false}>
         {activeToolId === "brush" ? (
           <motion.div
+            className="pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2 sm:top-4"
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.97 }}
             initial={{ opacity: 0, y: -10, scale: 0.97 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="max-w-[calc(100vw-2rem)] overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="max-w-[calc(100vw-8rem)] overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <CreationToolBar
                 activeBrushShape={activeBrushShape}
                 aiModelPlacementActive={aiModelPlacementActive}
@@ -137,9 +140,11 @@ export function ToolPalette({
         ) : null}
       </AnimatePresence>
 
+      {/* Mesh-edit toolbar — floats top-center when mesh-edit is active */}
       <AnimatePresence initial={false}>
         {activeToolId === "mesh-edit" ? (
           <motion.div
+            className="pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2 sm:top-4"
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.97 }}
             initial={{ opacity: 0, y: -10, scale: 0.97 }}
@@ -174,6 +179,6 @@ export function ToolPalette({
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
