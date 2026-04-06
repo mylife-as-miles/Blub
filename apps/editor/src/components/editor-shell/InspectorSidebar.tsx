@@ -385,9 +385,9 @@ export function InspectorSidebar({
 
   return (
     <div className={cn(
-      "pointer-events-none absolute z-20 flex",
-      "right-2 top-2 w-[calc(100%-1rem)] max-h-[45vh]",
-      "sm:right-4 sm:top-4 sm:w-72 sm:max-h-[calc(100%-7rem)]",
+      "pointer-events-none absolute z-10 flex",
+      "bottom-2 right-2 w-[calc(100%-1rem)] max-h-[38vh]",
+      "sm:bottom-auto sm:right-4 sm:top-4 sm:z-20 sm:w-72 sm:max-h-[calc(100%-7rem)]",
       "md:w-80",
       "lg:w-88",
       collapsed ? "h-auto" : "h-[clamp(18rem,45vh,42rem)] sm:h-[clamp(26rem,58vh,42rem)]"
