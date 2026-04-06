@@ -383,13 +383,18 @@ export function InspectorSidebar({
 
   const collapsed = activeRightPanel === null;
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      setSidebarOpen(false);
+    }
+  }, []);
 
   return (
     <div className={cn(
       "pointer-events-none absolute z-20 flex flex-col gap-2",
       /* Always a left sidebar — from just below menu bar to near bottom */
       "left-2 top-16",
-      sidebarOpen ? ["bottom-2 w-56 sm:w-72 md:w-80 lg:w-88"] : "w-auto",
+      sidebarOpen ? "bottom-2 w-48 sm:w-64 md:w-72 lg:w-80" : "w-auto",
     )}>
       {/* Collapse toggle — always visible at all screen sizes */}
       <div className="flex justify-start">
@@ -413,34 +418,34 @@ export function InspectorSidebar({
         >
           <div className={cn("px-2 pt-2 sm:px-3 sm:pt-3", collapsed ? "pb-2 sm:pb-3" : "pb-1 sm:pb-2")}>
             <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="glass-panel-subtle !grid !h-12 sm:!h-14 !min-w-max !w-full !grid-cols-7 !items-stretch !rounded-[18px] sm:!rounded-[22px] !p-1" variant="default">
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="scene" onClick={() => handleTabClick("scene")}>
+            <TabsList className="glass-panel-subtle !grid !h-12 sm:!h-14 !w-full !grid-cols-7 !items-stretch !rounded-[18px] sm:!rounded-[22px] !p-1" variant="default">
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="scene" onClick={() => handleTabClick("scene")}>
                 <FolderTree />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Scene</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Scene</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="world" onClick={() => handleTabClick("world")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="world" onClick={() => handleTabClick("world")}>
                 <Globe2 />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>World</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>World</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="player" onClick={() => handleTabClick("player")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="player" onClick={() => handleTabClick("player")}>
                 <User />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Player</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Player</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="inspector" onClick={() => handleTabClick("inspector")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="inspector" onClick={() => handleTabClick("inspector")}>
                 <SlidersHorizontal />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Inspect</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Inspect</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="hooks" onClick={() => handleTabClick("hooks")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="hooks" onClick={() => handleTabClick("hooks")}>
                 <Cable />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Hooks</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Hooks</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="events" onClick={() => handleTabClick("events")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="events" onClick={() => handleTabClick("events")}>
                 <BellRing />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Events</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Events</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="materials" onClick={() => handleTabClick("materials")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="materials" onClick={() => handleTabClick("materials")}>
                 <SwatchBook />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Mats</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Mats</span>
               </TabsTrigger>
             </TabsList>
             </div>

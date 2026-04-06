@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { defaultTools, type ToolId } from "@blud/tool-system";
 import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
@@ -12,6 +12,11 @@ type ToolIconSidebarProps = {
 
 export function ToolIconSidebar({ activeToolId, onSetToolId }: ToolIconSidebarProps) {
   const [open, setOpen] = useState(true);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      setOpen(false);
+    }
+  }, []);
 
   return (
     <div className="pointer-events-none absolute right-2 top-16 z-20 flex flex-col items-end gap-2">
