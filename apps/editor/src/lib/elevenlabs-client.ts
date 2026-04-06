@@ -70,6 +70,88 @@ export async function fetchVoices(): Promise<ElevenLabsVoice[]> {
   return data.voices ?? [];
 }
 
+/**
+ * Generate a sound effect from a text description.
+ * Returns an AudioBuffer ready to play via Web Audio API.
+ */
+export async function generateSoundEffect(
+  description: string,
+  durationSeconds?: number,
+): Promise<AudioBuffer> {
+  const response = await fetch("/api/elevenlabs/sfx", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description, durationSeconds }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown error" })) as { error: string };
+    throw new Error(`ElevenLabs SFX failed: ${err.error}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const audioCtx = getAudioContext();
+  return audioCtx.decodeAudioData(arrayBuffer);
+}
+
+/**
+ * Clone a voice from an audio file blob.
+ * Returns the new voice_id.
+ */
+export async function cloneVoice(name: string, audioFile: File): Promise<string> {
+  const form = new FormData();
+  form.append("name", name);
+  form.append("files", audioFile);
+
+  const response = await fetch("/api/elevenlabs/voices/add", {
+    method: "POST",
+    body: form,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown error" })) as { error: string };
+    throw new Error(`Voice clone failed: ${err.error}`);
+  }
+
+  const data = await response.json() as { voice_id: string };
+  return data.voice_id;
+}
+
+/**
+ * Generate a sound effect and return a persistent blob URL.
+ * Stores the audio as a blob URL suitable for persisting in scene settings.
+ */
+export async function generateSoundEffectUrl(
+  description: string,
+  durationSeconds?: number,
+): Promise<string> {
+  const response = await fetch("/api/elevenlabs/sfx", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description, durationSeconds }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown error" })) as { error: string };
+    throw new Error(`ElevenLabs SFX failed: ${err.error}`);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * Delete a cloned voice.
+ */
+export async function deleteVoice(voiceId: string): Promise<void> {
+  const response = await fetch(`/api/elevenlabs/voices/${voiceId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to delete voice ${voiceId}`);
+  }
+}
+
 let _audioCtx: AudioContext | null = null;
 function getAudioContext(): AudioContext {
   if (!_audioCtx || _audioCtx.state === "closed") {

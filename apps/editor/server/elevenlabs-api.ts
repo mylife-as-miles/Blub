@@ -20,8 +20,11 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import type { Plugin, ViteDevServer, PreviewServer } from "vite";
 
-const TTS_PATH    = "/api/elevenlabs/tts";
-const VOICES_PATH = "/api/elevenlabs/voices";
+const TTS_PATH         = "/api/elevenlabs/tts";
+const VOICES_PATH      = "/api/elevenlabs/voices";
+const SFX_PATH         = "/api/elevenlabs/sfx";
+const VOICE_ADD_PATH   = "/api/elevenlabs/voices/add";
+const VOICE_DEL_PREFIX = "/api/elevenlabs/voices/";
 
 const DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // "George" — a good neutral default
 const DEFAULT_MODEL_ID = "eleven_multilingual_v2";
@@ -47,6 +50,22 @@ function registerApi(
 
     if (pathname === TTS_PATH && req.method === "POST") {
       await handleTts(req, res);
+      return;
+    }
+
+    if (pathname === SFX_PATH && req.method === "POST") {
+      await handleSfx(req, res);
+      return;
+    }
+
+    if (pathname === VOICE_ADD_PATH && req.method === "POST") {
+      await handleVoiceAdd(req, res);
+      return;
+    }
+
+    if (pathname?.startsWith(VOICE_DEL_PREFIX) && req.method === "DELETE") {
+      const voiceId = pathname.slice(VOICE_DEL_PREFIX.length);
+      await handleVoiceDelete(voiceId, res);
       return;
     }
 
@@ -123,6 +142,117 @@ async function handleTts(
     res.end();
   } catch (err) {
     console.error("[elevenlabs-api] TTS error", err);
+    sendJson(res, 500, { error: "Internal server error." });
+  }
+}
+
+async function handleSfx(
+  req: import("node:http").IncomingMessage,
+  res: import("node:http").ServerResponse,
+) {
+  try {
+    const body = await readJson<{ description: string; durationSeconds?: number }>(req);
+
+    if (!body?.description?.trim()) {
+      sendJson(res, 400, { error: "description is required." });
+      return;
+    }
+
+    const connectors = new ReplitConnectors();
+    const response = await connectors.proxy("elevenlabs", "/v1/sound-generation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: body.description,
+        duration_seconds: body.durationSeconds ?? null,
+        prompt_influence: 0.3,
+        output_format: "mp3_44100_128",
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[elevenlabs-api] SFX upstream error", response.status, errText);
+      sendJson(res, response.status, { error: "ElevenLabs SFX failed.", detail: errText });
+      return;
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "no-store",
+    });
+
+    const reader = response.body?.getReader();
+    if (!reader) { res.end(); return; }
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(Buffer.from(value));
+    }
+    res.end();
+  } catch (err) {
+    console.error("[elevenlabs-api] SFX error", err);
+    sendJson(res, 500, { error: "Internal server error." });
+  }
+}
+
+async function handleVoiceAdd(
+  req: import("node:http").IncomingMessage,
+  res: import("node:http").ServerResponse,
+) {
+  try {
+    const chunks: Buffer[] = [];
+    await new Promise<void>((resolve, reject) => {
+      req.on("data", (c: Buffer) => chunks.push(c));
+      req.on("end", resolve);
+      req.on("error", reject);
+    });
+    const rawBody = Buffer.concat(chunks);
+
+    const connectors = new ReplitConnectors();
+    const response = await connectors.proxy("elevenlabs", "/v1/voices/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": req.headers["content-type"] ?? "multipart/form-data",
+        "Content-Length": String(rawBody.byteLength),
+      },
+      body: rawBody as unknown as BodyInit,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[elevenlabs-api] voice add error", response.status, errText);
+      sendJson(res, response.status, { error: "Voice clone failed.", detail: errText });
+      return;
+    }
+
+    const data = await response.json() as unknown;
+    sendJson(res, 200, data);
+  } catch (err) {
+    console.error("[elevenlabs-api] voice add error", err);
+    sendJson(res, 500, { error: "Internal server error." });
+  }
+}
+
+async function handleVoiceDelete(
+  voiceId: string,
+  res: import("node:http").ServerResponse,
+) {
+  try {
+    const connectors = new ReplitConnectors();
+    const response = await connectors.proxy("elevenlabs", `/v1/voices/${voiceId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      sendJson(res, response.status, { error: "Voice delete failed.", detail: errText });
+      return;
+    }
+
+    sendJson(res, 200, { ok: true });
+  } catch (err) {
+    console.error("[elevenlabs-api] voice delete error", err);
     sendJson(res, 500, { error: "Internal server error." });
   }
 }
