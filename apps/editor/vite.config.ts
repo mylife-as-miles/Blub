@@ -15,8 +15,11 @@ const repoRoot = path.resolve(__dirname, "../..");
 const workspaceAliases = {
   "@blud/dev-sync": path.resolve(repoRoot, "packages/dev-sync/src/index.ts"),
   "@blud/editor-core": path.resolve(repoRoot, "packages/editor-core/src/index.ts"),
+  "@blud/engine-config": path.resolve(repoRoot, "packages/engine-config/src/index.ts"),
   "@blud/geometry-kernel": path.resolve(repoRoot, "packages/geometry-kernel/src/index.ts"),
+  "@blud/physics-backend": path.resolve(repoRoot, "packages/physics-backend/src/index.ts"),
   "@blud/render-pipeline": path.resolve(repoRoot, "packages/render-pipeline/src/index.ts"),
+  "@blud/renderer-backend": path.resolve(repoRoot, "packages/renderer-backend/src/index.ts"),
   "@blud/runtime-build": path.resolve(repoRoot, "packages/runtime-build/src/index.ts"),
   "@blud/shared": path.resolve(repoRoot, "packages/shared/src/index.ts"),
   "@blud/three-runtime": path.resolve(repoRoot, "packages/three-runtime/src/index.ts"),

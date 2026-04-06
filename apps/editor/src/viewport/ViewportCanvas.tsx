@@ -1,4 +1,5 @@
 import { Canvas, useThree, type RootState } from "@react-three/fiber";
+import { useRendererGlConfig } from "@/viewport/hooks/useRendererGlConfig";
 import {
   arcEditableMeshEdges,
   bevelEditableMeshEdges,
@@ -215,6 +216,8 @@ export function ViewportCanvas({
   const viewportRootRef = useRef<HTMLDivElement | null>(null);
   const meshObjectsRef = useRef(new Map<string, Object3D>());
   const raycasterRef = useRef(new Raycaster());
+  const glConfig = useRendererGlConfig();
+
   const [brushEditHandleIds, setBrushEditHandleIds] = useState<string[]>([]);
   const [brushCreateState, setBrushCreateState] = useState<BrushCreateState | null>(null);
   const [arcState, setArcState] = useState<ArcState | null>(null);
@@ -2969,6 +2972,7 @@ export function ViewportCanvas({
       <Canvas
         camera={canvasCamera}
         dpr={Math.max(0.5, Math.min((typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1) * dprScale, 2.5))}
+        gl={glConfig}
         orthographic={viewport.projection === "orthographic"}
         onCreated={(state: RootState) => {
           cameraRef.current = state.camera;
