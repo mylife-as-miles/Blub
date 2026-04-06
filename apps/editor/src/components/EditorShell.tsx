@@ -465,7 +465,6 @@ export function EditorShell({
           onSetSnapSize={onSetSnapSize}
           onStopPhysics={onStopPhysics}
           onSetTransformMode={onSetTransformMode}
-          onSetToolId={onSetToolId}
           onSetViewMode={onSetViewMode}
           physicsPlayback={physicsPlayback}
           sculptMode={sculptMode}
@@ -474,7 +473,6 @@ export function EditorShell({
           selectedGeometry={selectedIsGeometry}
           selectedMesh={selectedIsMesh}
           snapEnabled={activeViewport.grid.enabled}
-          tools={tools}
           transformMode={transformMode}
           viewMode={viewMode}
         />
