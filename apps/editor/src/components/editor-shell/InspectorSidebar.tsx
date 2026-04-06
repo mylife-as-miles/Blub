@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { BellRing, Cable, FolderTree, Globe2, SlidersHorizontal, SwatchBook, User } from "lucide-react";
+import { BellRing, Cable, ChevronLeft, ChevronRight, FolderTree, Globe2, SlidersHorizontal, SwatchBook, User } from "lucide-react";
 import {
   type EditableMesh,
   isInstancingNode,
@@ -382,16 +382,32 @@ export function InspectorSidebar({
   };
 
   const collapsed = activeRightPanel === null;
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className={cn(
-      "pointer-events-none absolute z-10 flex",
-      "bottom-2 right-2 w-[calc(100%-1rem)] max-h-[38vh]",
-      "sm:bottom-auto sm:right-4 sm:top-4 sm:z-20 sm:w-72 sm:max-h-[calc(100%-7rem)]",
-      "md:w-80",
-      "lg:w-88",
-      collapsed ? "h-auto" : "h-[clamp(18rem,45vh,42rem)] sm:h-[clamp(26rem,58vh,42rem)]"
+      "pointer-events-none absolute z-10 flex flex-col gap-2",
+      "bottom-2 left-2 w-[calc(100%-1rem)] max-h-[38vh]",
+      "sm:bottom-auto sm:left-4 sm:top-4 sm:z-20 sm:max-h-[calc(100%-7rem)]",
+      sidebarOpen
+        ? "sm:w-72 md:w-80 lg:w-88"
+        : "sm:w-auto",
+      !sidebarOpen ? "h-auto" : collapsed ? "h-auto" : "h-[clamp(18rem,45vh,42rem)] sm:h-[clamp(26rem,58vh,42rem)]"
     )}>
+      {/* Collapse toggle — always visible, sticks to top of the sidebar area */}
+      <div className="hidden sm:flex sm:justify-start">
+        <button
+          className="pointer-events-auto flex size-8 items-center justify-center rounded-full glass-panel text-foreground/60 hover:text-foreground transition-colors duration-150"
+          onClick={() => setSidebarOpen((v) => !v)}
+          title={sidebarOpen ? "Collapse inspector" : "Expand inspector"}
+          type="button"
+        >
+          {sidebarOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+        </button>
+      </div>
+
+      {/* Panel body — hidden when collapsed on desktop */}
+      {sidebarOpen && (
       <FloatingPanel className="flex min-h-0 w-full flex-col overflow-hidden">
         <Tabs
           className="flex min-h-0 flex-1 flex-col gap-0"
@@ -1362,6 +1378,7 @@ export function InspectorSidebar({
           </TabsContent>
         </Tabs>
       </FloatingPanel>
+      )}
     </div>
   );
 }
