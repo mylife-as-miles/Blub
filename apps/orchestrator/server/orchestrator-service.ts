@@ -11,7 +11,8 @@ import {
 } from "../../../packages/dev-sync/src/node";
 import type { DevSyncGameRegistration } from "../../../packages/dev-sync/src/shared";
 
-const HOST = "127.0.0.1";
+const HOST = "0.0.0.0";
+const INTERNAL_HOST = "127.0.0.1";
 const TRIDENT_PORT = 8080;
 const ANIMATION_STUDIO_PORT = 8081;
 const GAME_PORT_START = 4301;
@@ -55,6 +56,7 @@ type ManagedRuntime = {
   port: number;
   process: ChildProcess | null;
   projectId: string | null;
+  publicUrl: string;
   startedAt: number | null;
   status: RuntimeStatus;
   url: string;
@@ -389,6 +391,7 @@ export class OrchestratorService {
 
     runtime.port = project.preferredPort ?? (await findAvailablePort(project.preferredPort ?? GAME_PORT_START));
     runtime.url = createUrl(runtime.port);
+    runtime.publicUrl = createPublicUrl(runtime.port);
     runtime.label = project.name;
     runtime.cwd = project.projectRoot;
 
@@ -779,6 +782,7 @@ function createManagedRuntime(options: {
     port: options.port,
     process: null,
     projectId: options.projectId ?? null,
+    publicUrl: createPublicUrl(options.port),
     startedAt: null,
     status: "stopped",
     url: createUrl(options.port)
@@ -807,7 +811,7 @@ function toRuntimeSnapshot(runtime: ManagedRuntime, registration?: DevSyncGameRe
     sceneIds: registration?.sceneIds ?? [],
     startedAt: runtime.startedAt,
     status: runtime.status,
-    url: runtime.url
+    url: runtime.publicUrl
   };
 }
 
@@ -1027,7 +1031,7 @@ function isPortFree(port: number) {
     server.on("error", () => {
       resolvePromise(false);
     });
-    server.listen(port, HOST, () => {
+    server.listen(port, INTERNAL_HOST, () => {
       server.close(() => resolvePromise(true));
     });
   });
@@ -1049,7 +1053,15 @@ function sleep(durationMs: number) {
 }
 
 function createUrl(port: number) {
-  return `http://${HOST}:${port}`;
+  return `http://${INTERNAL_HOST}:${port}`;
+}
+
+function createPublicUrl(port: number) {
+  const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+  if (replitDomain) {
+    return `https://${replitDomain}:${port}`;
+  }
+  return `http://${INTERNAL_HOST}:${port}`;
 }
 
 function formatCommand(command: RuntimeCommand) {
