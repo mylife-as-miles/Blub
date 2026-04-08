@@ -851,3 +851,52 @@ export const COPILOT_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
     }
   }
 ];
+
+/** Only `generate_game_html` — used when the model's task is purely game generation */
+export const GAME_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
+  COPILOT_TOOL_DECLARATIONS.find((t) => t.name === "generate_game_html")!
+];
+
+/**
+ * Return `true` when the user's prompt is clearly a standalone-game request
+ * (not a scene-editing request). In that case we expose only `generate_game_html`
+ * instead of all 59 editor tools so the model context stays lean.
+ */
+export function isGameGenerationPrompt(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  const gameKeywords = [
+    "make me a game",
+    "create a game",
+    "build a game",
+    "make a game",
+    "generate a game",
+    "make a playable",
+    "create a playable",
+    "build a playable",
+    "create a prototype",
+    "make a prototype",
+    "build a prototype",
+    "generate a prototype",
+    "create a demo",
+    "make a demo",
+    "build a demo",
+    "generate a demo",
+    "open world",
+    "car game",
+    "vehicle game",
+    "terrain vehicle",
+    "3d game",
+    "webgpu game",
+    "three.js game",
+    "threejs game",
+    "standalone game",
+    "html game",
+    "browser game",
+    "platformer",
+    "fps game",
+    "racing game",
+    "shooter game",
+    "sandbox game",
+  ];
+  return gameKeywords.some((kw) => lower.includes(kw));
+}

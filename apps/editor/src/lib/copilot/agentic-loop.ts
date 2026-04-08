@@ -23,7 +23,7 @@ function uid(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-const TAG = "[AI-VIBE]";
+const TAG = "[COPILOT]";
 
 export async function runAgenticLoop(
   userPrompt: string,

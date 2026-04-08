@@ -5,7 +5,7 @@ import { runAgenticLoop } from "@/lib/copilot/agentic-loop";
 import { createCopilotProvider } from "@/lib/copilot/provider";
 import { buildSystemPrompt } from "@/lib/copilot/system-prompt";
 import { loadCopilotSettings, isCopilotConfigured } from "@/lib/copilot/settings";
-import { COPILOT_TOOL_DECLARATIONS } from "@/lib/copilot/tool-declarations";
+import { COPILOT_TOOL_DECLARATIONS, GAME_TOOL_DECLARATIONS, isGameGenerationPrompt } from "@/lib/copilot/tool-declarations";
 import { executeTool, type CopilotToolExecutionContext } from "@/lib/copilot/tool-executor";
 
 export type GeneratedGame = { title: string; html: string };
@@ -84,6 +84,9 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
 
       const copilotProvider = createCopilotProvider(settings.provider);
       const systemPrompt = buildSystemPrompt(editor);
+      const gameMode = isGameGenerationPrompt(prompt);
+      const tools = gameMode ? GAME_TOOL_DECLARATIONS : COPILOT_TOOL_DECLARATIONS;
+      console.log(`[COPILOT] Mode: ${gameMode ? "game-generation (1 tool)" : `editor (${tools.length} tools)`}`);
 
       const providerConfig = {
         apiKey: settings.provider === "gemini" ? settings.gemini.apiKey : "",
@@ -95,7 +98,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
         await copilotProvider.provider.runSession({
           messages: session.messages,
           userPrompt: prompt,
-          tools: COPILOT_TOOL_DECLARATIONS,
+          tools,
           systemPrompt,
           providerConfig,
           threadId: codexThreadIdRef.current,
@@ -117,7 +120,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
             provider: copilotProvider.provider,
             providerConfig,
             systemPrompt,
-            tools: COPILOT_TOOL_DECLARATIONS,
+            tools,
             executeTool: (toolCall) => executeTool(editor, toolCall, mergedToolContext),
             onUpdate: (updated) => {
               setSession({ ...updated, messages: [...updated.messages] });
