@@ -12,6 +12,7 @@ import {
   Settings,
   Square,
   Trash2,
+  Users,
   Wand2,
   X
 } from "lucide-react";
@@ -50,7 +51,7 @@ interface SettingsSheetProps {
   onStartProject: (id: string) => void;
   onStopProject: (id: string) => void;
   onRemoveProject: (id: string) => void;
-  onRestartEditor: (id: "blob" | "animation-studio") => void;
+  onRestartEditor: (id: "blob" | "animation-studio" | "character-studio") => void;
   onSetView: (view: ViewId) => void;
   onClose: () => void;
 }
@@ -115,13 +116,19 @@ export function SettingsSheet({
           <p className="mb-4 mt-1 text-xs text-white/42">{snapshot?.viewport.subtitle}</p>
           <div className="flex flex-wrap gap-2">
             <SheetButton icon={<Monitor size={12} />} onClick={() => onSetView("blob")}>
-              Blob
+              World Studio
             </SheetButton>
             <SheetButton
               icon={<Clapperboard size={12} />}
               onClick={() => onSetView("animation-studio")}
             >
               Animation Studio
+            </SheetButton>
+            <SheetButton
+              icon={<Users size={12} />}
+              onClick={() => onSetView("character-studio")}
+            >
+              Character Studio
             </SheetButton>
             {snapshot?.projects.some((p) => p.isSelected) ? (
               <SheetButton icon={<Gamepad2 size={12} />} onClick={() => onSetView("game")}>
@@ -162,7 +169,7 @@ export function SettingsSheet({
                     className="icon-btn"
                     title="Restart"
                     onClick={() =>
-                      onRestartEditor(editor.id === "animation-studio" ? "animation-studio" : "blob")
+                      onRestartEditor(editor.id as "blob" | "animation-studio" | "character-studio")
                     }
                     disabled={busyKey === `restart:${editor.id}`}
                   >
@@ -172,9 +179,7 @@ export function SettingsSheet({
                     type="button"
                     className="icon-btn"
                     title="Open"
-                    onClick={() =>
-                      onSetView(editor.id === "animation-studio" ? "animation-studio" : "blob")
-                    }
+                    onClick={() => onSetView(editor.id as ViewId)}
                   >
                     <ArrowUpRight size={13} />
                   </button>

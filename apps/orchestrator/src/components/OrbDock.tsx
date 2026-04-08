@@ -72,7 +72,7 @@ export function OrbDock({
             active={activeDockMode === "blob"}
             disabled={!snapshot}
             icon={<Monitor size={14} />}
-            label="Blob"
+            label="World Studio"
             subtitle="World editor"
             onClick={() => closeAndCall(() => onSetView("blob"))}
             busy={busyKey === "view:blob"}
