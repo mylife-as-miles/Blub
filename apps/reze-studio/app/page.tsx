@@ -1,5 +1,3 @@
-"use client"
-
 import {
   useEffect,
   useLayoutEffect,
@@ -13,8 +11,6 @@ import {
   type InputHTMLAttributes,
   type RefObject,
 } from "react"
-import Link from "next/link"
-import Image from "next/image"
 import { FilePlus2, FolderOpen, FileMusic, FileDown } from "lucide-react"
 import { Engine, Model, Vec3, parsePmxFolderInput, pmxFileAtRelativePath } from "reze-engine"
 import { Button } from "@/components/ui/button"
@@ -203,11 +199,14 @@ const StudioLeftPanel = memo(function StudioLeftPanel({
             REZE STUDIO
           </h1>
           <div className="flex shrink-0 items-center gap-0.5">
-            <Button variant="ghost" size="sm" asChild className="hover:bg-black hover:text-white rounded-full">
-              <Link href="https://github.com/AmyangXYZ/reze-studio" target="_blank">
-                <Image src="/github-mark-white.svg" alt="GitHub" width={16} height={16} />
-              </Link>
-            </Button>
+            <a
+              href="https://github.com/AmyangXYZ/reze-studio"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-full p-1.5 hover:bg-black hover:text-white transition-colors"
+            >
+              <img src="/github-mark-white.svg" alt="GitHub" width={16} height={16} />
+            </a>
           </div>
         </div>
 
@@ -288,9 +287,9 @@ const StudioLeftPanel = memo(function StudioLeftPanel({
               <MenubarContent sideOffset={4} className="min-w-32 p-0.5 text-xs">
                 <MenubarGroup>
                   <MenubarItem className="gap-2 py-1 pl-2 pr-1.5 text-[11px] text-muted-foreground" asChild>
-                    <Link href={docsReadmeUrl} target="_blank" rel="noreferrer">
+                    <a href={docsReadmeUrl} target="_blank" rel="noreferrer">
                       Tutorial (README)
-                    </Link>
+                    </a>
                   </MenubarItem>
                   <MenubarItem className="gap-2 py-1 pl-2 pr-1.5 text-[11px] text-muted-foreground" disabled>
                     Keyboard shortcuts…
@@ -305,9 +304,9 @@ const StudioLeftPanel = memo(function StudioLeftPanel({
                     About Reze Studio
                   </MenubarItem>
                   <MenubarItem className="gap-2 py-1 pl-2 pr-1.5 text-[11px] text-muted-foreground" asChild>
-                    <Link href={`${repoUrl}/issues`} target="_blank" rel="noreferrer">
+                    <a href={`${repoUrl}/issues`} target="_blank" rel="noreferrer">
                       Report an issue
-                    </Link>
+                    </a>
                   </MenubarItem>
                 </MenubarGroup>
               </MenubarContent>

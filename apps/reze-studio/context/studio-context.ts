@@ -1,5 +1,3 @@
-"use client"
-
 /** Editable document + selection. Wraps the reducer that becomes the undo/redo target.
  *  Transport (playhead + play/pause) lives in <Playback> so playback ticks don't
  *  invalidate this context every rAF. */

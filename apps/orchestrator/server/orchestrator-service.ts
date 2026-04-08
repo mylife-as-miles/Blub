@@ -21,7 +21,6 @@ const STATE_VERSION = 1;
 const LOG_LIMIT = 120;
 const SHUTDOWN_GRACE_MS = 3_000;
 const STARTUP_TIMEOUT_MS = 20_000;
-const NEXTJS_STARTUP_TIMEOUT_MS = 120_000;
 
 export type PackageManager = "bun" | "npm" | "pnpm" | "yarn";
 export type ViewId = "blob" | "animation-studio" | "character-studio" | "game";
@@ -536,15 +535,14 @@ export class OrchestratorService {
       return;
     }
 
-    // Character Studio runs as a Next.js dev server — no build step needed.
-    // Next.js does a full initial compilation so it needs a much longer timeout.
+    // Character Studio runs as a Vite dev server — no build step needed.
     if (editorId === "character-studio") {
       const command = {
-        args: ["dev", "-p", String(CHARACTER_STUDIO_PORT), "-H", HOST],
-        command: join(this.repoRoot, "apps/reze-studio/node_modules/.bin/next"),
+        args: ["--port", String(CHARACTER_STUDIO_PORT), "--host", HOST],
+        command: join(this.repoRoot, "apps/reze-studio/node_modules/.bin/vite"),
         cwd: join(this.repoRoot, "apps/reze-studio")
       };
-      await this.startRuntime(runtime, command, NEXTJS_STARTUP_TIMEOUT_MS);
+      await this.startRuntime(runtime, command);
       return;
     }
 

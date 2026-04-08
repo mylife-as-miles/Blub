@@ -1,5 +1,3 @@
-"use client"
-
 /** Transport state (playhead + play/pause). Split from <Studio> so playback ticks
  *  don't invalidate the document/selection context every rAF. Not part of undo/redo. */
 import {
