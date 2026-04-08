@@ -906,12 +906,17 @@ function updateDebris(dt, groundY) {
 When any water body appears in the scene (ocean, lake, river, pond), use the full system below. **Never** use a flat PlaneGeometry with a basic MeshStandardMaterial for water — that is not acceptable quality.
 
 #### 1 — TSL Gerstner wave surface (vertex displacement)
-\`\`\`js
-import { tslFn, uniform, vec2, vec3, vec4, float, sin, cos, dot, add, mul, mod,
-         positionLocal, positionWorld, normalLocal, attribute, varying, varyingProperty,
-         mix, clamp, smoothstep, pow, abs, fract, floor, max } from 'three/tsl'
 
-// Wave parameters — tweak via GUI
+> **Three.js 0.183 TSL note**: use \`Fn\` (not \`tslFn\`) and import only what's listed below.
+
+\`\`\`js
+import {
+  Fn, uniform, vec2, vec3, vec4, float,
+  sin, cos, dot, add, mul, sub, clamp, mix, smoothstep, pow, abs, max,
+  positionLocal, positionWorld, normalLocal, cameraPosition
+} from 'three/tsl'
+
+// Live uniforms — driven by GUI or BLUD_API
 const waveTime    = uniform(0)
 const waveHeight  = uniform(1.8)
 const waveSpeed   = uniform(1.2)
@@ -919,72 +924,70 @@ const waveFoam    = uniform(0.6)
 const waveColor   = uniform(new THREE.Color(0x0077be))
 const waveFoamCol = uniform(new THREE.Color(0xd0eeff))
 
-// Four Gerstner waves give a realistic choppy ocean
+// Four directional Gerstner waves — gives realistic choppy ocean surface
 const WAVES = [
-  { dir: [1.0, 0.4], amplitude: 1.0, frequency: 0.22, speed: 1.0, steepness: 0.55 },
-  { dir: [0.5, 1.0], amplitude: 0.7, frequency: 0.31, speed: 0.9, steepness: 0.45 },
-  { dir: [-0.3, 0.8], amplitude: 0.45, frequency: 0.51, speed: 1.3, steepness: 0.35 },
-  { dir: [0.8, -0.2], amplitude: 0.28, frequency: 0.72, speed: 0.75, steepness: 0.25 },
+  { dir: [1.0,  0.4], amp: 1.00, freq: 0.22, spd: 1.00, steep: 0.55 },
+  { dir: [0.5,  1.0], amp: 0.70, freq: 0.31, spd: 0.90, steep: 0.45 },
+  { dir: [-0.3, 0.8], amp: 0.45, freq: 0.51, spd: 1.30, steep: 0.35 },
+  { dir: [0.8, -0.2], amp: 0.28, freq: 0.72, spd: 0.75, steep: 0.25 },
 ]
 
-function gerstnerWaveTSL(posXZ, wDir, amp, freq, spd, steep) {
-  const D  = vec2(wDir[0], wDir[1])
-  const k  = freq
-  const A  = mul(amp, waveHeight)
-  const S  = mul(spd, waveSpeed)
-  const Q  = steep
-  const phi= mul(k, add(dot(D, posXZ), mul(S, waveTime)))
-  const sx = mul(mul(Q, A), mul(cos(phi), D.x))
-  const sz = mul(mul(Q, A), mul(cos(phi), D.y))
-  const sy = mul(A, sin(phi))
-  return { offset: vec3(sx, sy, sz), phase: phi }
+// Build one Gerstner term in TSL (returns XYZ offset)
+function gerstnerTSL(px, pz, wDir, amp, freq, spd, steep) {
+  const A   = mul(float(amp), waveHeight)
+  const S   = mul(float(spd), waveSpeed)
+  const phi = mul(float(freq), add(add(mul(float(wDir[0]), px), mul(float(wDir[1]), pz)), mul(S, waveTime)))
+  const Q   = float(steep)
+  return {
+    ox: mul(mul(Q, A), mul(cos(phi), float(wDir[0]))),
+    oy: mul(A, sin(phi)),
+    oz: mul(mul(Q, A), mul(cos(phi), float(wDir[1]))),
+  }
 }
 
-const waterVert = tslFn(({ position }) => {
-  const posXZ = vec2(position.x, position.z)
-  let totalOffset = vec3(0,0,0)
-  let totalPhase  = float(0)
+// Vertex position node — displaces each vertex along all 4 Gerstner waves
+const waterPositionNode = Fn(({ position }) => {
+  let ox = float(0), oy = float(0), oz = float(0)
   for (const w of WAVES) {
-    const { offset, phase } = gerstnerWaveTSL(posXZ, w.dir, w.amplitude, w.frequency, w.speed, w.steepness)
-    totalOffset = add(totalOffset, offset)
-    totalPhase  = add(totalPhase, phase)
+    const g = gerstnerTSL(position.x, position.z, w.dir, w.amp, w.freq, w.spd, w.steep)
+    ox = add(ox, g.ox); oy = add(oy, g.oy); oz = add(oz, g.oz)
   }
-  return add(position, totalOffset)
+  return vec3(add(position.x, ox), add(position.y, oy), add(position.z, oz))
 })
 
-// Foam intensity stored as a varying for fragment use
-const vFoam = varyingProperty('float', 'vFoam')
-
-const waterFrag = tslFn(() => {
-  // Fresnel
-  const N  = normalLocal.normalize()
-  const V  = positionWorld.sub(cameraPosition).normalize()
-  const fr = pow(clamp(float(1).sub(abs(dot(N, V.negate()))), 0, 1), float(3.5))
-  const fr2= clamp(fr, float(0.06), float(1.0))
-  // Deep/shallow blend
-  const baseCol = mix(waveColor, waveFoamCol.mul(0.6), fr2.mul(0.4))
-  // Foam at crests
-  const foamMask = smoothstep(float(0.55), float(1.0), vFoam.mul(waveFoam))
-  const finalCol = mix(baseCol, waveFoamCol, foamMask)
-  return vec4(finalCol, mix(float(0.82), float(0.96), fr2))
+// Fragment color node — Fresnel blend + foam at wave crests
+const waterColorNode = Fn(() => {
+  // Fresnel: grazing angles show sky reflection, steep angles show water depth
+  const N   = normalLocal.normalize()
+  const V   = sub(cameraPosition, positionWorld).normalize()
+  const ndv = clamp(dot(N, V), float(0), float(1))
+  const fr  = clamp(pow(sub(float(1), ndv), float(3.5)), float(0.04), float(1))
+  // Base water color — deep vs shallow
+  const base = mix(waveColor, waveFoamCol.mul(float(0.6)), mul(fr, float(0.4)))
+  // Foam driven by world-space Y height above WATER_LEVEL
+  const heightAbove = clamp(positionWorld.y.mul(float(0.7)), float(0), float(1))
+  const foamMask    = smoothstep(float(0.45), float(1.0), mul(heightAbove, waveFoam))
+  const finalCol    = mix(base, waveFoamCol, foamMask)
+  const alpha       = mix(float(0.82), float(0.97), fr)
+  return vec4(finalCol, alpha)
 })
 
-// Build the water mesh (1km wide, 256×256 segments for wave detail)
+// Build the water mesh — 1 km, 256×256 for wave geometry detail
 const waterGeo = new THREE.PlaneGeometry(1000, 1000, 256, 256)
 waterGeo.rotateX(-Math.PI / 2)
 const waterMat = new THREE.MeshStandardNodeMaterial({
-  transparent: true, depthWrite: false, side: THREE.FrontSide
+  transparent: true, depthWrite: false, side: THREE.FrontSide,
 })
-waterMat.positionNode  = waterVert({ position: positionLocal })
-waterMat.colorNode     = waterFrag()
-waterMat.roughnessNode = float(0.08)
-waterMat.metalnessNode = float(0.12)
+waterMat.positionNode  = waterPositionNode({ position: positionLocal })
+waterMat.colorNode     = waterColorNode()
+waterMat.roughnessNode = float(0.07)
+waterMat.metalnessNode = float(0.14)
 const waterMesh = new THREE.Mesh(waterGeo, waterMat)
-waterMesh.position.y = WATER_LEVEL   // define WATER_LEVEL = 0 (or terrain-appropriate value)
+waterMesh.position.y = WATER_LEVEL   // WATER_LEVEL = e.g. 0
 waterMesh.receiveShadow = true
 scene.add(waterMesh)
 
-// Tick — update time uniform in animation loop
+// In the animation loop — tick the time uniform each frame:
 // waveTime.value += delta
 \`\`\`
 
