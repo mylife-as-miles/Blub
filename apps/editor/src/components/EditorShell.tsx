@@ -19,8 +19,9 @@ import type { PrimitiveNodeData, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import type { WorkerJob } from "@blud/workers";
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
+import { buildGameBlobUrl } from "@/lib/game-html";
 import { AiModelPromptBar } from "@/components/editor-shell/AiModelPromptBar";
 import { CopilotPanel } from "@/components/editor-shell/CopilotPanel";
 import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
@@ -311,6 +312,33 @@ export function EditorShell({
   viewportQuality,
   viewports
 }: EditorShellProps) {
+  const [gameViewUrl, setGameViewUrl] = useState<string | null>(null);
+  const gameViewUrlRef = useRef<string | null>(null);
+
+  const handlePlayInViewport = useCallback(() => {
+    if (!copilot.latestGame) return;
+    if (gameViewUrlRef.current) URL.revokeObjectURL(gameViewUrlRef.current);
+    const url = buildGameBlobUrl(copilot.latestGame.html);
+    gameViewUrlRef.current = url;
+    setGameViewUrl(url);
+  }, [copilot.latestGame]);
+
+  const handleExitGameView = useCallback(() => {
+    setGameViewUrl(null);
+    if (gameViewUrlRef.current) {
+      setTimeout(() => {
+        if (gameViewUrlRef.current) URL.revokeObjectURL(gameViewUrlRef.current);
+        gameViewUrlRef.current = null;
+      }, 500);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!copilot.latestGame) {
+      handleExitGameView();
+    }
+  }, [copilot.latestGame, handleExitGameView]);
+
   const selectionEnabled = physicsPlayback === "stopped";
   const nodes = Array.from(editor.scene.nodes.values());
   const entities = Array.from(editor.scene.entities.values());
@@ -433,6 +461,23 @@ export function EditorShell({
           <div className="absolute inset-0">
             <ViewportLayout renderViewportPane={renderViewportPane} viewMode={viewMode} />
           </div>
+
+          {gameViewUrl && (
+            <div className="absolute inset-0 z-20 rounded-[32px] overflow-hidden">
+              <iframe
+                src={gameViewUrl}
+                className="size-full border-0"
+                allow="autoplay"
+                title="Game preview"
+              />
+              <button
+                className="absolute left-4 top-4 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm hover:bg-black/80 hover:text-white transition-colors"
+                onClick={handleExitGameView}
+              >
+                ← Editor
+              </button>
+            </div>
+          )}
 
         <ToolPalette
           activeBrushShape={activeBrushShape}
@@ -588,6 +633,7 @@ export function EditorShell({
               onClearGame={copilot.clearLatestGame}
               onClearHistory={copilot.clearHistory}
               onClose={onToggleCopilot}
+              onPlayInViewport={handlePlayInViewport}
               onSendMessage={copilot.sendMessage}
               onSettingsChanged={copilot.refreshConfigured}
               session={copilot.session}
