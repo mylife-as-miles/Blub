@@ -925,6 +925,54 @@ Use \`renderer.setAnimationLoop\` (not raw rAF) for WebGPU compatibility.
 
 ---
 
+### BLUD Editor Bridge — ALWAYS INCLUDE
+
+Every generated game **must** expose \`window.BLUD_API\` so the host editor can drive it in real-time (UE5 Play-in-Editor style). Place this block **before** the animation loop, after scene + physics are initialized:
+
+\`\`\`js
+// ── BLUD Editor Bridge ──────────────────────────────────────────────────
+window.BLUD_API = {
+  setGravity:     ({ y })           => { world.gravity.y = y; },
+  setFriction:    ({ v })           => { try { groundCollider?.setFriction?.(v); } catch(e){} },
+  setRestitution: ({ v })           => { try { groundCollider?.setRestitution?.(v); } catch(e){} },
+  setFog:         ({ density })     => { if (scene.fog) scene.fog.density = density; },
+  setTimeOfDay:   ({ t })           => {
+    if (sunLight) {
+      const a = t * Math.PI;
+      sunLight.position.set(Math.cos(a)*80, Math.sin(a)*80, 40);
+      sunLight.intensity = Math.max(0, Math.sin(a)) * 3;
+    }
+  },
+  setWind:        ({ x, z })        => { if (typeof windVec !== 'undefined') { windVec.x=x; windVec.z=z; } },
+  spawnVehicle:   ({ x=0,y=5,z=0 })=> { if (typeof createVehicle==='function') createVehicle(x,y,z); },
+  spawnDebris:    ({ x=0,y=3,z=0,count=20,scale=1 }) => {
+    if (typeof spawnDebris==='function') spawnDebris(x,y,z,0,0,count,scale);
+  },
+  setCameraMode:  ({ mode })        => {
+    if (typeof setCameraMode==='function') setCameraMode(mode);
+    else window._cameraMode = mode;
+  },
+  reset:          ()                => location.reload(),
+};
+window.addEventListener('message', function(e) {
+  if (!e.data || !e.data.__blud) return;
+  const fn = window.BLUD_API[e.data.cmd];
+  if (typeof fn === 'function') fn(e.data.args || {});
+});
+if (window.parent !== window) {
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      window.parent.postMessage({ __blud_ready: true, commands: Object.keys(window.BLUD_API) }, '*');
+    }, 800);
+  });
+}
+// ── End BLUD Editor Bridge ────────────────────────────────────────────
+\`\`\`
+
+Adapt variable names (\`world\`, \`sunLight\`, \`groundCollider\`, etc.) to match your actual scene. Every game **must** define at minimum: \`setGravity\`, \`setFog\`, \`setTimeOfDay\`, \`spawnVehicle\`, \`spawnDebris\`, \`setCameraMode\`, \`reset\`.
+
+---
+
 ### General output rules
 - One complete file: \`<!DOCTYPE html>\` through \`</html>\`
 - All styles, scripts, and logic inline — zero external files, zero build step

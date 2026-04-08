@@ -24,6 +24,7 @@ import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types
 import { buildGameBlobUrl } from "@/lib/game-html";
 import { AiModelPromptBar } from "@/components/editor-shell/AiModelPromptBar";
 import { CopilotPanel } from "@/components/editor-shell/CopilotPanel";
+import { GameBridgePanel } from "@/components/editor-shell/GameBridgePanel";
 import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
 import { InspectorSidebar } from "@/components/editor-shell/InspectorSidebar";
 import { SpatialAnalysisPanel } from "@/components/editor-shell/SpatialAnalysisPanel";
@@ -314,6 +315,7 @@ export function EditorShell({
 }: EditorShellProps) {
   const [gameViewUrl, setGameViewUrl] = useState<string | null>(null);
   const gameViewUrlRef = useRef<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const handlePlayInViewport = useCallback(() => {
     if (!copilot.latestGame) return;
@@ -465,17 +467,19 @@ export function EditorShell({
           {gameViewUrl && (
             <div className="absolute inset-0 z-20 rounded-[32px] overflow-hidden">
               <iframe
+                ref={iframeRef}
                 src={gameViewUrl}
                 className="size-full border-0"
                 allow="autoplay"
                 title="Game preview"
               />
               <button
-                className="absolute left-4 top-4 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm hover:bg-black/80 hover:text-white transition-colors"
+                className="absolute left-4 top-4 z-30 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm hover:bg-black/80 hover:text-white transition-colors"
                 onClick={handleExitGameView}
               >
                 ← Editor
               </button>
+              <GameBridgePanel iframeRef={iframeRef} />
             </div>
           )}
 
