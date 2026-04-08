@@ -27,11 +27,11 @@
  */
 
 import { useMemo } from "react";
-import type * as THREE from "three";
 import { getRendererAdapter, getRendererCapabilities } from "@blud/renderer-backend";
 import { getEngineFlags } from "@blud/engine-config";
 
-type GlConfig = ((canvas: HTMLCanvasElement) => THREE.WebGLRenderer) | undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GlConfig = any;
 
 export function useRendererGlConfig(): GlConfig {
   return useMemo<GlConfig>(() => {

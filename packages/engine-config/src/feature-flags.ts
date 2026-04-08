@@ -48,7 +48,7 @@ export const DEFAULT_ENGINE_FLAGS: Readonly<EngineFeatureFlags> = Object.freeze(
  */
 function readViteEnvFlags(): Partial<EngineFeatureFlags> {
   const env =
-    typeof import.meta !== "undefined" && (import.meta as Record<string, unknown>).env
+    typeof import.meta !== "undefined" && (import.meta as unknown as Record<string, unknown>).env
       ? (import.meta as { env: Record<string, string> }).env
       : {};
 
