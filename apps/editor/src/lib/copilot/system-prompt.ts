@@ -1488,6 +1488,551 @@ Adapt variable names (\`world\`, \`sunLight\`, \`groundCollider\`, etc.) to matc
 
 ---
 
+## Sports / Physics Arcade Game — Full Pattern
+
+Use this section whenever the requested game is a tabletop or arena sports/arcade title (ping pong, billiards, air hockey, foosball, shuffleboard, bowling, basketball, tennis, etc.). These games do **not** need Rapier — use pure kinematic JS physics instead.
+
+### Renderer + post-processing setup
+
+\`\`\`js
+import * as THREE from 'three/webgpu'
+import {
+  pass, mrt, output, normalView,
+  uniform, vec2, vec3, vec4, float,
+  screenUV, Fn, Loop, If,
+  transformedNormalView
+} from 'three/tsl'
+import { ao } from 'three/addons/tsl/display/GTAONode.js'
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+
+const LAYER_DEFAULT = 0
+const LAYER_SSR_EXCLUDE = 1  // transparent objects go on this layer — excluded from SSR
+
+const scene = new THREE.Scene()
+scene.background = new THREE.Color(0x000000)
+scene.fog = new THREE.FogExp2(0x000000, 0.055)
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100)
+camera.position.set(0, 8, 10)
+camera.lookAt(0, 0, 0)
+
+const renderer = new THREE.WebGPURenderer({ antialias: true })
+renderer.setSize(innerWidth, innerHeight)
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+document.getElementById('root').appendChild(renderer.domElement)
+await renderer.init()  // ← required for WebGPU
+
+// Orbit controls (F key toggles free-look)
+const orbitControls = new OrbitControls(camera, renderer.domElement)
+orbitControls.enabled = false
+orbitControls.enableDamping = true
+orbitControls.dampingFactor = 0.08
+orbitControls.target.set(0, 0.5, 0)
+let freeOrbitMode = false
+
+// MRT scene pass — renders colour + normals for GTAO and SSR
+const scenePassNode = pass(scene, camera)
+scenePassNode.setMRT(mrt({ output, normal: transformedNormalView }))
+const scenePass  = scenePassNode.getTextureNode('output')
+const normalPass = scenePassNode.getTextureNode('normal')
+const depthPass  = scenePassNode.getTextureNode('depth')
+
+// GTAO ambient occlusion
+const aoPass = ao(depthPass, normalPass, camera)
+aoPass.resolutionScale = 0.4
+aoPass.thickness.value = 2
+aoPass.samples.value = 6
+aoPass.distanceExponent.value = 1.5
+const aoRemapped = aoPass.getTextureNode().r.mul(0.6).add(0.4)
+\`\`\`
+
+### Custom TSL SSR node
+
+This is the full screen-space reflections implementation. Copy it exactly — it ray-marches in view space, refines hits with binary search, applies edge/distance fade and Fresnel, and restricts reflections to upward-facing surfaces so walls and floors don't show false reflections.
+
+\`\`\`js
+const ssrEnabled    = uniform(1.0)
+const ssrStrength   = uniform(0.35)
+const ssrThickness  = uniform(0.15)
+const ssrMaxDist    = uniform(1.0)
+const ssrFresnelPow = uniform(1.5)
+const ssrFade       = uniform(0.9)
+const projMatU      = uniform(camera.projectionMatrix)
+const projInvMatU   = uniform(camera.projectionMatrixInverse)
+const viewMatInvU   = uniform(camera.matrixWorld)
+
+const ssrNode = Fn(([colorIn, depthIn, normalIn]) => {
+  const uv       = screenUV
+  const rawDepth = depthIn.sample(uv).x
+  const isSky    = rawDepth.greaterThanEqual(0.999)
+
+  // Linearise depth
+  const A      = projMatU.element(2).element(2)
+  const B      = projMatU.element(3).element(2)
+  const ndcZ   = rawDepth.mul(2.0).sub(1.0)
+  const linearZ = B.div(ndcZ.add(A))
+
+  // Reconstruct view-space position
+  const clipX  = uv.x.mul(2.0).sub(1.0)
+  const clipY  = float(1.0).sub(uv.y).mul(2.0).sub(1.0)
+  const viewX  = clipX.mul(projInvMatU.element(0).element(0)).mul(linearZ)
+  const viewY  = clipY.mul(projInvMatU.element(1).element(1)).mul(linearZ)
+  const viewPos = vec3(viewX, viewY, linearZ.negate())
+
+  // Reflection ray
+  const N = normalIn.sample(uv).xyz.normalize()
+  const V = viewPos.normalize()
+  const R = V.sub(N.mul(V.dot(N).mul(2.0))).normalize()
+
+  // Fresnel
+  const NdotV  = N.dot(V.negate()).clamp(0.0, 1.0)
+  const fresnel = float(1.0).sub(NdotV).pow(ssrFresnelPow).clamp(0.0, 1.0)
+
+  const hitColor  = vec3(0.0, 0.0, 0.0).toVar()
+  const hitWeight = float(0.0).toVar()
+  const hitT      = float(0.0).toVar()
+  const prevT     = float(0.0).toVar()
+
+  // Only reflect upward-facing surfaces (table top) — skip walls/undersides
+  const isUpwardFacing = N.y.abs().greaterThan(0.3)
+  const reflGoingUp    = R.y.greaterThan(-0.5)
+
+  // World-space Y of the fragment (to skip floor)
+  const worldY = viewMatInvU.element(0).element(1).mul(viewPos.x)
+    .add(viewMatInvU.element(1).element(1).mul(viewPos.y))
+    .add(viewMatInvU.element(2).element(1).mul(viewPos.z))
+    .add(viewMatInvU.element(3).element(1))
+  const isAboveFloor  = worldY.greaterThan(-0.8)
+  const isCloseEnough = linearZ.lessThan(14.0)
+
+  If(ssrEnabled.greaterThan(0.5).and(R.z.lessThan(0.1)).and(isSky.not())
+    .and(isUpwardFacing).and(reflGoingUp).and(isAboveFloor).and(isCloseEnough), () => {
+
+    // 16-step linear ray march
+    Loop(16, ({ i }) => {
+      const fi      = float(i).add(1.0)
+      const t       = fi.div(16.0).mul(ssrMaxDist)
+      const sPos    = viewPos.add(R.mul(t))
+      const negZ    = sPos.z.negate()
+      const sClipX  = sPos.x.mul(projMatU.element(0).element(0)).div(negZ)
+      const sClipY  = sPos.y.mul(projMatU.element(1).element(1)).div(negZ)
+      const sUV     = vec2(sClipX.mul(0.5).add(0.5), float(1.0).sub(sClipY.mul(0.5).add(0.5)))
+      const inBounds = sUV.x.greaterThanEqual(0.0).and(sUV.x.lessThanEqual(1.0))
+        .and(sUV.y.greaterThanEqual(0.0)).and(sUV.y.lessThanEqual(1.0))
+      If(inBounds.and(hitWeight.lessThan(0.5)), () => {
+        const sd     = depthIn.sample(sUV).x
+        const sNdcZ  = sd.mul(2.0).sub(1.0)
+        const sLinZ  = B.div(sNdcZ.add(A))
+        const diff   = negZ.sub(sLinZ)
+        If(diff.greaterThan(0.0).and(diff.lessThan(ssrThickness)).and(sd.lessThan(0.999)), () => {
+          hitT.assign(t); hitWeight.assign(1.0)
+        })
+      })
+      If(hitWeight.lessThan(0.5), () => { prevT.assign(t) })
+    })
+
+    // 4-step binary refinement
+    If(hitWeight.greaterThan(0.5), () => {
+      const loT = prevT.toVar()
+      const hiT = hitT.toVar()
+      Loop(4, () => {
+        const midT   = loT.add(hiT).mul(0.5)
+        const mPos   = viewPos.add(R.mul(midT))
+        const mNegZ  = mPos.z.negate()
+        const mClipX = mPos.x.mul(projMatU.element(0).element(0)).div(mNegZ)
+        const mClipY = mPos.y.mul(projMatU.element(1).element(1)).div(mNegZ)
+        const mUV    = vec2(mClipX.mul(0.5).add(0.5), float(1.0).sub(mClipY.mul(0.5).add(0.5)))
+        const mDiff  = mNegZ.sub(B.div(depthIn.sample(mUV).x.mul(2.0).sub(1.0).add(A)))
+        If(mDiff.greaterThan(0.0), () => { hiT.assign(midT) }).Else(() => { loT.assign(midT) })
+      })
+      const fT      = loT.add(hiT).mul(0.5)
+      const fPos    = viewPos.add(R.mul(fT))
+      const fNegZ   = fPos.z.negate()
+      const fClipX  = fPos.x.mul(projMatU.element(0).element(0)).div(fNegZ)
+      const fClipY  = fPos.y.mul(projMatU.element(1).element(1)).div(fNegZ)
+      const fUV     = vec2(fClipX.mul(0.5).add(0.5), float(1.0).sub(fClipY.mul(0.5).add(0.5)))
+      const edgeFade = fUV.x.mul(float(1.0).sub(fUV.x)).mul(4.0).clamp(0.0, 1.0)
+        .mul(fUV.y.mul(float(1.0).sub(fUV.y)).mul(4.0).clamp(0.0, 1.0))
+      const distFade = float(1.0).sub(fT.div(ssrMaxDist)).clamp(0.0, 1.0)
+      hitColor.assign(colorIn.sample(fUV).xyz.mul(edgeFade).mul(distFade))
+    })
+  })
+
+  const reflMix = hitWeight.mul(fresnel).mul(ssrStrength).mul(ssrFade)
+  return vec4(hitColor, reflMix)
+})
+
+// Composite: colour + SSR then GTAO
+const ssrResult      = ssrNode(scenePass, depthPass, normalPass)
+const sceneWithSSR   = scenePass.add(vec4(ssrResult.xyz.mul(ssrResult.w), 0.0))
+const compositedScene = sceneWithSSR.mul(aoRemapped)
+
+const PostProcessingClass = THREE.PostProcessing || THREE.RenderPipeline
+const postProcessing = new PostProcessingClass(renderer)
+postProcessing.outputNode = compositedScene
+postProcessing.needsUpdate = true
+\`\`\`
+
+### HDR environment
+
+\`\`\`js
+const hdrLoader = new HDRLoader()
+hdrLoader.load('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr', (hdr) => {
+  hdr.mapping = THREE.EquirectangularReflectionMapping
+  scene.environment = hdr
+  scene.environmentIntensity = 0.6
+  // Keep dark background — use HDR for reflections only, not skybox
+})
+\`\`\`
+
+### Procedural game object patterns
+
+**Table surface — MeshPhysicalMaterial with clearcoat:**
+\`\`\`js
+const tableMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color(0x002c66),
+  roughness: 1.0, metalness: 0.0,
+  clearcoat: 0.3, clearcoatRoughness: 0.1,
+  envMapIntensity: 0.5, reflectivity: 0.5,
+})
+\`\`\`
+
+**Canvas net texture (draw a grid, use as alphaMap):**
+\`\`\`js
+function makeNetTexture(w, h, gridX, gridY) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h
+  const ctx = c.getContext('2d')
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h)
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2
+  for (let x = 0; x <= gridX; x++) { const px = (x/gridX)*w; ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,h); ctx.stroke() }
+  for (let y = 0; y <= gridY; y++) { const py = (y/gridY)*h; ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(w,py); ctx.stroke() }
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.NearestFilter
+  return t
+}
+const netTex      = makeNetTexture(256, 128, 16, 12)
+const netAlphaTex = makeNetTexture(256, 128, 16, 12)
+const netMat = new THREE.MeshStandardMaterial({
+  map: netTex, alphaMap: netAlphaTex,
+  transparent: true, side: THREE.DoubleSide,
+  roughness: 0.9, metalness: 0.1,
+  emissive: 0xffffff, emissiveIntensity: 0.15, depthWrite: false,
+})
+const net = new THREE.Mesh(new THREE.PlaneGeometry(netWidth, netHeight), netMat)
+net.layers.enable(LAYER_SSR_EXCLUDE)  // transparent — skip SSR
+\`\`\`
+
+**Egg-shaped paddle head with ExtrudeGeometry:**
+\`\`\`js
+function createRacketShape(inset = 0) {
+  const shape = new THREE.Shape()
+  const segments = 48; const rX = 0.6 - inset; const rTop = 0.68 - inset; const rBot = 0.48 - inset
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2
+    const sin = Math.sin(a); const cos = Math.cos(a)
+    const ry = cos > 0 ? THREE.MathUtils.lerp(rX, rTop, cos) : THREE.MathUtils.lerp(rX, rBot, -cos)
+    const x = sin * rX; const y = cos * ry
+    if (i === 0) shape.moveTo(x, y); else shape.lineTo(x, y)
+  }
+  return shape
+}
+// ExtrudeGeometry blade with bevel:
+const bladeGeo = new THREE.ExtrudeGeometry(createRacketShape(0), {
+  depth: 0.08, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2,
+})
+\`\`\`
+
+**Handle with per-vertex XZ deform (flared FL-style grip):**
+\`\`\`js
+function makeFlaredHandle(geo, len, neckW, neckD, midW, midD, buttW, buttD) {
+  const pos = geo.attributes.position
+  for (let i = 0; i < pos.count; i++) {
+    const t = THREE.MathUtils.clamp((pos.getY(i) + len/2) / len, 0, 1)
+    const [w, d] = t > 0.4
+      ? [THREE.MathUtils.lerp(midW, neckW, (t-0.4)/0.6), THREE.MathUtils.lerp(midD, neckD, (t-0.4)/0.6)]
+      : [THREE.MathUtils.lerp(buttW, midW, t/0.4),        THREE.MathUtils.lerp(buttD, midD, t/0.4)]
+    pos.setX(i, pos.getX(i) * w); pos.setZ(i, pos.getZ(i) * d)
+  }
+  pos.needsUpdate = true; geo.computeVertexNormals()
+}
+const handleGeo = new THREE.CylinderGeometry(1, 1, handleLen, 12, 12, false)
+makeFlaredHandle(handleGeo, handleLen, 0.035, 0.028, 0.055, 0.042, 0.048, 0.038)
+\`\`\`
+
+### Ball trail pool
+
+\`\`\`js
+const TRAIL_COUNT = 20
+const trailPositions = Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3())
+const trailMeshes = Array.from({ length: TRAIL_COUNT }, (_, i) => {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(BALL_RADIUS * 0.5, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: (1 - i/TRAIL_COUNT) * 0.3 })
+  )
+  m.visible = false; scene.add(m); return m
+})
+
+// Each frame — prepend current position, shift trail:
+function updateTrail(ballPos) {
+  trailPositions.unshift(ballPos.clone()); trailPositions.pop()
+  trailMeshes.forEach((m, i) => {
+    const age = trailPositions[i]
+    if (age.y < -5) { m.visible = false; return }
+    m.visible = true; m.position.copy(age)
+  })
+}
+\`\`\`
+
+### Kinematic ball physics (no Rapier)
+
+\`\`\`js
+const GRAVITY = -12   // m/s²
+const BOUNCE_DAMPING = 0.85
+const TABLE_TOP_Y = TABLE_Y + TABLE_HEIGHT / 2
+
+const gameState = {
+  ballPos: new THREE.Vector3(), ballVel: new THREE.Vector3(),
+  playerScore: 0, aiScore: 0, playerSets: 0, aiSets: 0,
+  serving: true, rallying: false, lastHit: 'none',
+  bouncedOpponent: false, bouncedServer: false,
+  gameOver: false, matchOver: false, paused: true,
+}
+
+const SETS_TO_WIN = 3   // best of 5
+const POINTS_TO_WIN = 11
+
+function physicsTick(delta) {
+  if (gameState.paused) return
+  gameState.ballVel.y += GRAVITY * delta
+  gameState.ballPos.addScaledVector(gameState.ballVel, delta)
+
+  // Bounce off table top surface
+  if (gameState.ballPos.y <= TABLE_TOP_Y + BALL_RADIUS) {
+    gameState.ballPos.y = TABLE_TOP_Y + BALL_RADIUS
+    gameState.ballVel.y = Math.abs(gameState.ballVel.y) * BOUNCE_DAMPING
+    // Determine which half the ball is on, apply scoring rules
+    const onPlayerSide = gameState.ballPos.z > 0
+    if (gameState.lastHit === 'player' && onPlayerSide) {
+      // Player hit it but it bounced on their own side first — fault
+      pointToAI()
+    } else if (gameState.lastHit === 'player' && !onPlayerSide) {
+      gameState.bouncedOpponent = true
+      // AI must return it now; if AI misses → point to player
+    }
+    // Mirror logic for AI side
+  }
+
+  // Ball went off table (fell below) — award point
+  if (gameState.ballPos.y < TABLE_TOP_Y - 3) {
+    awardPoint(gameState.lastHit === 'player' ? 'player' : 'ai')
+  }
+
+  // Net collision (thin AABB slice at z=0)
+  if (Math.abs(gameState.ballPos.z) < 0.05 && gameState.ballPos.y < TABLE_TOP_Y + NET_HEIGHT) {
+    if (gameState.ballPos.y > TABLE_TOP_Y) {
+      // Hit the net — point goes to the non-server
+      awardPoint(gameState.lastHit === 'player' ? 'ai' : 'player')
+    }
+  }
+}
+
+function awardPoint(winner) {
+  if (winner === 'player') { gameState.playerScore++ } else { gameState.aiScore++ }
+  checkSetEnd()
+  resetBall(winner === 'player')
+}
+
+function checkSetEnd() {
+  const p = gameState.playerScore, a = gameState.aiScore
+  const deuce = p >= 10 && a >= 10
+  const playerWins = deuce ? (p - a >= 2) : (p >= POINTS_TO_WIN)
+  const aiWins     = deuce ? (a - p >= 2) : (a >= POINTS_TO_WIN)
+  if (playerWins || aiWins) {
+    if (playerWins) gameState.playerSets++; else gameState.aiSets++
+    gameState.playerScore = 0; gameState.aiScore = 0
+    gameState.gameOver = true
+    if (gameState.playerSets >= SETS_TO_WIN || gameState.aiSets >= SETS_TO_WIN) {
+      gameState.matchOver = true
+    }
+  }
+}
+\`\`\`
+
+### AI opponent
+
+\`\`\`js
+const AI_SKILL = 0.85   // 0 = random, 1 = perfect tracking
+
+function updateAIPaddle(delta, aiPaddleGroup) {
+  if (gameState.ballVel.z >= 0) return  // ball going away from AI — hold position
+  const targetX = gameState.ballPos.x + (Math.random() - 0.5) * (1 - AI_SKILL) * 2
+  aiPaddleGroup.position.x += (targetX - aiPaddleGroup.position.x) * Math.min(delta * 4, 1)
+  aiPaddleGroup.position.x = THREE.MathUtils.clamp(aiPaddleGroup.position.x, -TABLE_WIDTH/2 + 0.3, TABLE_WIDTH/2 - 0.3)
+}
+
+function checkAIPaddleHit(aiPaddleGroup) {
+  const d = gameState.ballPos.distanceTo(aiPaddleGroup.position)
+  if (d < 0.45 && gameState.lastHit !== 'ai') {
+    gameState.ballVel.z  = Math.abs(gameState.ballVel.z) * 1.05
+    gameState.ballVel.x += (Math.random() - 0.5) * 1.2
+    gameState.ballVel.y  = Math.abs(gameState.ballVel.y) + 1.5
+    gameState.lastHit    = 'ai'
+  }
+}
+\`\`\`
+
+### Input handling (mouse + WASD + arrows + touch)
+
+\`\`\`js
+const keys = { a: false, d: false, w: false, s: false }
+let mouseX = 0
+let useMouseControl = true
+
+window.addEventListener('mousemove', (e) => {
+  mouseX = (e.clientX / innerWidth) * 2 - 1
+  useMouseControl = true
+})
+window.addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase()
+  if (k === 'a' || k === 'arrowleft')  { keys.a = true; useMouseControl = false }
+  if (k === 'd' || k === 'arrowright') { keys.d = true; useMouseControl = false }
+  if (k === 'w' || k === 'arrowup')   keys.w = true
+  if (k === 's' || k === 'arrowdown') keys.s = true
+  if (k === 'f') {
+    freeOrbitMode = !freeOrbitMode
+    orbitControls.enabled = freeOrbitMode
+    if (!freeOrbitMode) { camera.position.set(0, 8, 10); camera.lookAt(0, 0.5, 0) }
+  }
+  if (k === ' ') {
+    if (gameState.paused && gameState.serverIsPlayer) serve()
+    else if (gameState.matchOver) { resetMatch(); serve() }
+    else if (gameState.gameOver) startNextSet()
+  }
+})
+window.addEventListener('keyup', (e) => {
+  const k = e.key.toLowerCase()
+  if (k === 'a' || k === 'arrowleft')  keys.a = false
+  if (k === 'd' || k === 'arrowright') keys.d = false
+  if (k === 'w' || k === 'arrowup')   keys.w = false
+  if (k === 's' || k === 'arrowdown') keys.s = false
+})
+window.addEventListener('touchmove', (e) => {
+  e.preventDefault()
+  mouseX = (e.touches[0].clientX / innerWidth) * 2 - 1
+  useMouseControl = true
+}, { passive: false })
+window.addEventListener('touchstart', (e) => { /* same serve/reset logic as mousedown */ })
+
+// In the update loop — move player paddle
+function updatePlayerPaddle(delta, playerPaddleGroup) {
+  let targetX = playerPaddleGroup.position.x
+  if (useMouseControl) {
+    targetX = mouseX * (TABLE_WIDTH / 2 - 0.3)
+  } else {
+    if (keys.a) targetX -= 4 * delta
+    if (keys.d) targetX += 4 * delta
+  }
+  playerPaddleGroup.position.x += (targetX - playerPaddleGroup.position.x) * Math.min(delta * 12, 1)
+  playerPaddleGroup.position.x = THREE.MathUtils.clamp(playerPaddleGroup.position.x, -TABLE_WIDTH/2 + 0.3, TABLE_WIDTH/2 - 0.3)
+}
+\`\`\`
+
+### Settings panel UI helpers
+
+Use these helpers to build the settings panel — do NOT import a GUI library:
+
+\`\`\`js
+function createSection(parent, title) {
+  const sec = document.createElement('div')
+  sec.style.cssText = 'margin-bottom: 16px;'
+  const label = document.createElement('div')
+  label.style.cssText = "color: rgba(255,255,255,0.3); font-style: italic; font-size: 13px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;"
+  label.textContent = title; sec.appendChild(label); parent.appendChild(sec); return sec
+}
+
+function createSlider(parent, label, min, max, step, value, onChange) {
+  const row = document.createElement('div')
+  row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;'
+  const lbl = document.createElement('span'); lbl.style.cssText = 'color:#aaa; font-size:11px;'; lbl.textContent = label
+  const val = document.createElement('span'); val.style.cssText = 'color:#fff; font-size:11px; min-width:32px; text-align:right;'; val.textContent = value
+  const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = value
+  inp.style.cssText = 'width:90px; height:4px; -webkit-appearance:none; background:rgba(255,255,255,0.1); border-radius:2px; cursor:pointer; outline:none;'
+  inp.addEventListener('input', () => { val.textContent = parseFloat(inp.value).toFixed(step < 0.1 ? 2 : step < 1 ? 1 : 0); onChange(parseFloat(inp.value)) })
+  const right = document.createElement('div'); right.style.cssText = 'display:flex; gap:8px; align-items:center;'
+  right.appendChild(inp); right.appendChild(val)
+  row.appendChild(lbl); row.appendChild(right); parent.appendChild(row); return inp
+}
+
+function createToggle(parent, label, value, onChange) {
+  const row = document.createElement('div'); row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;'
+  const lbl = document.createElement('span'); lbl.style.cssText = 'color:#aaa; font-size:11px;'; lbl.textContent = label
+  const tog = document.createElement('div')
+  tog.style.cssText = \`width:34px;height:18px;border-radius:9px;cursor:pointer;transition:background 0.2s;background:\${value?'rgba(34,153,255,0.6)':'rgba(255,255,255,0.1)'};position:relative;\`
+  const knob = document.createElement('div')
+  knob.style.cssText = \`width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;transition:left 0.2s;left:\${value?'18px':'2px'};\`
+  tog.appendChild(knob)
+  let st = value
+  tog.addEventListener('click', () => {
+    st = !st; tog.style.background = st ? 'rgba(34,153,255,0.6)' : 'rgba(255,255,255,0.1)'; knob.style.left = st ? '18px' : '2px'; onChange(st)
+  })
+  row.appendChild(lbl); row.appendChild(tog); parent.appendChild(row)
+}
+
+function createColorPicker(parent, label, value, onChange) {
+  const row = document.createElement('div'); row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;'
+  const lbl = document.createElement('span'); lbl.style.cssText = 'color:#aaa; font-size:11px;'; lbl.textContent = label
+  const inp = document.createElement('input'); inp.type = 'color'; inp.value = value
+  inp.style.cssText = 'width:28px;height:22px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;background:none;cursor:pointer;padding:0;'
+  inp.addEventListener('input', () => onChange(inp.value))
+  row.appendChild(lbl); row.appendChild(inp); parent.appendChild(row); return inp
+}
+
+// Then wire up settings sections like:
+// const lightSec = createSection(settingsPanel, 'Lighting')
+// createSlider(lightSec, 'Ambient', 0, 2, 0.05, 0.5, v => ambientLight.intensity = v)
+// createSlider(lightSec, 'Directional', 0, 3, 0.05, 1.0, v => dirLight.intensity = v)
+// ...
+// const ssrSec = createSection(settingsPanel, 'SSR Reflections')
+// createToggle(ssrSec, 'Enabled', true, v => ssrEnabled.value = v ? 1.0 : 0.0)
+// createSlider(ssrSec, 'Strength', 0, 1, 0.05, 0.35, v => ssrStrength.value = v)
+// createSlider(ssrSec, 'Thickness', 0.01, 0.5, 0.01, 0.15, v => ssrThickness.value = v)
+// createSlider(ssrSec, 'Max Distance', 0.1, 3.0, 0.1, 1.0, v => ssrMaxDist.value = v)
+// createSlider(ssrSec, 'Fresnel', 0.5, 4.0, 0.1, 1.5, v => ssrFresnelPow.value = v)
+\`\`\`
+
+### Main loop
+
+\`\`\`js
+const clock = new THREE.Clock()
+renderer.setAnimationLoop(async () => {
+  const delta = Math.min(clock.getDelta(), 0.05)   // cap at 50 ms to avoid tunnelling
+  if (freeOrbitMode) orbitControls.update()
+
+  physicsTick(delta)
+  updatePlayerPaddle(delta, playerPaddle)
+  updateAIPaddle(delta, aiPaddle)
+  checkAIPaddleHit(aiPaddle)
+  updateTrail(ball.position)
+
+  // Sync ball mesh to physics position
+  ball.position.copy(gameState.ballPos)
+
+  // Update SSR camera matrices every frame
+  projMatU.value.copy(camera.projectionMatrix)
+  projInvMatU.value.copy(camera.projectionMatrixInverse)
+  viewMatInvU.value.copy(camera.matrixWorld)
+
+  await postProcessing.renderAsync()
+})
+\`\`\`
+
+> **SSR layer rule**: any mesh with \`transparent: true\` (nets, particles, glass, UI sprites) must call \`mesh.layers.enable(LAYER_SSR_EXCLUDE)\` so the depth-buffer read in the SSR pass sees through them correctly.
+
+---
+
 ### General output rules
 - One complete file: \`<!DOCTYPE html>\` through \`</html>\`
 - All styles, scripts, and logic inline — zero external files, zero build step
@@ -1503,6 +2048,9 @@ Three.js WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, ce
 
 **Builder / sandbox / creative tool** (when the user asks to build, place, or create things — like a brick builder, city planner, sculpting tool):
 Three.js WebGPU + MeshPhysicalMaterial (clearcoat, sheen), HDR environment (Polyhaven via RGBELoader + canvas fallback), VSMShadowMap, WebGPU post-processing (AO + bloom), RoundedBoxGeometry, mergeGeometries for static batching, raycaster snap-to-grid placement with ghost preview mesh, layered Web Audio UI sounds (snap click / hover tick / remove pop / confirm), grid-based data structure (Map or 3D array) for placed objects, custom glassy dark settings panel, loading screen, stats-gl. Pattern: ghost mesh follows mouse, left-click places, right-click removes.
+
+**Sports / physics arcade game** (ping pong, billiards, bowling, basketball, air hockey, tennis, etc.):
+Three.js WebGPU renderer + \`await renderer.init()\`, MRT pass for SSR (custom TSL Fn ray-march node — see "Sports / Physics Arcade" section below for full pattern), GTAO ambient occlusion, HDR from Polyhaven via HDRLoader, MeshPhysicalMaterial (clearcoat + reflectivity) for table/court surfaces. Procedural mesh geometry for game objects (ExtrudeGeometry + THREE.Shape for paddles/rackets, per-vertex CylinderGeometry XZ deform for handles, canvas CanvasTexture for net/scoring boards). Kinematic ball physics in pure JS (gravity constant, bounce damping, AABB collision vs table + net + paddles — no Rapier needed). AI opponent with lerp tracking + skill-scaled error. Tournament state machine (sets, points, deuce/advantage/ace). Ball trail pool (20 translucent meshes with fading opacity). Mouse X + WASD/arrows + touch input for paddle. Orbit camera toggle (F key). SSR layer exclusion (\`layers.enable(LAYER_SSR_EXCLUDE)\`) for transparent objects. Settings panel with Lighting / Environment / HDR / SSR / Physics / Game sections using createSection/createSlider/createToggle/createColorPicker helpers.
 
 For **all** requests: loading screen, fog, shadows, stats-gl, and a settings panel with at least 3 folders.
 **Always include the cell scatter + ruins system** for open-world games — it is what makes the world feel alive.
