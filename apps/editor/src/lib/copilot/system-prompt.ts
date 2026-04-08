@@ -1133,10 +1133,280 @@ waterFolder.add({level: WATER_LEVEL}, 'level', -10, 50, 0.1).name('Water level')
 waterFolder.open()
 \`\`\`
 
+#### 7 — Rain drops on water: falling streaks + CPU wave propagation + ring splashes
+
+Use this system **whenever weather includes rain** or the player enters a rain biome. It layers on top of the Gerstner surface: Gerstner handles macro ocean waves, the CPU grid handles micro ripples from individual rain impacts.
+
+\`\`\`js
+// ── Rain system constants ──────────────────────────────────────────────
+const RAIN_COUNT   = 600
+const RAIN_AREA    = 120        // XZ extent matching terrain size
+const RAIN_HEIGHT  = 80
+const STREAK_COUNT = 120
+let   rainIntensity = 1.0       // 0–1, driven by weather system or GUI
+
+// ── Falling rain points ───────────────────────────────────────────────
+const rainGeo = new THREE.BufferGeometry()
+const rainPos = new Float32Array(RAIN_COUNT * 3)
+const rainVel = new Float32Array(RAIN_COUNT)
+const rainOpacity = new Float32Array(RAIN_COUNT)
+for (let i = 0; i < RAIN_COUNT; i++) {
+  rainPos[i*3]   = (Math.random()-0.5)*RAIN_AREA
+  rainPos[i*3+1] = Math.random()*RAIN_HEIGHT
+  rainPos[i*3+2] = (Math.random()-0.5)*RAIN_AREA
+  rainVel[i]     = 30 + Math.random()*30
+  rainOpacity[i] = 0.2 + Math.random()*0.5
+}
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3))
+rainGeo.setAttribute('aOpacity', new THREE.BufferAttribute(rainOpacity, 1))
+const rainMat = new THREE.ShaderMaterial({
+  uniforms: { uColor: { value: new THREE.Color(0x8aaabe) } },
+  vertexShader: \`
+    attribute float aOpacity; varying float vOpacity;
+    void main() {
+      vOpacity = aOpacity;
+      vec4 mv = modelViewMatrix * vec4(position,1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = max(1.0, 2.5*(200.0/-mv.z));
+    }\`,
+  fragmentShader: \`
+    uniform vec3 uColor; varying float vOpacity;
+    void main() {
+      float d = length(gl_PointCoord - 0.5);
+      if (d > 0.5) discard;
+      gl_FragColor = vec4(uColor, vOpacity*(1.0-d*2.0));
+    }\`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+})
+const rainPoints = new THREE.Points(rainGeo, rainMat)
+scene.add(rainPoints)
+
+// ── Velocity streaks (LineSegments give the fast-fall blur effect) ────
+const streakGeo = new THREE.BufferGeometry()
+const streakPos = new Float32Array(STREAK_COUNT * 6)
+const streakData = []
+for (let i = 0; i < STREAK_COUNT; i++) {
+  const x = (Math.random()-0.5)*RAIN_AREA
+  const y = Math.random()*RAIN_HEIGHT
+  const z = (Math.random()-0.5)*RAIN_AREA
+  const len = 1.0 + Math.random()*2.5
+  streakData.push({ x, y, z, speed: 45+Math.random()*30, len })
+  const b = i*6
+  streakPos[b]=x; streakPos[b+1]=y; streakPos[b+2]=z
+  streakPos[b+3]=x; streakPos[b+4]=y-len; streakPos[b+5]=z
+}
+streakGeo.setAttribute('position', new THREE.BufferAttribute(streakPos, 3))
+const streakMat = new THREE.LineBasicMaterial({
+  color: 0x7a9ab0, transparent: true, opacity: 0.25,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+})
+const streakLines = new THREE.LineSegments(streakGeo, streakMat)
+scene.add(streakLines)
+
+// ── CPU wave propagation grid (finite-difference) ─────────────────────
+// Layered on top of Gerstner for rain micro-ripples.
+// Use a smaller sub-mesh or modify the water geometry directly.
+const RIPPLE_SEGS = 200       // should match your water plane SEGMENTS
+const RIPPLE_SIZE = 80        // match your water plane physical size
+const vertCount   = (RIPPLE_SEGS+1)*(RIPPLE_SEGS+1)
+const waveH   = new Float32Array(vertCount)  // current height offsets
+const waveV   = new Float32Array(vertCount)  // velocity
+const DAMPING    = 0.965
+const WAVE_SPD   = 0.18
+const MAX_RIPPLE = 0.9
+const rippleQueue = []        // { x, z, strength, radius, speed, maxRadius, life }
+
+function rippleIndex(ix, iz) {
+  if (ix<0||ix>RIPPLE_SEGS||iz<0||iz>RIPPLE_SEGS) return -1
+  return iz*(RIPPLE_SEGS+1)+ix
+}
+function addRipple(wx, wz, strength = 1.0) {
+  rippleQueue.push({ x:wx, z:wz, strength, radius:0, speed:12, maxRadius:22, life:1.0 })
+}
+
+function simulateRipples(dt, waterGeometry) {
+  const posArr = waterGeometry.attributes.position.array
+  const half = RIPPLE_SIZE/2, step = RIPPLE_SIZE/RIPPLE_SEGS
+
+  // Inject ripple sources into velocity field
+  for (let r = rippleQueue.length-1; r >= 0; r--) {
+    const rip = rippleQueue[r]
+    rip.radius += rip.speed*dt
+    rip.life -= dt*0.55
+    if (rip.life <= 0 || rip.radius > rip.maxRadius) { rippleQueue.splice(r,1); continue }
+    const cx = Math.round((rip.x+half)/step), cz = Math.round((rip.z+half)/step)
+    const outer = Math.ceil((rip.radius+0.5)/step)
+    for (let iz=Math.max(0,cz-outer); iz<=Math.min(RIPPLE_SEGS,cz+outer); iz++) {
+      for (let ix=Math.max(0,cx-outer); ix<=Math.min(RIPPLE_SEGS,cx+outer); ix++) {
+        const dist = Math.sqrt((ix-cx)**2+(iz-cz)**2)*step
+        const ringDist = Math.abs(dist - rip.radius)
+        if (ringDist < 1.0) {
+          const idx = rippleIndex(ix, iz)
+          if (idx >= 0) waveV[idx] += rip.strength*rip.life*(1.0-ringDist)*0.045*Math.sin(dist*2-rip.radius*3)
+        }
+      }
+    }
+  }
+
+  // Wave propagation (2D discrete wave equation)
+  for (let iz=1; iz<RIPPLE_SEGS; iz++) {
+    for (let ix=1; ix<RIPPLE_SEGS; ix++) {
+      const i  = rippleIndex(ix, iz)
+      const lap = waveH[rippleIndex(ix-1,iz)] + waveH[rippleIndex(ix+1,iz)]
+                + waveH[rippleIndex(ix,iz-1)] + waveH[rippleIndex(ix,iz+1)]
+                - 4*waveH[i]
+      waveV[i] = Math.max(-2, Math.min(2, (waveV[i] + lap*WAVE_SPD)*DAMPING))
+    }
+  }
+  for (let i=0; i<vertCount; i++) {
+    waveH[i] = Math.max(-MAX_RIPPLE, Math.min(MAX_RIPPLE, (waveH[i]+waveV[i])*0.99))
+    posArr[i*3+1] = (posArr[i*3+1] || 0) + waveH[i]   // add ripple on top of Gerstner Y
+  }
+  // Pin edges to 0
+  for (let ix=0; ix<=RIPPLE_SEGS; ix++) {
+    for (const iz of [0, RIPPLE_SEGS]) { const idx=rippleIndex(ix,iz); waveH[idx]=0; waveV[idx]=0 }
+  }
+  for (let iz=0; iz<=RIPPLE_SEGS; iz++) {
+    for (const ix of [0, RIPPLE_SEGS]) { const idx=rippleIndex(ix,iz); waveH[idx]=0; waveV[idx]=0 }
+  }
+  waterGeometry.attributes.position.needsUpdate = true
+  waterGeometry.computeVertexNormals()
+}
+
+// ── Rain ring splash particles ────────────────────────────────────────
+const MAX_SPLASH = 600
+const splashGeo  = new THREE.BufferGeometry()
+const splashPos  = new Float32Array(MAX_SPLASH*3)
+const splashSize = new Float32Array(MAX_SPLASH)
+const splashAlpha= new Float32Array(MAX_SPLASH)
+splashGeo.setAttribute('position', new THREE.BufferAttribute(splashPos, 3))
+splashGeo.setAttribute('aSize',    new THREE.BufferAttribute(splashSize,1))
+splashGeo.setAttribute('aAlpha',   new THREE.BufferAttribute(splashAlpha,1))
+const splashMat = new THREE.ShaderMaterial({
+  uniforms: { uColor: { value: new THREE.Color(0xaaccdd) } },
+  vertexShader: \`
+    attribute float aSize; attribute float aAlpha; varying float vAlpha;
+    void main() {
+      vAlpha = aAlpha;
+      vec4 mv = modelViewMatrix*vec4(position,1.0);
+      gl_Position = projectionMatrix*mv;
+      gl_PointSize = aSize*(150.0/-mv.z);
+    }\`,
+  fragmentShader: \`
+    uniform vec3 uColor; varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord-0.5);
+      if (d>0.5) discard;
+      float ring = smoothstep(0.3,0.45,d)*smoothstep(0.5,0.45,d);
+      float fill = smoothstep(0.5,0.0,d)*0.3;
+      gl_FragColor = vec4(uColor,(ring+fill)*vAlpha);
+    }\`,
+  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+})
+const splashPoints = new THREE.Points(splashGeo, splashMat)
+scene.add(splashPoints)
+const activeSplashes = []
+function addRingSplash(wx, wz) {
+  if (activeSplashes.length >= MAX_SPLASH) return
+  activeSplashes.push({ x:wx, y:0.15, z:wz, life:1.0, maxLife:0.4+Math.random()*0.3,
+    size:2+Math.random()*3, vy:2+Math.random()*2 })
+}
+function updateRingSplashes(dt) {
+  for (let i=activeSplashes.length-1; i>=0; i--) {
+    const s = activeSplashes[i]
+    s.life -= dt/s.maxLife; s.y += s.vy*dt; s.vy -= 8*dt; s.size += dt*6
+    if (s.life<=0) { activeSplashes.splice(i,1) }
+  }
+  for (let i=0; i<MAX_SPLASH; i++) {
+    if (i<activeSplashes.length) {
+      const s=activeSplashes[i]
+      splashPos[i*3]=s.x; splashPos[i*3+1]=s.y; splashPos[i*3+2]=s.z
+      splashSize[i]=s.size*s.life; splashAlpha[i]=s.life*0.7
+    } else { splashPos[i*3+1]=-100; splashSize[i]=0; splashAlpha[i]=0 }
+  }
+  splashGeo.attributes.position.needsUpdate=true
+  splashGeo.attributes.aSize.needsUpdate=true
+  splashGeo.attributes.aAlpha.needsUpdate=true
+}
+
+// ── Rain update (called every frame) ────────────────────────────────
+function updateRain(dt, waterY = WATER_LEVEL) {
+  const activeCount = Math.floor(RAIN_COUNT*rainIntensity)
+  for (let i=0; i<activeCount; i++) {
+    rainPos[i*3+1] -= rainVel[i]*dt
+    if (rainPos[i*3+1] < waterY) {
+      const hx = rainPos[i*3], hz = rainPos[i*3+2]
+      if (Math.abs(hx)<RIPPLE_SIZE/2 && Math.abs(hz)<RIPPLE_SIZE/2) {
+        addRipple(hx, hz, 0.15+Math.random()*0.2)
+        if (Math.random()<0.3) addRingSplash(hx, hz)
+      }
+      rainPos[i*3]   = (Math.random()-0.5)*RAIN_AREA
+      rainPos[i*3+1] = RAIN_HEIGHT + Math.random()*10
+      rainPos[i*3+2] = (Math.random()-0.5)*RAIN_AREA
+      rainVel[i]     = 30+Math.random()*30
+    }
+  }
+  rainGeo.attributes.position.needsUpdate = true
+
+  const activeStreaks = Math.floor(STREAK_COUNT*rainIntensity)
+  for (let i=0; i<activeStreaks; i++) {
+    const s = streakData[i]
+    s.y -= s.speed*dt
+    if (s.y < waterY) { s.x=(Math.random()-0.5)*RAIN_AREA; s.y=RAIN_HEIGHT+Math.random()*10; s.z=(Math.random()-0.5)*RAIN_AREA }
+    const b=i*6
+    streakPos[b]=s.x; streakPos[b+1]=s.y; streakPos[b+2]=s.z
+    streakPos[b+3]=s.x; streakPos[b+4]=s.y-s.len; streakPos[b+5]=s.z
+  }
+  streakGeo.attributes.position.needsUpdate = true
+  streakMat.opacity = 0.25*rainIntensity
+  rainPoints.visible = rainIntensity > 0
+  streakLines.visible = rainIntensity > 0.05
+}
+
+// ── Mouse/touch interactive ripples ─────────────────────────────────
+const _rippleRaycaster = new THREE.Raycaster()
+const _rippleMouse     = new THREE.Vector2()
+let   _rippleDown      = false, _lastRippleT = 0
+renderer.domElement.addEventListener('pointerdown', e => { _rippleDown=true; _castRipple(e,2.0) })
+renderer.domElement.addEventListener('pointermove', e => {
+  const now=performance.now()
+  if (_rippleDown && now-_lastRippleT>50) { _castRipple(e,1.8); _lastRippleT=now }
+  else if (!_rippleDown && now-_lastRippleT>80) { _castRipple(e,0.4); _lastRippleT=now }
+})
+renderer.domElement.addEventListener('pointerup', () => _rippleDown=false )
+function _castRipple(e, strength) {
+  _rippleMouse.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1)
+  _rippleRaycaster.setFromCamera(_rippleMouse, camera)
+  const hits = _rippleRaycaster.intersectObject(waterMesh)
+  if (hits.length) {
+    addRipple(hits[0].point.x, hits[0].point.z, strength)
+    for (let i=0;i<3;i++) addRingSplash(hits[0].point.x+(Math.random()-0.5)*2, hits[0].point.z+(Math.random()-0.5)*2)
+  }
+}
+
+// ── BLUD_API extensions for rain ──────────────────────────────────────
+// Add to window.BLUD_API:
+//   setRainIntensity: ({ v }) => { rainIntensity = Math.max(0, Math.min(1, v)) },
+//   setWaveHeight:    ({ v }) => { waveHeight.value = v },
+
+// ── In animation loop, add: ───────────────────────────────────────────
+// updateRain(delta, WATER_LEVEL)
+// updateRingSplashes(delta)
+// simulateRipples(delta, waterGeo)   // pass your water plane geometry
+
+// ── Rain GUI folder (add inside the Water folder) ─────────────────────
+// waterFolder.add({rain:100},'rain',0,100,1).name('Rain intensity').onChange(v=>{ rainIntensity=v/100 })
+\`\`\`
+
+**When to activate rain:** check the \`BLUD_API.setRainIntensity\` call. At intensity 0 all rain geometry is hidden (no draw calls). At 1 all 600 drops + 120 streaks are active. The ripple grid always runs at full resolution for mouse interaction even when rain is off.
+
+---
+
 **Integration rules:**
 - Call \`waveTime.value += delta\` every frame in the animation loop.
 - Call \`applyBuoyancy()\` for every dynamic rigid body inside the physics tick.
 - Call \`spawnSplash(x, z, intensity)\` whenever a fast-moving rigid body crosses the water surface (compare prev/current Y against \`getWaterHeight()\`).
+- Call \`updateRain(delta, WATER_LEVEL)\`, \`updateRingSplashes(delta)\`, and \`simulateRipples(delta, waterGeo)\` every frame when rain is enabled.
 - Call \`updateSplash(delta)\` and \`updateCaustics(elapsedTime)\` every frame.
 - Call \`updateUnderwater(camera, ...)\` every frame.
 - The \`WATER_DENSITY\` constant should be ~1025 (seawater) — tune down to ~200 for arcade-feel floating.
@@ -1226,7 +1496,7 @@ Adapt variable names (\`world\`, \`sunLight\`, \`groundCollider\`, etc.) to matc
 Two target archetypes — match the right one to the request:
 
 **Open-world action game** (default when the user asks for a "game" or vehicle/terrain demo):
-Three.js WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, cell scatter (rocks / bushes / ancient ruins: columns/walls/arches/temples/towers/ziggurats), debris pool on impact, instanced dust/splash particles, **full TSL Gerstner wave water system** (4-wave surface with foam + Fresnel, Rapier buoyancy on all physics bodies, splash particle pool, underwater fog/post-processing, canvas caustics), WebGPU post-processing (AO + bloom), custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust / **Water** folders), loading screen, bottom HUD, stats-gl. If the scene has water, the water archetype from the "Advanced Water Physics" section is **mandatory** — no exceptions.
+Three.js WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, cell scatter (rocks / bushes / ancient ruins: columns/walls/arches/temples/towers/ziggurats), debris pool on impact, instanced dust/splash particles, **full TSL Gerstner wave water system** (4-wave surface with foam + Fresnel, Rapier buoyancy on all physics bodies, splash particle pool, underwater fog/post-processing, canvas caustics, **rain system**: 600 falling points + 120 velocity streak lines + ring-splash shader particles + CPU finite-difference ripple grid that physically propagates each raindrop impact outward, mouse/touch interactive ripples), WebGPU post-processing (AO + bloom), custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust / **Water** folders), loading screen, bottom HUD, stats-gl. If the scene has water, the water archetype from the "Advanced Water Physics" section is **mandatory** — no exceptions.
 
 **Builder / sandbox / creative tool** (when the user asks to build, place, or create things — like a brick builder, city planner, sculpting tool):
 Three.js WebGPU + MeshPhysicalMaterial (clearcoat, sheen), HDR environment (Polyhaven via RGBELoader + canvas fallback), VSMShadowMap, WebGPU post-processing (AO + bloom), RoundedBoxGeometry, mergeGeometries for static batching, raycaster snap-to-grid placement with ghost preview mesh, layered Web Audio UI sounds (snap click / hover tick / remove pop / confirm), grid-based data structure (Map or 3D array) for placed objects, custom glassy dark settings panel, loading screen, stats-gl. Pattern: ghost mesh follows mouse, left-click places, right-click removes.
