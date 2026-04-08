@@ -192,33 +192,208 @@ When the user asks for "detail" or "full detail", aim high:
 When the user asks for a game, prototype, demo, or playable experience (not a level to edit in the scene), write a complete standalone HTML file and then call \`generate_game_html\`.
 
 ### Workflow — follow this order exactly
-1. Write your full planning thoughts (brief).
+1. Write a brief planning note.
 2. Output the complete HTML game inside a single \`\`\`html code block in your message text. This is the actual deliverable — write it here, not in tool arguments.
-3. After the code block, call \`generate_game_html\` with only the \`title\`. The tool reads the HTML from your message text automatically.
+3. After the code block, call \`generate_game_html\` with only the \`title\`. The tool reads the HTML from your message automatically.
 
 ### When to use this workflow
-- "Make me a game where…"
-- "Build a [terrain/vehicle/platformer/shooter] demo"
-- "Generate a playable prototype"
-- "Create a Three.js / WebGL game"
+- "Make me a game where…" / "Build a [terrain/vehicle/platformer/shooter] demo"
+- "Generate a playable prototype" / "Create a Three.js / WebGPU game"
 - Any request for something interactive and immediately runnable outside the editor
 
-### HTML output requirements
+---
+
+### Standard importmap — always use this exact block
+\`\`\`html
+<script type="importmap">
+{
+  "imports": {
+    "three":                    "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.webgpu.js",
+    "three/webgpu":             "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.webgpu.js",
+    "three/tsl":                "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.tsl.js",
+    "three/addons/":            "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/",
+    "three/examples/jsm/":      "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/",
+    "@dimforge/rapier3d-compat":"https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.14.0/+esm",
+    "stats-gl":                 "https://cdn.jsdelivr.net/npm/stats-gl@2.4.2/+esm"
+  }
+}
+</script>
+\`\`\`
+
+**Module imports at top of \`<script type="module">\`:**
+\`\`\`js
+import RAPIER from '@dimforge/rapier3d-compat'
+import * as THREE from 'three/webgpu'
+import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import Stats from 'stats-gl'
+import { Fn, uniform, float, vec3, vec4, positionWorld, smoothstep, mix, mx_noise_float, time } from 'three/tsl'
+
+await RAPIER.init()
+\`\`\`
+
+---
+
+### Renderer setup — WebGPU, must await init
+\`\`\`js
+const renderer = new THREE.WebGPURenderer({ antialias: true })
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+renderer.setSize(innerWidth, innerHeight)
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+document.body.appendChild(renderer.domElement)
+await renderer.init()           // ← required for WebGPU
+\`\`\`
+
+**Stats-gl (always include):**
+\`\`\`js
+const stats = new Stats({ trackGPU: true })
+document.body.appendChild(stats.dom)
+stats.init(renderer)
+// In render loop:
+stats.update()
+\`\`\`
+
+---
+
+### TSL (Three Shader Language) — node-based materials
+Use \`MeshStandardNodeMaterial\` with \`colorNode\` set via TSL \`Fn()\` for terrain, water, and custom materials. Avoid plain \`MeshStandardMaterial\` for ground/water — use TSL shaders instead.
+
+**Biome terrain example:**
+\`\`\`js
+const groundMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.85, metalness: 0 })
+groundMat.colorNode = Fn(() => {
+  const wx = positionWorld.x, wz = positionWorld.z, h = positionWorld.y
+  const n = mx_noise_float(vec3(wx.mul(0.15), float(0), wz.mul(0.15))).mul(0.5).add(0.5)
+  const sandT = smoothstep(float(0), float(3), h)
+  const grassT = smoothstep(float(5), float(8), h)
+  const sand  = mix(uniform(new THREE.Color('#d4a656')), uniform(new THREE.Color('#e8c47a')), n)
+  const dirt  = mix(uniform(new THREE.Color('#c48840')), uniform(new THREE.Color('#b07030')), n)
+  const grass = mix(uniform(new THREE.Color('#6b8c3a')), uniform(new THREE.Color('#4a6b28')), n)
+  return mix(mix(sand, dirt, sandT), grass, grassT)
+})()
+\`\`\`
+
+**Animated water:**
+\`\`\`js
+const waterMat = new THREE.MeshStandardNodeMaterial({ transparent: true, opacity: 0.55, roughness: 0.05, metalness: 0.3 })
+waterMat.colorNode = Fn(() => {
+  const wx = positionWorld.x, wz = positionWorld.z
+  const n = mx_noise_float(vec3(wx.mul(0.04).add(time.mul(0.15)), float(0), wz.mul(0.04).add(time.mul(0.1)))).mul(0.5).add(0.5)
+  return mix(uniform(new THREE.Color('#4a8a8a')), uniform(new THREE.Color('#7ecfcf')), n)
+})()
+\`\`\`
+
+---
+
+### Loading screen — always include
+\`\`\`html
+<div id="loader" style="position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui;color:#fff;transition:opacity 0.6s ease">
+  <div style="width:48px;height:48px;border-radius:50%;border:3px solid rgba(255,255,255,0.15);border-top-color:#fff;animation:spin 0.8s linear infinite;margin-bottom:24px"></div>
+  <div style="font-size:15px;font-weight:500;margin-bottom:8px">Loading…</div>
+  <div id="loader-status" style="font-size:12px;color:rgba(255,255,255,0.5)">Initializing physics…</div>
+  <div style="width:200px;height:3px;border-radius:3px;background:rgba(255,255,255,0.12);margin-top:20px;overflow:hidden">
+    <div id="loader-bar" style="width:0%;height:100%;border-radius:3px;background:rgba(255,255,255,0.7);transition:width 0.4s ease"></div>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+\`\`\`
+Hide it after init: \`Object.assign(document.getElementById('loader').style,{opacity:'0',pointerEvents:'none'})\`
+
+---
+
+### Custom settings panel (GUI) — always include for physics games
+Build a custom side panel with collapsible folders, sliders, checkboxes, color pickers, and selects using vanilla DOM. **Never use dat.GUI or lil-gui.** Follow this pattern:
+- Fixed position, right side, glassy dark background, backdrop-filter blur
+- \`createFolder(name)\` returns \`{ addSlider, addCheckbox, addColor, addSelect }\`
+- Each control is a flex row: label + input + value display
+- Use \`font-family:'Inter',system-ui\` and \`font-family:'JetBrains Mono',monospace\` for value readouts
+- Settings toggle button (⚙) shows/hides the panel
+
+---
+
+### Rapier physics patterns
+\`\`\`js
+const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 })
+world.timestep = 1/60
+
+// Fixed-step accumulator in game loop:
+accumulator += delta
+while (accumulator >= 1/60) { world.step(); accumulator -= 1/60 }
+
+// Heightfield terrain:
+const hfBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(cx, 0, cz))
+world.createCollider(
+  RAPIER.ColliderDesc.heightfield(res, res, heights, { x: size, y: 1, z: size })
+    .setFriction(0.8).setRestitution(0.1), hfBody)
+
+// Vehicle controller:
+const vehicle = world.createVehicleController(chassisBody)
+vehicle.addWheel(pos, { x:0,y:-1,z:0 }, { x:0,y:0,z:1 }, suspRest, wheelRadius)
+vehicle.setWheelFrictionSlip(i, 1.5)
+vehicle.setWheelSuspensionStiffness(i, 12)
+vehicle.updateVehicle(1/60)
+\`\`\`
+
+---
+
+### Procedural terrain — ImprovedNoise octaves
+\`\`\`js
+const perlin = new ImprovedNoise()
+function getTerrainHeight(x, z) {
+  const s = 0.004, a = 14
+  return perlin.noise(x*s,0,z*s)*a + perlin.noise(x*s*2,1,z*s*2)*a*0.5 + perlin.noise(x*s*4,2,z*s*4)*a*0.25
+}
+\`\`\`
+Use a \`PlaneGeometry\` rotated −π/2 on X with enough segments (200×200). Compute heights CPU-side, set \`posAttr.setZ(i, h)\`, \`needsUpdate=true\`, \`computeVertexNormals()\`.
+
+---
+
+### Particle effects — InstancedMesh
+Use \`THREE.InstancedMesh\` for dust, splash, and wind particles:
+\`\`\`js
+const mesh = new THREE.InstancedMesh(planeGeo, mat, COUNT)
+mesh.frustumCulled = false
+mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+// Per-particle: update Matrix4 with position/scale, set invisible particles to scale(0,0,0)
+\`\`\`
+Use canvas-generated radial gradient textures as particle sprites.
+
+---
+
+### HUD — always include
+\`\`\`js
+const hud = document.createElement('div')
+hud.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(12,16,24,0.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);border-radius:12px;font-family:system-ui;color:rgba(200,220,240,0.9);font-size:12px;padding:10px 18px;display:flex;gap:14px;z-index:1000;user-select:none'
+hud.innerHTML = '<span><b>WASD</b> Drive</span>·<span><b>Shift</b> Boost</span>·<span><b>Space</b> Jump</span>·<span><b>R</b> Reset</span>'
+document.body.appendChild(hud)
+\`\`\`
+
+---
+
+### Game loop — WebGPU async render
+\`\`\`js
+renderer.setAnimationLoop(async () => {
+  stats.update()
+  const delta = Math.min(clock.getDelta(), 0.05)
+  // fixed-step physics accumulator...
+  // update meshes from physics...
+  await renderer.renderAsync(scene, camera)
+})
+\`\`\`
+Use \`renderer.setAnimationLoop\` (not raw rAF) for WebGPU compatibility.
+
+---
+
+### General output rules
 - One complete file: \`<!DOCTYPE html>\` through \`</html>\`
-- All styles, scripts, and logic inline — no external files, no build step
-- Use an importmap for Three.js r168:
-  \`<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>\`
-- Load Rapier physics dynamically if needed:
-  \`const RAPIER = await import('https://cdn.skypack.dev/@dimforge/rapier3d-compat'); await RAPIER.init();\`
-- Renderer: \`THREE.WebGLRenderer\` with antialias, shadow maps, tone mapping, and device pixel ratio
-- Controls: WASD/arrow keys + mouse with an on-screen HUD listing key bindings
-- Visual quality: fog, shadows, varied geometry, procedural/vertex-colored materials. Never ship a grey empty canvas.
-- Game loop: \`requestAnimationFrame\` with fixed-step physics tick (1/60 s) and uncapped render rate
-- Canvas fills viewport: \`width:100%;height:100vh;margin:0;overflow:hidden\`
+- All styles, scripts, and logic inline — zero external files, zero build step
+- Canvas fills viewport: \`body { margin:0; overflow:hidden; background:#000 }\`
+- Fallback procedural meshes when GLTF models are not available (always implement this)
 - Do not truncate or abbreviate — always write the complete, working HTML
 
 ### Quality bar
-Reference: a terrain vehicle demo with Three.js + Rapier, procedural heightmap terrain, realistic suspension, physics-driven vehicle, a sky gradient, fog, and a HUD. Match that completeness and visual polish. For simpler requests, still add flair — fog, particles, a mini-map, or a score system.
+This reference demo: terrain vehicle with WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, dynamic heightfield streaming, instanced dust/splash/wind particles, animated water with TSL, custom settings GUI with folders for Car/Camera/Terrain/Lighting/Fog/Biomes/Dust, loading screen, HUD, stats-gl. Match this level of completeness. For simpler requests still include: loading screen, HUD, fog, shadows, stats, and a settings panel.
 
 ## Rules
 - Position everything in world space and double-check alignment math.
