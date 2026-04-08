@@ -901,6 +901,248 @@ function updateDebris(dt, groundY) {
 
 ---
 
+### Advanced Water Physics — TSL Gerstner Waves + Rapier Buoyancy
+
+When any water body appears in the scene (ocean, lake, river, pond), use the full system below. **Never** use a flat PlaneGeometry with a basic MeshStandardMaterial for water — that is not acceptable quality.
+
+#### 1 — TSL Gerstner wave surface (vertex displacement)
+\`\`\`js
+import { tslFn, uniform, vec2, vec3, vec4, float, sin, cos, dot, add, mul, mod,
+         positionLocal, positionWorld, normalLocal, attribute, varying, varyingProperty,
+         mix, clamp, smoothstep, pow, abs, fract, floor, max } from 'three/tsl'
+
+// Wave parameters — tweak via GUI
+const waveTime    = uniform(0)
+const waveHeight  = uniform(1.8)
+const waveSpeed   = uniform(1.2)
+const waveFoam    = uniform(0.6)
+const waveColor   = uniform(new THREE.Color(0x0077be))
+const waveFoamCol = uniform(new THREE.Color(0xd0eeff))
+
+// Four Gerstner waves give a realistic choppy ocean
+const WAVES = [
+  { dir: [1.0, 0.4], amplitude: 1.0, frequency: 0.22, speed: 1.0, steepness: 0.55 },
+  { dir: [0.5, 1.0], amplitude: 0.7, frequency: 0.31, speed: 0.9, steepness: 0.45 },
+  { dir: [-0.3, 0.8], amplitude: 0.45, frequency: 0.51, speed: 1.3, steepness: 0.35 },
+  { dir: [0.8, -0.2], amplitude: 0.28, frequency: 0.72, speed: 0.75, steepness: 0.25 },
+]
+
+function gerstnerWaveTSL(posXZ, wDir, amp, freq, spd, steep) {
+  const D  = vec2(wDir[0], wDir[1])
+  const k  = freq
+  const A  = mul(amp, waveHeight)
+  const S  = mul(spd, waveSpeed)
+  const Q  = steep
+  const phi= mul(k, add(dot(D, posXZ), mul(S, waveTime)))
+  const sx = mul(mul(Q, A), mul(cos(phi), D.x))
+  const sz = mul(mul(Q, A), mul(cos(phi), D.y))
+  const sy = mul(A, sin(phi))
+  return { offset: vec3(sx, sy, sz), phase: phi }
+}
+
+const waterVert = tslFn(({ position }) => {
+  const posXZ = vec2(position.x, position.z)
+  let totalOffset = vec3(0,0,0)
+  let totalPhase  = float(0)
+  for (const w of WAVES) {
+    const { offset, phase } = gerstnerWaveTSL(posXZ, w.dir, w.amplitude, w.frequency, w.speed, w.steepness)
+    totalOffset = add(totalOffset, offset)
+    totalPhase  = add(totalPhase, phase)
+  }
+  return add(position, totalOffset)
+})
+
+// Foam intensity stored as a varying for fragment use
+const vFoam = varyingProperty('float', 'vFoam')
+
+const waterFrag = tslFn(() => {
+  // Fresnel
+  const N  = normalLocal.normalize()
+  const V  = positionWorld.sub(cameraPosition).normalize()
+  const fr = pow(clamp(float(1).sub(abs(dot(N, V.negate()))), 0, 1), float(3.5))
+  const fr2= clamp(fr, float(0.06), float(1.0))
+  // Deep/shallow blend
+  const baseCol = mix(waveColor, waveFoamCol.mul(0.6), fr2.mul(0.4))
+  // Foam at crests
+  const foamMask = smoothstep(float(0.55), float(1.0), vFoam.mul(waveFoam))
+  const finalCol = mix(baseCol, waveFoamCol, foamMask)
+  return vec4(finalCol, mix(float(0.82), float(0.96), fr2))
+})
+
+// Build the water mesh (1km wide, 256×256 segments for wave detail)
+const waterGeo = new THREE.PlaneGeometry(1000, 1000, 256, 256)
+waterGeo.rotateX(-Math.PI / 2)
+const waterMat = new THREE.MeshStandardNodeMaterial({
+  transparent: true, depthWrite: false, side: THREE.FrontSide
+})
+waterMat.positionNode  = waterVert({ position: positionLocal })
+waterMat.colorNode     = waterFrag()
+waterMat.roughnessNode = float(0.08)
+waterMat.metalnessNode = float(0.12)
+const waterMesh = new THREE.Mesh(waterGeo, waterMat)
+waterMesh.position.y = WATER_LEVEL   // define WATER_LEVEL = 0 (or terrain-appropriate value)
+waterMesh.receiveShadow = true
+scene.add(waterMesh)
+
+// Tick — update time uniform in animation loop
+// waveTime.value += delta
+\`\`\`
+
+#### 2 — Rapier buoyancy (every physic body near water floats/sinks correctly)
+\`\`\`js
+// Compute water surface height at a world XZ position (fast CPU approximation)
+function getWaterHeight(wx, wz) {
+  const t = waveTime.value
+  let y = WATER_LEVEL
+  for (const w of WAVES) {
+    const phi = w.frequency * (w.dir[0]*wx + w.dir[1]*wz + w.speed * waveSpeed.value * t)
+    y += w.amplitude * waveHeight.value * Math.sin(phi)
+  }
+  return y
+}
+
+// Called once per physics tick for every buoyant rigid body
+function applyBuoyancy(rigidBody, halfExtents, density = 500) {
+  const pos = rigidBody.translation()
+  const wh  = getWaterHeight(pos.x, pos.z)
+  const objectBottom = pos.y - halfExtents.y
+  const objectTop    = pos.y + halfExtents.y
+  if (objectBottom >= wh) return  // fully above water
+  const submergeDepth = Math.min(wh - objectBottom, halfExtents.y * 2)
+  const submergedVol  = submergeDepth * halfExtents.x * 2 * halfExtents.z * 2
+  // Archimedes
+  const buoyantForce = WATER_DENSITY * submergedVol * Math.abs(gravity.y)
+  rigidBody.addForce({ x:0, y: buoyantForce, z:0 }, true)
+  // Water drag (kills excessive spin and velocity)
+  const linVel = rigidBody.linvel()
+  const drag   = 2.5 * (submergeDepth / (halfExtents.y * 2))
+  rigidBody.addForce({ x: -linVel.x*drag, y: 0, z: -linVel.z*drag }, true)
+  const angVel = rigidBody.angvel()
+  rigidBody.addTorque({ x: -angVel.x*drag*2, y: -angVel.y*drag*2, z: -angVel.z*drag*2 }, true)
+}
+// In physics tick:
+// applyBuoyancy(vehicleBody, { x:2, y:0.6, z:4 })
+\`\`\`
+
+#### 3 — Water splash particle pool (pooled, never allocate at runtime)
+\`\`\`js
+const SPLASH_COUNT = 300
+const splashPool = Array.from({length:SPLASH_COUNT}, () => ({
+  mesh:null, life:0, maxLife:0, vx:0, vy:0, vz:0, drag:0.93
+}))
+let splashIdx = 0
+const splashGroup = new THREE.Group(); scene.add(splashGroup)
+const splashGeo = new THREE.SphereGeometry(1, 4, 4)
+const splashMat = new THREE.MeshBasicMaterial({ color:0xaaddff, transparent:true, opacity:0.7 })
+
+function spawnSplash(wx, wz, intensity = 1) {
+  const wh = getWaterHeight(wx, wz)
+  const count = Math.floor(8 + intensity * 18)
+  for (let i=0; i<count; i++) {
+    const s = splashPool[splashIdx++ % SPLASH_COUNT]
+    if (s.mesh) { splashGroup.remove(s.mesh); s.mesh=null }
+    const m = new THREE.Mesh(splashGeo, splashMat)
+    const sc = (0.04 + Math.random()*0.1) * intensity
+    m.scale.setScalar(sc)
+    m.position.set(wx + (Math.random()-0.5)*intensity*1.5, wh, wz + (Math.random()-0.5)*intensity*1.5)
+    splashGroup.add(m); s.mesh=m
+    const spread = 2.5 + intensity*2
+    s.vx = (Math.random()-0.5)*spread; s.vy = 2+Math.random()*(4+intensity); s.vz = (Math.random()-0.5)*spread
+    s.maxLife = 0.6+Math.random()*0.8; s.life = s.maxLife
+  }
+}
+function updateSplash(dt) {
+  for (const s of splashPool) {
+    if (!s.mesh || s.life<=0) continue
+    s.life -= dt
+    if (s.life<=0) { splashGroup.remove(s.mesh); s.mesh=null; continue }
+    s.vy -= 9.8*dt; s.vx*=s.drag; s.vz*=s.drag
+    s.mesh.position.x+=s.vx*dt; s.mesh.position.y+=s.vy*dt; s.mesh.position.z+=s.vz*dt
+    const alpha = (s.life/s.maxLife)
+    s.mesh.material.opacity = alpha*0.7
+    s.mesh.scale.setScalar(s.mesh.scale.x * (1+dt*1.2))  // expand outward
+    if (s.mesh.position.y < getWaterHeight(s.mesh.position.x, s.mesh.position.z)) {
+      splashGroup.remove(s.mesh); s.mesh=null
+    }
+  }
+}
+\`\`\`
+
+#### 4 — Underwater post-processing + fog
+\`\`\`js
+// Check each frame if camera is submerged
+function updateUnderwater(camera, postProcessing, aoPass, bloomPass) {
+  const camWH = getWaterHeight(camera.position.x, camera.position.z)
+  const underwater = camera.position.y < camWH
+  if (underwater) {
+    scene.fog = scene.fog || new THREE.FogExp2(0x003d5c, 0.08)
+    scene.fog.color.set(0x003d5c)
+    scene.fog.density = 0.08
+    renderer.setClearColor(0x002233)
+    if (bloomPass) bloomPass.strength = 0.9
+  } else {
+    if (scene.fog) { scene.fog.color.set(0x8ca0b0); scene.fog.density = 0.01 }
+    renderer.setClearColor(0x0a0e14)
+    if (bloomPass) bloomPass.strength = 0.35
+  }
+}
+\`\`\`
+
+#### 5 — Caustics animated texture (canvas-generated, displayed on underwater surfaces)
+\`\`\`js
+// Generate animated caustic pattern into a canvas texture each frame (cheap + no external asset)
+const CAUSTIC_SIZE = 256
+const causticCanvas = document.createElement('canvas')
+causticCanvas.width = causticCanvas.height = CAUSTIC_SIZE
+const causticCtx = causticCanvas.getContext('2d')
+const causticTex = new THREE.CanvasTexture(causticCanvas)
+causticTex.wrapS = causticTex.wrapT = THREE.RepeatWrapping
+causticTex.repeat.set(8, 8)
+
+function updateCaustics(t) {
+  const ctx = causticCtx; const S = CAUSTIC_SIZE
+  ctx.fillStyle = '#002233'
+  ctx.fillRect(0,0,S,S)
+  const count = 16
+  for (let i=0; i<count; i++) {
+    const angle = (i/count)*Math.PI*2 + t*0.4
+    const r     = 60+Math.sin(t*0.7+i)*28
+    const cx    = S/2 + Math.cos(angle)*r*1.4
+    const cy    = S/2 + Math.sin(angle*1.3)*r
+    const grad  = ctx.createRadialGradient(cx,cy,0, cx,cy, 28+Math.sin(t+i)*8)
+    grad.addColorStop(0,'rgba(80,200,255,0.55)')
+    grad.addColorStop(1,'rgba(0,40,80,0)')
+    ctx.fillStyle = grad
+    ctx.beginPath(); ctx.ellipse(cx,cy, 22,14, angle+t*0.3, 0, Math.PI*2); ctx.fill()
+  }
+  causticTex.needsUpdate = true
+}
+// Apply causticTex as emissiveMap on ground material:
+//   groundMat.emissiveMap = causticTex; groundMat.emissive.set(0x003366); groundMat.emissiveIntensity = 0.4
+// Call updateCaustics(elapsedTime) in the animation loop only when underwater or water covers ground.
+\`\`\`
+
+#### 6 — Water GUI settings folder
+\`\`\`js
+const waterFolder = gui.addFolder('Water')
+waterFolder.add({height:1.8}, 'height', 0, 5, 0.01).name('Wave height').onChange(v => waveHeight.value=v)
+waterFolder.add({speed:1.2},  'speed',  0, 4, 0.01).name('Wave speed') .onChange(v => waveSpeed.value=v)
+waterFolder.add({foam:0.6},   'foam',   0, 2, 0.01).name('Foam').onChange(v => waveFoam.value=v)
+waterFolder.addColor({color:'#0077be'}, 'color').name('Water color').onChange(v => waveColor.value.set(v))
+waterFolder.add({level: WATER_LEVEL}, 'level', -10, 50, 0.1).name('Water level').onChange(v => { waterMesh.position.y=v; WATER_LEVEL=v })
+waterFolder.open()
+\`\`\`
+
+**Integration rules:**
+- Call \`waveTime.value += delta\` every frame in the animation loop.
+- Call \`applyBuoyancy()\` for every dynamic rigid body inside the physics tick.
+- Call \`spawnSplash(x, z, intensity)\` whenever a fast-moving rigid body crosses the water surface (compare prev/current Y against \`getWaterHeight()\`).
+- Call \`updateSplash(delta)\` and \`updateCaustics(elapsedTime)\` every frame.
+- Call \`updateUnderwater(camera, ...)\` every frame.
+- The \`WATER_DENSITY\` constant should be ~1025 (seawater) — tune down to ~200 for arcade-feel floating.
+
+---
+
 ### HUD — always include
 \`\`\`js
 const hud = document.createElement('div')
@@ -984,7 +1226,7 @@ Adapt variable names (\`world\`, \`sunLight\`, \`groundCollider\`, etc.) to matc
 Two target archetypes — match the right one to the request:
 
 **Open-world action game** (default when the user asks for a "game" or vehicle/terrain demo):
-Three.js WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, cell scatter (rocks / bushes / ancient ruins: columns/walls/arches/temples/towers/ziggurats), debris pool on impact, instanced dust/splash particles, TSL animated water, WebGPU post-processing (AO + bloom), custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust folders), loading screen, bottom HUD, stats-gl.
+Three.js WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, cell scatter (rocks / bushes / ancient ruins: columns/walls/arches/temples/towers/ziggurats), debris pool on impact, instanced dust/splash particles, **full TSL Gerstner wave water system** (4-wave surface with foam + Fresnel, Rapier buoyancy on all physics bodies, splash particle pool, underwater fog/post-processing, canvas caustics), WebGPU post-processing (AO + bloom), custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust / **Water** folders), loading screen, bottom HUD, stats-gl. If the scene has water, the water archetype from the "Advanced Water Physics" section is **mandatory** — no exceptions.
 
 **Builder / sandbox / creative tool** (when the user asks to build, place, or create things — like a brick builder, city planner, sculpting tool):
 Three.js WebGPU + MeshPhysicalMaterial (clearcoat, sheen), HDR environment (Polyhaven via RGBELoader + canvas fallback), VSMShadowMap, WebGPU post-processing (AO + bloom), RoundedBoxGeometry, mergeGeometries for static batching, raycaster snap-to-grid placement with ghost preview mesh, layered Web Audio UI sounds (snap click / hover tick / remove pop / confirm), grid-based data structure (Map or 3D array) for placed objects, custom glassy dark settings panel, loading screen, stats-gl. Pattern: ghost mesh follows mouse, left-click places, right-click removes.
