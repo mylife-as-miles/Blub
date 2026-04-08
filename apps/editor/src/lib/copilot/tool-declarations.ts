@@ -897,6 +897,17 @@ export function isGameGenerationPrompt(prompt: string): boolean {
     "racing game",
     "shooter game",
     "sandbox game",
+    "brick builder",
+    "lego",
+    "voxel",
+    "city builder",
+    "build and place",
+    "place blocks",
+    "block builder",
+    "sculpting tool",
+    "building tool",
+    "building simulator",
+    "construction game",
   ];
   return gameKeywords.some((kw) => lower.includes(kw));
 }

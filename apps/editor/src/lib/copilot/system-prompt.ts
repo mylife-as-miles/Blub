@@ -281,6 +281,309 @@ window.elevenlabs.generateSfx("tyre screech on gravel").catch(() => {})
 
 ---
 
+### Procedural Web Audio — UI sounds (no ElevenLabs needed for clicks/ticks)
+For instant sub-50ms UI feedback (snap clicks, hover ticks, error buzzes, button presses) use the Web Audio API directly — it has zero latency. Use ElevenLabs only for narration and long-form SFX.
+
+**Always resume AudioContext on first user gesture:**
+\`\`\`js
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+function resumeAudio() { if (audioCtx.state === 'suspended') audioCtx.resume() }
+window.addEventListener('pointerdown', resumeAudio, { once: true })
+window.addEventListener('keydown', resumeAudio, { once: true })
+\`\`\`
+
+**Layered snap/place sound (brick click, item placed):**
+\`\`\`js
+function playSnapSound() {
+  const now = audioCtx.currentTime
+  // Layer 1: bright click
+  const o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain()
+  o1.type = 'sine'; o1.frequency.setValueAtTime(1400, now); o1.frequency.exponentialRampToValueAtTime(500, now + 0.025)
+  g1.gain.setValueAtTime(0.045, now); g1.gain.exponentialRampToValueAtTime(0.001, now + 0.04)
+  o1.connect(g1).connect(audioCtx.destination); o1.start(now); o1.stop(now + 0.04)
+  // Layer 2: low thud
+  const o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain()
+  o2.type = 'sine'; o2.frequency.setValueAtTime(240, now); o2.frequency.exponentialRampToValueAtTime(100, now + 0.06)
+  g2.gain.setValueAtTime(0.055, now); g2.gain.exponentialRampToValueAtTime(0.001, now + 0.07)
+  o2.connect(g2).connect(audioCtx.destination); o2.start(now); o2.stop(now + 0.07)
+  // Layer 3: bandpass noise texture
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.02, audioCtx.sampleRate)
+  const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1)*0.25
+  const src = audioCtx.createBufferSource(), ng = audioCtx.createGain(), nf = audioCtx.createBiquadFilter()
+  nf.type = 'bandpass'; nf.frequency.value = 2500; nf.Q.value = 1.5
+  src.buffer = buf; ng.gain.setValueAtTime(0.025, now); ng.gain.exponentialRampToValueAtTime(0.001, now + 0.025)
+  src.connect(nf).connect(ng).connect(audioCtx.destination); src.start(now)
+}
+\`\`\`
+
+**Other common one-liners:**
+\`\`\`js
+// Hover tick
+function playTick() { const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.value=2200; g.gain.setValueAtTime(0.008,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.01); o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.012) }
+// Remove/delete
+function playRemove() { const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(180,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(700,audioCtx.currentTime+0.05); g.gain.setValueAtTime(0.035,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.06); o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.06) }
+// Confirm / success
+function playConfirm() { const now=audioCtx.currentTime; [0,0.07,0.14].forEach((t,i)=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.value=[700,900,1100][i]; g.gain.setValueAtTime(0.02,now+t); g.gain.exponentialRampToValueAtTime(0.001,now+t+0.07); o.connect(g).connect(audioCtx.destination); o.start(now+t); o.stop(now+t+0.07) }) }
+\`\`\`
+
+---
+
+### HDR environments — RGBELoader + Polyhaven
+Use HDRI environments for physically correct reflections, especially with \`MeshPhysicalMaterial\`.
+Always provide a canvas-generated fallback for when the HDR load fails or is slow.
+
+\`\`\`js
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
+
+const pmremGenerator = new THREE.PMREMGenerator(renderer)
+pmremGenerator.compileEquirectangularShader()
+
+// Polyhaven 1k HDRIs — reliable CDN, free to use
+const HDR_URLS = {
+  meadow:    'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/meadow_2_1k.hdr',
+  studio:    'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr',
+  venice:    'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/venice_sunset_1k.hdr',
+  forest:    'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/syferfontein_0d_clear_puresky_1k.hdr',
+  warehouse: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/empty_warehouse_01_1k.hdr',
+  night:     'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/moonlit_golf_1k.hdr',
+}
+
+// Fallback: gradient canvas equirectangular
+function makeFallbackEnv() {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 512
+  const ctx = c.getContext('2d')
+  const g = ctx.createLinearGradient(0, 0, 0, 512)
+  g.addColorStop(0, '#87CEEB'); g.addColorStop(0.45, '#B0D4E8'); g.addColorStop(0.5, '#E8DCC8'); g.addColorStop(1, '#8B7355')
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 512)
+  const tex = new THREE.CanvasTexture(c)
+  tex.mapping = THREE.EquirectangularReflectionMapping
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
+const fallback = makeFallbackEnv()
+scene.environment = fallback; scene.background = fallback
+scene.backgroundBlurriness = 0.25 // subtle lens-blur on background
+
+function loadHDR(url) {
+  new RGBELoader().load(url, (hdr) => {
+    const envMap = pmremGenerator.fromEquirectangular(hdr).texture
+    hdr.dispose()
+    scene.environment = envMap; scene.background = envMap
+  }, undefined, () => { /* keep fallback */ })
+}
+\`\`\`
+
+---
+
+### Physical materials — clearcoat, sheen, transmission
+Use \`MeshPhysicalMaterial\` for high-quality surfaces (plastic, metal, glass, rubber, ceramic).
+
+\`\`\`js
+// Glossy plastic / Lego brick
+const plastic = new THREE.MeshPhysicalMaterial({
+  color: '#d42020', roughness: 0.28, metalness: 0,
+  clearcoat: 0.35, clearcoatRoughness: 0.22,
+  sheen: 0.12, sheenRoughness: 0.6,
+  envMapIntensity: 1.2,
+})
+
+// Brushed metal / chrome
+const metal = new THREE.MeshPhysicalMaterial({
+  color: '#b8b8c0', roughness: 0.12, metalness: 0.95,
+  clearcoat: 0.08, clearcoatRoughness: 0.3,
+  envMapIntensity: 2.0,
+})
+
+// Glass / transparent panels
+const glass = new THREE.MeshPhysicalMaterial({
+  color: '#a0d0ff', roughness: 0.0, metalness: 0,
+  transmission: 0.96, thickness: 0.5, ior: 1.5,
+  transparent: true,
+})
+
+// VSMShadowMap — required for soft shadows with PCF at this quality level
+renderer.shadowMap.type = THREE.VSMShadowMap
+\`\`\`
+
+---
+
+### Additional geometries — rounded shapes & merged geometry
+\`\`\`js
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+
+// Rounded box (width, height, depth, segments, radius)
+const brickGeo = new RoundedBoxGeometry(1.6, 0.96, 0.8, 2, 0.05)
+
+// Merge multiple geometries into one draw call (huge perf win for static geometry)
+const merged = mergeGeometries([geo1, geo2, geo3], false) // false = no groups
+const mergedWithGroups = mergeGeometries([geo1, geo2], true)  // true = separate material groups
+\`\`\`
+
+---
+
+### Procedural canvas textures — normal maps, roughness maps
+Generate all textures at startup — no image files needed.
+
+\`\`\`js
+// Seeded random for deterministic textures
+function seededRand(seed) {
+  let s = seed
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 }
+}
+
+// Normal map (subtle surface noise)
+function makeNormalMap(size = 256) {
+  const c = document.createElement('canvas'); c.width = c.height = size
+  const ctx = c.getContext('2d')
+  const img = ctx.createImageData(size, size); const d = img.data
+  const rnd = seededRand(42)
+  for (let i = 0; i < size * size; i++) {
+    d[i*4]   = Math.max(0, Math.min(255, 128 + (rnd()-0.5)*20))
+    d[i*4+1] = Math.max(0, Math.min(255, 128 + (rnd()-0.5)*20))
+    d[i*4+2] = 255; d[i*4+3] = 255
+  }
+  ctx.putImageData(img, 0, 0)
+  const tex = new THREE.CanvasTexture(c)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  return tex
+}
+
+// Roughness variation map (worn patches + fine grain)
+function makeRoughnessMap(size = 256) {
+  const c = document.createElement('canvas'); c.width = c.height = size
+  const ctx = c.getContext('2d')
+  ctx.fillStyle = '#808080'; ctx.fillRect(0,0,size,size)
+  const img = ctx.getImageData(0,0,size,size); const d = img.data
+  const rnd = seededRand(99)
+  for (let p = 0; p < 20; p++) {
+    const cx=rnd()*size, cy=rnd()*size, r=40+rnd()*120, str=20+rnd()*35
+    for (let y=Math.max(0,cy-r|0); y<Math.min(size,cy+r|0); y++) for (let x=Math.max(0,cx-r|0); x<Math.min(size,cx+r|0); x++) {
+      const dist=Math.sqrt((x-cx)**2+(y-cy)**2); if(dist>=r) continue
+      const t=1-dist/r; const smooth=t*t*(3-2*t); const i=(y*size+x)*4
+      d[i]=Math.max(0,d[i]-str*smooth); d[i+1]=d[i]; d[i+2]=d[i]
+    }
+  }
+  for (let i=0; i<size*size; i++) { const n=(rnd()-0.5)*16; d[i*4]=Math.max(0,Math.min(255,d[i*4]+n)); d[i*4+1]=d[i*4]; d[i*4+2]=d[i*4] }
+  ctx.putImageData(img, 0, 0)
+  const tex = new THREE.CanvasTexture(c)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  return tex
+}
+
+// Apply to material:
+const mat = new THREE.MeshPhysicalMaterial({ ... })
+mat.normalMap = makeNormalMap()
+mat.roughnessMap = makeRoughnessMap()
+\`\`\`
+
+---
+
+### WebGPU post-processing — bloom, AO, film grain
+Use \`THREE.PostProcessing\` (WebGPU native — not the legacy \`EffectComposer\`).
+Use \`postProcessing.renderAsync()\` instead of \`renderer.renderAsync()\` in the game loop.
+
+\`\`\`js
+import { pass, mrt, output, transformedNormalView } from 'three/tsl'
+import { bloom } from 'three/addons/tsl/display/BloomNode.js'
+import { ao } from 'three/addons/tsl/display/GTAONode.js'
+import { uniform, vec3, float, clamp, screenUV } from 'three/tsl'
+
+const postProcessing = new THREE.PostProcessing(renderer)
+
+// Scene pass with MRT (captures normals for AO)
+const scenePass = pass(scene, camera)
+scenePass.setMRT(mrt({ output: output, normal: transformedNormalView }))
+
+const sceneColor  = scenePass.getTextureNode('output')
+const sceneNormal = scenePass.getTextureNode('normal')
+const sceneDepth  = scenePass.getTextureNode('depth')
+
+// GTAO ambient occlusion
+const aoPass = ao(sceneDepth, sceneNormal, camera)
+aoPass.distanceExponent.value = 1.0
+aoPass.distanceFallOff.value = 0.25
+aoPass.radius.value = 0.05
+aoPass.scale.value = 0.7
+const aoFactor = vec3(aoPass.getTextureNode().x)
+const aoBlended = sceneColor.mul(aoFactor)
+
+// Bloom
+const bloomStrength = uniform(0.18)
+const bloomRadius   = uniform(0.2)
+const bloomThresh   = uniform(1.5)
+const bloomNode = bloom(aoBlended, bloomStrength, bloomRadius, bloomThresh)
+let composed = aoBlended.add(bloomNode)
+
+// Film grain (cheap TSL noise)
+const grainAmount = uniform(0.04)
+// composed = composed.add(grainAmount.mul(float(Math.random()).sub(0.5))) // add per-frame noise in rAF
+
+postProcessing.outputNode = clamp(composed, 0, 1)
+
+// Rebuild whenever parameters change (call after any uniform tweak)
+function rebuildPost() { postProcessing.outputNode = clamp(composed, 0, 1); postProcessing.needsUpdate = true }
+rebuildPost()
+
+// Game loop — use postProcessing instead of renderer:
+renderer.setAnimationLoop(async () => {
+  stats.update()
+  const delta = Math.min(clock.getDelta(), 0.05)
+  // ... update logic ...
+  await postProcessing.renderAsync()
+})
+\`\`\`
+
+**Toggle AO or bloom at runtime:**
+\`\`\`js
+const aoEnabled = uniform(1.0)
+const aoMixed = aoFactor.mul(aoEnabled).add(float(1.0).sub(aoEnabled))
+\`\`\`
+
+---
+
+### Raycaster interaction — snap-to-grid & ghost preview
+For builder, sandbox, and placement games. Mouse hovers show a ghost (semi-transparent) mesh snapped to grid; click places it.
+
+\`\`\`js
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
+const _hit = new THREE.Vector3()
+// A plane or baseplate mesh used as the placement surface
+const groundPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0)
+
+window.addEventListener('mousemove', (e) => {
+  mouse.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1)
+})
+
+const GRID = 0.8  // snap unit in world space
+function snapToGrid(v, unit) { return Math.round(v / unit) * unit }
+
+function updateGhost() {
+  raycaster.setFromCamera(mouse, camera)
+  const hit = raycaster.ray.intersectPlane(groundPlane, _hit)
+  if (!hit) { ghost.visible = false; return }
+  ghost.visible = true
+  ghost.position.set(snapToGrid(hit.x, GRID), 0, snapToGrid(hit.z, GRID))
+}
+
+// For picking existing objects (right-click remove):
+function pickObject(objects) {
+  raycaster.setFromCamera(mouse, camera)
+  const hits = raycaster.intersectObjects(objects, false)
+  return hits.length > 0 ? hits[0].object : null
+}
+
+// Ghost mesh (semi-transparent preview):
+const ghost = new THREE.Mesh(myGeo, new THREE.MeshPhysicalMaterial({ color:'#4488ff', opacity:0.45, transparent:true }))
+scene.add(ghost)
+// Each frame: updateGhost()
+// On click: place real mesh at ghost.position, call playSnapSound()
+\`\`\`
+
+---
+
 ### TSL (Three Shader Language) — node-based materials
 Use \`MeshStandardNodeMaterial\` with \`colorNode\` set via TSL \`Fn()\` for terrain, water, and custom materials. Avoid plain \`MeshStandardMaterial\` for ground/water — use TSL shaders instead.
 
@@ -630,7 +933,16 @@ Use \`renderer.setAnimationLoop\` (not raw rAF) for WebGPU compatibility.
 - Do not truncate or abbreviate — always write the complete, working HTML
 
 ### Quality bar
-The gold standard is a terrain vehicle demo with: Three.js WebGPU + TSL biome shaders (sandy desert palette), Rapier heightfield + vehicle controller, cell-based procedural scatter (rocks, bushes, ancient ruins — columns/walls/arches/temples/towers), debris pool spawned on impacts, instanced dust/splash/wind particles, animated water with TSL, custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust folders), loading screen, bottom HUD (WASD Drive · Shift Boost · Space Jump · R Reset · P Debug · O Orbit), stats-gl. **Always include the cell scatter + ruins system** — it is what makes the world feel alive, as seen in the screenshot where rocks and ancient columns are scattered across the sandy terrain around the player's vehicle. For simpler requests still include: loading screen, HUD, fog, shadows, stats, and a settings panel with at least 3 folders.
+Two target archetypes — match the right one to the request:
+
+**Open-world action game** (default when the user asks for a "game" or vehicle/terrain demo):
+Three.js WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, cell scatter (rocks / bushes / ancient ruins: columns/walls/arches/temples/towers/ziggurats), debris pool on impact, instanced dust/splash particles, TSL animated water, WebGPU post-processing (AO + bloom), custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust folders), loading screen, bottom HUD, stats-gl.
+
+**Builder / sandbox / creative tool** (when the user asks to build, place, or create things — like a brick builder, city planner, sculpting tool):
+Three.js WebGPU + MeshPhysicalMaterial (clearcoat, sheen), HDR environment (Polyhaven via RGBELoader + canvas fallback), VSMShadowMap, WebGPU post-processing (AO + bloom), RoundedBoxGeometry, mergeGeometries for static batching, raycaster snap-to-grid placement with ghost preview mesh, layered Web Audio UI sounds (snap click / hover tick / remove pop / confirm), grid-based data structure (Map or 3D array) for placed objects, custom glassy dark settings panel, loading screen, stats-gl. Pattern: ghost mesh follows mouse, left-click places, right-click removes.
+
+For **all** requests: loading screen, fog, shadows, stats-gl, and a settings panel with at least 3 folders.
+**Always include the cell scatter + ruins system** for open-world games — it is what makes the world feel alive.
 
 ## Rules
 - Position everything in world space and double-check alignment math.
