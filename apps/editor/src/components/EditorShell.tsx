@@ -20,7 +20,7 @@ import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import type { WorkerJob } from "@blud/workers";
 import type { ReactNode } from "react";
-import type { CopilotSession } from "@/lib/copilot/types";
+import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
 import { AiModelPromptBar } from "@/components/editor-shell/AiModelPromptBar";
 import { CopilotPanel } from "@/components/editor-shell/CopilotPanel";
 import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
@@ -48,7 +48,7 @@ type EditorShellProps = {
   aiModelPlacementActive: boolean;
   copilot: {
     session: CopilotSession;
-    sendMessage: (prompt: string) => void;
+    sendMessage: (prompt: string, images?: CopilotImageAttachment[]) => void;
     abort: () => void;
     clearHistory: () => void;
     isConfigured: boolean;

@@ -16,10 +16,16 @@ export type CopilotSettings = {
 
 // ── Messages ──────────────────────────────────────────────────
 
+export type CopilotImageAttachment = {
+  dataUrl: string;
+  mimeType: string;
+};
+
 export type CopilotMessage = {
   id: string;
   role: "user" | "assistant" | "tool";
   content: string;
+  images?: CopilotImageAttachment[];
   toolCalls?: CopilotToolCall[];
   toolResults?: CopilotToolResult[];
   /** Raw provider response parts — preserved verbatim for thought signatures */

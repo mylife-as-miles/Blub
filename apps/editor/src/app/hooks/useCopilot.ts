@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditorCore } from "@blud/editor-core";
-import type { CopilotSession } from "@/lib/copilot/types";
+import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
 import { runAgenticLoop } from "@/lib/copilot/agentic-loop";
 import { createCopilotProvider } from "@/lib/copilot/provider";
 import { buildSystemPrompt } from "@/lib/copilot/system-prompt";
@@ -65,7 +65,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
   }, [session.status, session.messages]);
 
   const sendMessage = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, images?: CopilotImageAttachment[]) => {
       const settings = loadCopilotSettings();
 
       if (!isCopilotConfigured(settings)) {
@@ -74,7 +74,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
           status: "error",
           error: settings.provider === "codex"
             ? 'Codex not configured. Run "codex login" in your terminal.'
-            : "No API key configured. Open Vibe settings to add one."
+            : "No API key configured. Open Copilot settings to add one."
         }));
         return;
       }
@@ -123,7 +123,8 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
               setSession({ ...updated, messages: [...updated.messages] });
             }
           },
-          controller.signal
+          controller.signal,
+          images
         );
       }
 

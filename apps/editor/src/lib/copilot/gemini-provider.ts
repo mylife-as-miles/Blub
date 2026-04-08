@@ -13,7 +13,17 @@ function convertMessages(messages: CopilotMessage[]) {
 
   for (const message of messages) {
     if (message.role === "user") {
-      contents.push({ role: "user", parts: [{ text: message.content }] });
+      const parts: Record<string, unknown>[] = [];
+      if (message.images && message.images.length > 0) {
+        for (const img of message.images) {
+          const base64 = img.dataUrl.split(",")[1] ?? img.dataUrl;
+          parts.push({ inlineData: { mimeType: img.mimeType, data: base64 } });
+        }
+      }
+      if (message.content) {
+        parts.push({ text: message.content });
+      }
+      contents.push({ role: "user", parts });
     } else if (message.role === "assistant") {
       // Replay raw parts verbatim to preserve thoughtSignature
       if (message.rawParts && message.rawParts.length > 0) {
