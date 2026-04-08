@@ -411,6 +411,25 @@ export const COPILOT_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
     }
   },
   {
+    name: "generate_game_html",
+    description:
+      "Generates a complete, self-contained HTML game file that runs in any browser without a build step. Use this when the user asks to build a game, prototype, demo, or playable experience. The html parameter must be a full, valid HTML document (DOCTYPE through </html>) with all scripts and styles inline. Use Three.js and Rapier physics from CDN via an importmap. Make the game visually impressive, interactive, and immediately playable.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "A short, descriptive title for the game (used as the browser tab title and shown in the UI)"
+        },
+        html: {
+          type: "string",
+          description: "The complete standalone HTML file content. Must start with <!DOCTYPE html> and include all JavaScript, CSS, and assets inline. Use an importmap for Three.js (r168+) and @dimforge/rapier3d-compat from CDN. All game logic, renderer setup, physics, input handling, UI, and game loop must be self-contained in this single file."
+        }
+      },
+      required: ["title", "html"]
+    }
+  },
+  {
     name: "push_scene_to_connected_game",
     description:
       "Pushes the current editor scene into the connected scaffolded game dev server. Use it when the user asks to sync or send the current scene to the game.",

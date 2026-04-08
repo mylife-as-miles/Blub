@@ -53,6 +53,8 @@ type EditorShellProps = {
     clearHistory: () => void;
     isConfigured: boolean;
     refreshConfigured: () => void;
+    latestGame: { title: string; html: string } | null;
+    clearLatestGame: () => void;
   };
   copilotPanelOpen: boolean;
   gameConnectionControl?: ReactNode;
@@ -581,7 +583,9 @@ export function EditorShell({
           <div className="w-64 shrink-0 sm:w-80 lg:w-[22rem]">
             <CopilotPanel
               isConfigured={copilot.isConfigured}
+              latestGame={copilot.latestGame}
               onAbort={copilot.abort}
+              onClearGame={copilot.clearLatestGame}
               onClearHistory={copilot.clearHistory}
               onClose={onToggleCopilot}
               onSendMessage={copilot.sendMessage}

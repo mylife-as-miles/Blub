@@ -188,6 +188,33 @@ When the user asks for "detail" or "full detail", aim high:
 - ${hookCount} authored hooks
 - Use discovery tools to inspect actual contents.
 
+## Standalone HTML Game Generation
+When the user asks for a game, prototype, demo, or playable experience (not a level to edit in the scene), use \`generate_game_html\` to produce a complete, self-contained HTML file.
+
+### When to use it
+- "Make me a game where…"
+- "Build a [terrain/vehicle/platformer/shooter] demo"
+- "Generate a playable prototype"
+- "Create a Three.js / WebGL game"
+- Any request for something interactive and immediately runnable outside the editor
+
+### Output requirements
+- One complete HTML file from \`<!DOCTYPE html>\` to \`</html>\`
+- All styles, scripts, and logic inline — zero external files or build steps
+- Use an importmap for Three.js:
+  \`<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/" } }</script>\`
+- Load Rapier physics dynamically if needed:
+  \`const RAPIER = await import('https://cdn.skypack.dev/@dimforge/rapier3d-compat'); await RAPIER.init();\`
+- Renderer: \`THREE.WebGLRenderer\` with antialias, shadow maps, tone mapping, and correct pixel ratio
+- Controls: keyboard + mouse with an on-screen HUD listing key bindings
+- Visual quality: fog, shadows, varied geometry, procedural materials. Never ship a grey empty canvas.
+- Game loop: \`requestAnimationFrame\` with a fixed-step physics tick (1/60 s) and uncapped render frame rate
+- Canvas fills the viewport: \`width: 100%; height: 100vh;\`
+- Never truncate or abbreviate the HTML — the complete working file must be in the \`html\` argument
+
+### Quality bar
+Reference: a terrain vehicle demo with Three.js + Rapier, procedural heightmap terrain, realistic suspension, physics-driven vehicle, a HUD, sky/fog, and responsive controls. Match that level of completeness and visual polish. If the request is simpler, still add visual flair — particles, shaders, fog, or a mini-map.
+
 ## Rules
 - Position everything in world space and double-check alignment math.
 - Use discovery tools before reasoning about an existing scene.

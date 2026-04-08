@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Send, Square, Trash2, Volume2, VolumeX, Wrench, X } from "lucide-react";
+import { Bot, Download, ExternalLink, Gamepad2, Loader2, Send, Square, Trash2, Volume2, VolumeX, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CopilotSettingsDialog } from "@/components/editor-shell/CopilotSettingsDialog";
@@ -7,14 +7,18 @@ import type { CopilotMessage, CopilotSession } from "@/lib/copilot/types";
 import { cn } from "@/lib/utils";
 import { useTts } from "@/hooks/useTts";
 
+type GeneratedGame = { title: string; html: string };
+
 type CopilotPanelProps = {
   onClose: () => void;
   onSendMessage: (prompt: string) => void;
   onAbort: () => void;
   onClearHistory: () => void;
+  onClearGame?: () => void;
   onSettingsChanged: () => void;
   session: CopilotSession;
   isConfigured: boolean;
+  latestGame?: GeneratedGame | null;
 };
 
 export function CopilotPanel({
@@ -22,9 +26,11 @@ export function CopilotPanel({
   onSendMessage,
   onAbort,
   onClearHistory,
+  onClearGame,
   onSettingsChanged,
   session,
-  isConfigured
+  isConfigured,
+  latestGame
 }: CopilotPanelProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -109,6 +115,13 @@ export function CopilotPanel({
           </div>
         )}
       </div>
+
+      {/* Game artifact card */}
+      {latestGame && (
+        <div className="shrink-0 border-t border-white/8 p-3">
+          <GameCard game={latestGame} onDismiss={onClearGame} />
+        </div>
+      )}
 
       {/* Input */}
       <div className="shrink-0 border-t border-white/8 p-4">
@@ -278,6 +291,60 @@ function ThinkingIndicator({ session }: { session: CopilotSession }) {
           ? "Executing tools..."
           : `Thinking${session.iterationCount > 1 ? ` (step ${session.iterationCount})` : ""}...`}
       </span>
+    </div>
+  );
+}
+
+function GameCard({ game, onDismiss }: { game: GeneratedGame; onDismiss?: () => void }) {
+  const openGame = () => {
+    const blob = new Blob([game.html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
+  const downloadGame = () => {
+    const blob = new Blob([game.html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${game.title.toLowerCase().replace(/\s+/g, "-")}.html`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
+  return (
+    <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] p-3">
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Gamepad2 className="size-3.5 shrink-0 text-emerald-400" />
+          <span className="truncate text-[11px] font-medium text-foreground/80">{game.title}</span>
+        </div>
+        {onDismiss && (
+          <button
+            className="shrink-0 text-foreground/32 hover:text-foreground/60 transition-colors"
+            onClick={onDismiss}
+            title="Dismiss"
+          >
+            <X className="size-3" />
+          </button>
+        )}
+      </div>
+      <div className="flex gap-1.5">
+        <button
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/20 px-2.5 py-1.5 text-[10px] font-medium text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+          onClick={openGame}
+        >
+          <ExternalLink className="size-3" />
+          Open game
+        </button>
+        <button
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[10px] font-medium text-foreground/52 hover:text-foreground/72 hover:bg-white/[0.07] transition-colors"
+          onClick={downloadGame}
+          title="Download HTML file"
+        >
+          <Download className="size-3" />
+        </button>
+      </div>
     </div>
   );
 }

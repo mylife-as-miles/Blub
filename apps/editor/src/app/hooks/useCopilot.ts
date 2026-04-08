@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditorCore } from "@blud/editor-core";
 import type { CopilotSession } from "@/lib/copilot/types";
 import { runAgenticLoop } from "@/lib/copilot/agentic-loop";
@@ -7,6 +7,8 @@ import { buildSystemPrompt } from "@/lib/copilot/system-prompt";
 import { loadCopilotSettings, isCopilotConfigured } from "@/lib/copilot/settings";
 import { COPILOT_TOOL_DECLARATIONS } from "@/lib/copilot/tool-declarations";
 import { executeTool, type CopilotToolExecutionContext } from "@/lib/copilot/tool-executor";
+
+export type GeneratedGame = { title: string; html: string };
 
 const EMPTY_SESSION: CopilotSession = {
   messages: [],
@@ -17,8 +19,17 @@ const EMPTY_SESSION: CopilotSession = {
 export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecutionContext = {}) {
   const [session, setSession] = useState<CopilotSession>(EMPTY_SESSION);
   const [configured, setConfigured] = useState(() => isCopilotConfigured());
+  const [latestGame, setLatestGame] = useState<GeneratedGame | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const codexThreadIdRef = useRef<string | undefined>(undefined);
+
+  const mergedToolContext = useMemo<CopilotToolExecutionContext>(
+    () => ({
+      ...toolContext,
+      onGeneratedGame: (title: string, html: string) => setLatestGame({ title, html })
+    }),
+    [toolContext]
+  );
 
   useEffect(() => {
     const check = () => setConfigured(isCopilotConfigured());
@@ -69,7 +80,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
           onThreadId: (threadId) => {
             codexThreadIdRef.current = threadId;
           },
-          executeTool: (toolCall) => executeTool(editor, toolCall, toolContext),
+          executeTool: (toolCall) => executeTool(editor, toolCall, mergedToolContext),
           onUpdate: (updated) => {
             setSession({ ...updated, messages: [...updated.messages] });
           },
@@ -86,7 +97,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
             providerConfig,
             systemPrompt,
             tools: COPILOT_TOOL_DECLARATIONS,
-            executeTool: (toolCall) => executeTool(editor, toolCall, toolContext),
+            executeTool: (toolCall) => executeTool(editor, toolCall, mergedToolContext),
             onUpdate: (updated) => {
               setSession({ ...updated, messages: [...updated.messages] });
             }
@@ -112,12 +123,16 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
     setSession(EMPTY_SESSION);
   }, []);
 
+  const clearLatestGame = useCallback(() => setLatestGame(null), []);
+
   return {
     session,
     sendMessage,
     abort,
     clearHistory,
     isConfigured: configured,
-    refreshConfigured: () => setConfigured(isCopilotConfigured())
+    refreshConfigured: () => setConfigured(isCopilotConfigured()),
+    latestGame,
+    clearLatestGame
   };
 }
