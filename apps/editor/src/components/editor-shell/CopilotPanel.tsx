@@ -392,15 +392,56 @@ function ThinkingIndicator({ session }: { session: CopilotSession }) {
   );
 }
 
+/** Inject a `window.elevenlabs` bridge into the game HTML.
+ *  The bridge forwards TTS/SFX requests to the editor's ElevenLabs proxy using
+ *  the absolute editor origin so they work from a blob: URL context. */
+function injectElevenLabsBridge(html: string): string {
+  const origin = window.location.origin;
+  const bridge = `<script>
+(function(){
+  var B=${JSON.stringify(origin)};
+  var ac=null;
+  function ctx(){
+    if(!ac||ac.state==='closed')ac=new AudioContext();
+    if(ac.state==='suspended')ac.resume();
+    return ac;
+  }
+  function play(buf){
+    return ctx().decodeAudioData(buf).then(function(a){
+      return new Promise(function(res){
+        var s=ctx().createBufferSource();s.buffer=a;s.connect(ctx().destination);s.onended=res;s.start();
+      });
+    });
+  }
+  window.elevenlabs={
+    speak:function(text,opts){
+      opts=opts||{};
+      return fetch(B+'/api/elevenlabs/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({text:text},opts))})
+        .then(function(r){if(!r.ok)throw new Error('ElevenLabs TTS '+r.status);return r.arrayBuffer();}).then(play);
+    },
+    generateSfx:function(desc,dur){
+      var b={description:desc};if(dur!=null)b.durationSeconds=dur;
+      return fetch(B+'/api/elevenlabs/sfx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
+        .then(function(r){if(!r.ok)throw new Error('ElevenLabs SFX '+r.status);return r.arrayBuffer();}).then(play);
+    }
+  };
+  console.log('[ElevenLabs Bridge] ready →',B);
+})();
+<\/script>`;
+  if (html.includes("</head>")) return html.replace("</head>", bridge + "\n</head>");
+  if (html.includes("<head>")) return html.replace("<head>", "<head>\n" + bridge);
+  return bridge + "\n" + html;
+}
+
 function GameCard({ game, onDismiss }: { game: GeneratedGame; onDismiss?: () => void }) {
   const openGame = () => {
-    const blob = new Blob([game.html], { type: "text/html" });
+    const blob = new Blob([injectElevenLabsBridge(game.html)], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
   };
 
   const downloadGame = () => {
-    const blob = new Blob([game.html], { type: "text/html" });
+    const blob = new Blob([injectElevenLabsBridge(game.html)], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

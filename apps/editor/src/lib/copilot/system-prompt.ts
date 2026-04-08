@@ -256,6 +256,31 @@ stats.update()
 
 ---
 
+### ElevenLabs Audio (pre-injected into every game — no import needed)
+\`window.elevenlabs\` is automatically available when the game is opened from the editor. Use it freely for voice narration, HUD announcements, and AI-generated sound effects.
+
+\`\`\`js
+// Text-to-speech — resolves when playback finishes
+await window.elevenlabs.speak("Engine roaring. Let's go!")
+await window.elevenlabs.speak("Checkpoint reached.", { voiceId: "JBFqnCBsd6RMkjVDRZzb" })
+
+// AI sound effect generation — describe what you want
+await window.elevenlabs.generateSfx("powerful V8 engine idle, rumbling")
+await window.elevenlabs.generateSfx("distant explosion with echo", 2.5) // optional duration in seconds
+
+// Pattern: fire-and-forget (don't block game loop)
+window.elevenlabs.speak("Go!").catch(() => {})
+window.elevenlabs.generateSfx("tyre screech on gravel").catch(() => {})
+\`\`\`
+
+**When to use:**
+- Opening narration as the game loads (after first user gesture to unlock AudioContext)
+- Speed/damage/powerup HUD events: \`window.elevenlabs.speak("Speed boost!")\`
+- Ambient procedural SFX tied to gameplay: crashes, checkpoints, countdowns
+- Do NOT block \`await renderer.init()\` — call ElevenLabs after the game is running
+
+---
+
 ### TSL (Three Shader Language) — node-based materials
 Use \`MeshStandardNodeMaterial\` with \`colorNode\` set via TSL \`Fn()\` for terrain, water, and custom materials. Avoid plain \`MeshStandardMaterial\` for ground/water — use TSL shaders instead.
 

@@ -37,11 +37,24 @@ export function createElevenLabsApiPlugin(): Plugin {
   };
 }
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 function registerApi(
   server: Pick<ViteDevServer, "middlewares"> | Pick<PreviewServer, "middlewares">,
 ) {
   server.middlewares.use(async (req, res, next) => {
     const pathname = req.url?.split("?")[0];
+
+    // Handle CORS preflight from blob: origin (generated games)
+    if (req.method === "OPTIONS" && pathname?.startsWith("/api/elevenlabs/")) {
+      res.writeHead(204, CORS_HEADERS);
+      res.end();
+      return;
+    }
 
     if (pathname === VOICES_PATH && req.method === "GET") {
       await handleVoices(res);
@@ -123,6 +136,7 @@ async function handleTts(
     }
 
     res.writeHead(200, {
+      ...CORS_HEADERS,
       "Content-Type": "audio/mpeg",
       "Cache-Control": "no-store",
       "Transfer-Encoding": "chunked",
@@ -178,6 +192,7 @@ async function handleSfx(
     }
 
     res.writeHead(200, {
+      ...CORS_HEADERS,
       "Content-Type": "audio/mpeg",
       "Cache-Control": "no-store",
     });
@@ -259,7 +274,7 @@ async function handleVoiceDelete(
 
 function sendJson(res: import("node:http").ServerResponse, status: number, data: unknown) {
   const body = JSON.stringify(data);
-  res.writeHead(status, { "Content-Type": "application/json" });
+  res.writeHead(status, { ...CORS_HEADERS, "Content-Type": "application/json" });
   res.end(body);
 }
 
