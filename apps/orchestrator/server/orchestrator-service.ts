@@ -21,6 +21,7 @@ const STATE_VERSION = 1;
 const LOG_LIMIT = 120;
 const SHUTDOWN_GRACE_MS = 3_000;
 const STARTUP_TIMEOUT_MS = 20_000;
+const NEXTJS_STARTUP_TIMEOUT_MS = 120_000;
 
 export type PackageManager = "bun" | "npm" | "pnpm" | "yarn";
 export type ViewId = "blob" | "animation-studio" | "character-studio" | "game";
@@ -535,14 +536,15 @@ export class OrchestratorService {
       return;
     }
 
-    // Character Studio runs as a Next.js dev server — no build step needed
+    // Character Studio runs as a Next.js dev server — no build step needed.
+    // Next.js does a full initial compilation so it needs a much longer timeout.
     if (editorId === "character-studio") {
       const command = {
         args: ["dev", "-p", String(CHARACTER_STUDIO_PORT), "-H", HOST],
         command: join(this.repoRoot, "apps/reze-studio/node_modules/.bin/next"),
         cwd: join(this.repoRoot, "apps/reze-studio")
       };
-      await this.startRuntime(runtime, command);
+      await this.startRuntime(runtime, command, NEXTJS_STARTUP_TIMEOUT_MS);
       return;
     }
 
@@ -626,7 +628,7 @@ export class OrchestratorService {
     await access(distPath);
   }
 
-  private async startRuntime(runtime: ManagedRuntime, command: RuntimeCommand) {
+  private async startRuntime(runtime: ManagedRuntime, command: RuntimeCommand, timeoutMs = STARTUP_TIMEOUT_MS) {
     if (!(await isPortFree(runtime.port))) {
       runtime.status = "error";
       runtime.lastError = `Port ${runtime.port} is already in use.`;
@@ -683,7 +685,7 @@ export class OrchestratorService {
     });
 
     try {
-      await waitForHttp(runtime.url, STARTUP_TIMEOUT_MS);
+      await waitForHttp(runtime.url, timeoutMs);
 
       if (runtime.process) {
         runtime.status = "running";
