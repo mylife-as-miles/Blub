@@ -1045,10 +1045,8 @@ function executeToolInner(editor: EditorCore, name: string, args: Args, context:
 
     case "generate_game_html": {
       const title = str(args, "title", "Generated Game");
-      const html = str(args, "html", "");
-      if (!html) return fail("html content is required");
-      context.onGeneratedGame?.(title, html);
-      return ok({ delivered: true, title });
+      context.onGeneratedGame?.(title, "");
+      return ok({ registered: true, title });
     }
 
     default:
