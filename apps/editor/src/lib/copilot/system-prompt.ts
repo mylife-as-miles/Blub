@@ -208,11 +208,11 @@ When the user asks for a game, prototype, demo, or playable experience (not a le
 <script type="importmap">
 {
   "imports": {
-    "three":                    "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.webgpu.js",
-    "three/webgpu":             "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.webgpu.js",
-    "three/tsl":                "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.tsl.js",
-    "three/addons/":            "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/",
-    "three/examples/jsm/":      "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/",
+    "three":                    "https://cdn.jsdelivr.net/npm/three@0.183.1/build/three.webgpu.js",
+    "three/webgpu":             "https://cdn.jsdelivr.net/npm/three@0.183.1/build/three.webgpu.js",
+    "three/tsl":                "https://cdn.jsdelivr.net/npm/three@0.183.1/build/three.tsl.js",
+    "three/addons/":            "https://cdn.jsdelivr.net/npm/three@0.183.1/examples/jsm/",
+    "three/examples/jsm/":      "https://cdn.jsdelivr.net/npm/three@0.183.1/examples/jsm/",
     "@dimforge/rapier3d-compat":"https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.14.0/+esm",
     "stats-gl":                 "https://cdn.jsdelivr.net/npm/stats-gl@2.4.2/+esm"
   }
@@ -361,6 +361,218 @@ Use canvas-generated radial gradient textures as particle sprites.
 
 ---
 
+### Cell-based procedural scatter — rocks, vegetation, ancient ruins
+This system streams scene objects in/out as the player moves. It is the most important feature for making open-world games feel alive.
+
+**Seeded random helper:**
+\`\`\`js
+function seededRand(x, z, seed) {
+  let n = Math.sin(x * 12.9898 + z * 78.233 + seed * 43.1234) * 43758.5453
+  return n - Math.floor(n)
+}
+\`\`\`
+
+**Procedural rock geometry** (vertex-displaced sphere — always cache 12 variants):
+\`\`\`js
+const _rockGeoCache = []
+function buildRockGeoCache() {
+  for (let g = 0; g < 12; g++) {
+    const geo = new THREE.SphereGeometry(1, 24, 16)
+    const pos = geo.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const nx = pos.getX(i), ny = pos.getY(i), nz = pos.getZ(i)
+      const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1
+      const ux = nx/len, uy = ny/len, uz = nz/len
+      const n1 = Math.sin(ux*(1.5+g*0.3) + uz*(2.8+g*0.2) + g) * Math.cos(uy*(1.5+g*0.3)*1.3 + g*0.7)
+      const n2 = Math.sin(ux*(2.8+g*0.2)*2.1 + uy*3.7 + g*1.1) * 0.5
+      const disp = n1 * 0.12 + n2 * 0.06
+      const squashY = 0.45 + ((Math.sin(g*2.1)+1)*0.5)*0.4
+      pos.setX(i, nx*(1+disp)); pos.setY(i, ny*squashY*(1+disp*0.5)); pos.setZ(i, nz*(1+disp))
+    }
+    geo.computeVertexNormals()
+    _rockGeoCache.push(geo)
+  }
+}
+buildRockGeoCache()
+function getRockGeo(seed) { return _rockGeoCache[Math.floor(((seed*7.31)%1+1)%1*12)] }
+\`\`\`
+
+**Ancient ruin column** (procedural shaft + base + capital):
+\`\`\`js
+const ruinMats = [
+  new THREE.MeshStandardMaterial({ color:'#c4a96a', roughness:0.95, metalness:0.02 }),
+  new THREE.MeshStandardMaterial({ color:'#b89a5e', roughness:0.92, metalness:0.03 }),
+  new THREE.MeshStandardMaterial({ color:'#a88c52', roughness:0.97, metalness:0.01 }),
+]
+function createRuinColumn(seed, broken) {
+  const group = new THREE.Group()
+  const r = 0.25 + (seed % 0.3) * 0.5
+  const fullH = 2.5 + seed * 2.5
+  const h = broken ? fullH * (0.3 + ((Math.sin(seed*47.1)+1)*0.5)*0.5) : fullH
+  const shaftGeo = new THREE.CylinderGeometry(r*0.85, r, h, 10, 4)
+  const shaft = new THREE.Mesh(shaftGeo, ruinMats[Math.abs(Math.floor(seed*30))%3])
+  shaft.position.y = h/2; shaft.castShadow = shaft.receiveShadow = true
+  group.add(shaft)
+  const base = new THREE.Mesh(new THREE.BoxGeometry(r*2.8, 0.25, r*2.8), ruinMats[1])
+  base.position.y = 0.12; base.castShadow = base.receiveShadow = true
+  group.add(base)
+  if (!broken || h > fullH*0.6) {
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(r*2.4, 0.3, r*2.4), ruinMats[0])
+    cap.position.y = h + 0.15; cap.rotation.y = seed*2; cap.castShadow = true
+    group.add(cap)
+  }
+  return group
+}
+\`\`\`
+
+**Ruin cluster types** — choose by \`seed % 4\`:
+- **Column cluster** (2–5 columns, some broken, scattered debris blocks)
+- **Wall fragment** (stacked BoxGeometry blocks with erosion/gaps, fallen rubble)
+- **Archway** (two columns + lintel)
+- **Large temple / broken tower / colonnade / ziggurat** — generate one \`createLargeRuin(seed)\` for rare big landmarks
+
+**Cell streaming pattern** (must use — prevents stutter by spreading builds across frames):
+\`\`\`js
+const SCATTER_CELL = 14, SCATTER_RANGE = 12
+const scatterCells = new Map()  // "cx,cz" → [THREE.Object3D, ...]
+const scatterGroup = new THREE.Group(); scene.add(scatterGroup)
+let _lastCX = null, _lastCZ = null
+const buildQueue = []
+const BUILDS_PER_FRAME = 2
+
+function buildCell(cx, cz) {
+  const key = cx+','+cz
+  if (scatterCells.has(key)) return
+  const objs = []; const wx0 = cx*SCATTER_CELL, wz0 = cz*SCATTER_CELL
+  const r1 = seededRand(wx0, wz0, 1)
+  const r2 = seededRand(wx0, wz0, 2)
+  const r3 = seededRand(wx0, wz0, 20)  // ruins (r3 < 0.04)
+  const r4 = seededRand(wx0, wz0, 30)  // large ruins (r4 < 0.012)
+  // Rocks
+  if (r1 < 0.28) {
+    const wx = wx0+(seededRand(wx0,wz0,3)-0.5)*SCATTER_CELL*0.8
+    const wz = wz0+(seededRand(wx0,wz0,4)-0.5)*SCATTER_CELL*0.8
+    const h = getTerrainHeight(wx, wz)
+    const scale = 0.3 + seededRand(wx0,wz0,5)*1.2
+    const geo = getRockGeo(r1+cx*0.137+cz*0.293)
+    const mat = rockMats[Math.floor(seededRand(wx0,wz0,6)*3)]
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.set(wx, h-0.15*scale, wz)
+    mesh.rotation.set(seededRand(wx0,wz0,7)*0.4, seededRand(wx0,wz0,8)*Math.PI*2, seededRand(wx0,wz0,9)*0.3)
+    mesh.scale.set(scale, scale*(0.5+seededRand(wx0,wz0,10)*0.6), scale)
+    mesh.castShadow = mesh.receiveShadow = true
+    scatterGroup.add(mesh); objs.push(mesh)
+  }
+  // Ruin clusters (small)
+  if (r3 < 0.04) {
+    const wx = wx0+(seededRand(wx0,wz0,21)-0.5)*SCATTER_CELL*0.6
+    const wz = wz0+(seededRand(wx0,wz0,22)-0.5)*SCATTER_CELL*0.6
+    const h = getTerrainHeight(wx, wz)
+    const ruin = createRuinCluster(seededRand(wx0,wz0,23))
+    ruin.position.set(wx, h-0.1, wz)
+    ruin.scale.setScalar(0.8+seededRand(wx0,wz0,24)*0.6)
+    ruin.rotation.y = seededRand(wx0,wz0,25)*Math.PI*2
+    scatterGroup.add(ruin); objs.push(ruin)
+  }
+  // Large landmarks (rare)
+  if (r4 < 0.012) {
+    const wx = wx0+(seededRand(wx0,wz0,31)-0.5)*SCATTER_CELL*0.4
+    const wz = wz0+(seededRand(wx0,wz0,32)-0.5)*SCATTER_CELL*0.4
+    const h = getTerrainHeight(wx, wz)
+    const bigRuin = createLargeRuin(seededRand(wx0,wz0,33))
+    const scale = 2.2+seededRand(wx0,wz0,34)*1.3
+    bigRuin.position.set(wx, h-0.6*scale, wz)
+    bigRuin.scale.setScalar(scale)
+    bigRuin.rotation.y = seededRand(wx0,wz0,35)*Math.PI*2
+    scatterGroup.add(bigRuin); objs.push(bigRuin)
+  }
+  scatterCells.set(key, objs)
+}
+
+function removeCell(key) {
+  const objs = scatterCells.get(key); if (!objs) return
+  for (const obj of objs) { scatterGroup.remove(obj) }
+  scatterCells.delete(key)
+}
+
+function updateScatter(px, pz) {
+  const cx = Math.round(px/SCATTER_CELL), cz = Math.round(pz/SCATTER_CELL)
+  if (cx === _lastCX && cz === _lastCZ) {
+    // Drain queue only
+    for (let i=0; i<BUILDS_PER_FRAME && buildQueue.length; i++) {
+      const [bx,bz] = buildQueue.shift(); buildCell(bx, bz)
+    }
+    return
+  }
+  _lastCX = cx; _lastCZ = cz
+  // Remove far cells
+  for (const key of [...scatterCells.keys()]) {
+    const sep = key.indexOf(','), kx=parseInt(key.substring(0,sep)), kz=parseInt(key.substring(sep+1))
+    if (Math.abs(kx-cx) > SCATTER_RANGE+2 || Math.abs(kz-cz) > SCATTER_RANGE+2) removeCell(key)
+  }
+  // Queue new cells
+  for (let dx=-SCATTER_RANGE; dx<=SCATTER_RANGE; dx++) {
+    for (let dz=-SCATTER_RANGE; dz<=SCATTER_RANGE; dz++) {
+      const key=(cx+dx)+','+(cz+dz)
+      if (!scatterCells.has(key)) buildQueue.push([cx+dx, cz+dz])
+    }
+  }
+  for (let i=0; i<BUILDS_PER_FRAME && buildQueue.length; i++) {
+    const [bx,bz] = buildQueue.shift(); buildCell(bx, bz)
+  }
+}
+// Call updateScatter(player.x, player.z) every frame in the game loop
+\`\`\`
+
+---
+
+### Debris pool — physics impact particles
+Pool 200–600 debris pieces. Spawn them on collision/destruction. Never allocate new meshes at runtime.
+\`\`\`js
+const DEBRIS_COUNT = 400
+const debrisPool = Array.from({length: DEBRIS_COUNT}, () => ({
+  mesh: null, life: 0, maxLife: 0, vx:0, vy:0, vz:0, rx:0, ry:0, rz:0, gravity: 9.8, drag: 0.97
+}))
+let debrisIndex = 0
+const debrisGroup = new THREE.Group(); scene.add(debrisGroup)
+const debrisMats = [
+  new THREE.MeshStandardMaterial({ color:'#c4a96a', roughness:0.9 }),
+  new THREE.MeshStandardMaterial({ color:'#8a7d6b', roughness:0.88 }),
+]
+const debrisGeo = new THREE.BoxGeometry(1,1,1)
+
+function spawnDebris(wx, wy, wz, vImpactX, vImpactZ, count, scale) {
+  for (let n=0; n<count; n++) {
+    const idx = debrisIndex++ % DEBRIS_COUNT; const d = debrisPool[idx]
+    if (d.mesh) { debrisGroup.remove(d.mesh); d.mesh = null }
+    const sx=(0.08+Math.random()*0.18)*scale, sy=(0.05+Math.random()*0.12)*scale, sz=(0.06+Math.random()*0.15)*scale
+    const m = new THREE.Mesh(debrisGeo, debrisMats[n%2])
+    m.scale.set(sx,sy,sz)
+    m.position.set(wx+(Math.random()-0.5)*scale*0.8, wy+Math.random()*scale*0.5, wz+(Math.random()-0.5)*scale*0.8)
+    m.rotation.set(Math.random()*6, Math.random()*6, Math.random()*6)
+    m.castShadow = true; debrisGroup.add(m); d.mesh = m
+    const spread = 3+scale*1.5
+    d.vx=vImpactX*0.3+(Math.random()-0.5)*spread; d.vy=2+Math.random()*(3+scale)
+    d.vz=vImpactZ*0.3+(Math.random()-0.5)*spread
+    d.rx=(Math.random()-0.5)*8; d.ry=(Math.random()-0.5)*8; d.rz=(Math.random()-0.5)*8
+    d.maxLife=1.5+Math.random()*2.5; d.life=d.maxLife; d.gravity=8+Math.random()*4; d.drag=0.96+Math.random()*0.03
+  }
+}
+function updateDebris(dt, groundY) {
+  for (const d of debrisPool) {
+    if (d.life<=0 || !d.mesh) continue
+    d.life -= dt; if (d.life<=0) { debrisGroup.remove(d.mesh); d.mesh=null; continue }
+    d.vy -= d.gravity*dt; d.vx*=d.drag; d.vz*=d.drag
+    d.mesh.position.x+=d.vx*dt; d.mesh.position.y+=d.vy*dt; d.mesh.position.z+=d.vz*dt
+    d.mesh.rotation.x+=d.rx*dt; d.mesh.rotation.y+=d.ry*dt; d.mesh.rotation.z+=d.rz*dt
+    if (d.mesh.position.y < groundY) { d.mesh.position.y=groundY; d.vy*=-0.3; d.vx*=0.7; d.vz*=0.7 }
+    if (d.life/d.maxLife < 0.3) d.mesh.scale.multiplyScalar(0.97)
+  }
+}
+\`\`\`
+
+---
+
 ### HUD — always include
 \`\`\`js
 const hud = document.createElement('div')
@@ -393,7 +605,7 @@ Use \`renderer.setAnimationLoop\` (not raw rAF) for WebGPU compatibility.
 - Do not truncate or abbreviate — always write the complete, working HTML
 
 ### Quality bar
-This reference demo: terrain vehicle with WebGPU + TSL biome shaders, Rapier heightfield + vehicle controller, dynamic heightfield streaming, instanced dust/splash/wind particles, animated water with TSL, custom settings GUI with folders for Car/Camera/Terrain/Lighting/Fog/Biomes/Dust, loading screen, HUD, stats-gl. Match this level of completeness. For simpler requests still include: loading screen, HUD, fog, shadows, stats, and a settings panel.
+The gold standard is a terrain vehicle demo with: Three.js WebGPU + TSL biome shaders (sandy desert palette), Rapier heightfield + vehicle controller, cell-based procedural scatter (rocks, bushes, ancient ruins — columns/walls/arches/temples/towers), debris pool spawned on impacts, instanced dust/splash/wind particles, animated water with TSL, custom settings GUI (Car / Camera / Terrain / Lighting / Fog / Biomes / Dust folders), loading screen, bottom HUD (WASD Drive · Shift Boost · Space Jump · R Reset · P Debug · O Orbit), stats-gl. **Always include the cell scatter + ruins system** — it is what makes the world feel alive, as seen in the screenshot where rocks and ancient columns are scattered across the sandy terrain around the player's vehicle. For simpler requests still include: loading screen, HUD, fog, shadows, stats, and a settings panel with at least 3 folders.
 
 ## Rules
 - Position everything in world space and double-check alignment math.
