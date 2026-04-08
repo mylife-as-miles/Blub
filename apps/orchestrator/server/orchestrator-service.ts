@@ -15,6 +15,7 @@ const HOST = "0.0.0.0";
 const INTERNAL_HOST = "127.0.0.1";
 const TRIDENT_PORT = 8080;
 const ANIMATION_STUDIO_PORT = 8081;
+const CHARACTER_STUDIO_PORT = 8082;
 const GAME_PORT_START = 4301;
 const STATE_VERSION = 1;
 const LOG_LIMIT = 120;
@@ -22,7 +23,7 @@ const SHUTDOWN_GRACE_MS = 3_000;
 const STARTUP_TIMEOUT_MS = 20_000;
 
 export type PackageManager = "bun" | "npm" | "pnpm" | "yarn";
-export type ViewId = "blob" | "animation-studio" | "game";
+export type ViewId = "blob" | "animation-studio" | "character-studio" | "game";
 type RuntimeStatus = "stopped" | "starting" | "running" | "error";
 
 type StoredProject = {
@@ -152,6 +153,13 @@ export class OrchestratorService {
         label: "Animation Studio",
         port: ANIMATION_STUDIO_PORT
       }),
+      "character-studio": createManagedRuntime({
+        cwd: join(repoRoot, "apps/reze-studio"),
+        id: "character-studio",
+        kind: "editor",
+        label: "Character Studio",
+        port: CHARACTER_STUDIO_PORT
+      }),
       blob: createManagedRuntime({
         cwd: join(repoRoot, "apps/editor"),
         id: "blob",
@@ -179,7 +187,7 @@ export class OrchestratorService {
       (await listLiveGameRegistrations()).map((registration) => [registration.projectRoot, registration])
     );
     const selectedProject = state.projects.find((project) => project.id === state.activeProjectId) ?? null;
-    const editors = [this.editors.blob, this.editors["animation-studio"]]
+    const editors = [this.editors.blob, this.editors["animation-studio"], this.editors["character-studio"]]
       .filter((editor): editor is ManagedRuntime => Boolean(editor))
       .map((editor) => ({
         id: editor.id as Exclude<ViewId, "game">,
@@ -488,7 +496,7 @@ export class OrchestratorService {
     await mkdir(dirname(this.statePath), { recursive: true });
     this.state = await this.readStateFile();
     this.registerCleanupHooks();
-    await Promise.allSettled([this.ensureEditorRunning("blob"), this.ensureEditorRunning("animation-studio")]);
+    await Promise.allSettled([this.ensureEditorRunning("blob"), this.ensureEditorRunning("animation-studio"), this.ensureEditorRunning("character-studio")]);
   }
 
   private async readStateFile(): Promise<StoredState> {
@@ -524,6 +532,17 @@ export class OrchestratorService {
     const runtime = this.editors[editorId];
 
     if (!runtime || runtime.status === "running" || runtime.status === "starting") {
+      return;
+    }
+
+    // Character Studio runs as a Next.js dev server — no build step needed
+    if (editorId === "character-studio") {
+      const command = {
+        args: ["dev", "-p", String(CHARACTER_STUDIO_PORT), "-H", HOST],
+        command: join(this.repoRoot, "apps/reze-studio/node_modules/.bin/next"),
+        cwd: join(this.repoRoot, "apps/reze-studio")
+      };
+      await this.startRuntime(runtime, command);
       return;
     }
 
@@ -734,7 +753,7 @@ function normalizeState(state: Partial<StoredState>): StoredState {
   return {
     activeProjectId: state.activeProjectId ?? null,
     activeView:
-      state.activeView === "animation-studio" || state.activeView === "game" || state.activeView === "blob"
+      state.activeView === "animation-studio" || state.activeView === "game" || state.activeView === "blob" || state.activeView === "character-studio"
         ? state.activeView
         : "blob",
     projects: Array.isArray(state.projects)
@@ -837,6 +856,16 @@ function resolveViewport(options: {
       subtitle: editor?.status === "running" ? "Animation authoring" : "Preview server unavailable",
       url: editor?.status === "running" ? editor.url : null,
       view: "animation-studio"
+    };
+  }
+
+  if (options.activeView === "character-studio") {
+    const editor = options.editors.find((entry) => entry.id === "character-studio");
+    return {
+      label: "Character Studio",
+      subtitle: editor?.status === "running" ? "Character editing" : "Preview server unavailable",
+      url: editor?.status === "running" ? editor.url : null,
+      view: "character-studio"
     };
   }
 

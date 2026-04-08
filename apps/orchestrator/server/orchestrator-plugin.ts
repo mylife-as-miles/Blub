@@ -134,7 +134,7 @@ function registerApi(server: MiddlewareHost, service: OrchestratorService) {
       }
 
       if (req.method === "POST" && pathname === "/api/orchestrator/editors/restart") {
-        const body = await readJsonBody<{ editorId?: "blob" | "animation-studio" }>(req);
+        const body = await readJsonBody<{ editorId?: "blob" | "animation-studio" | "character-studio" }>(req);
 
         if (!body.editorId) {
           throw new Error("Missing editor id.");

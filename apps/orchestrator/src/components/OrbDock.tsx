@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Clapperboard, Gamepad2, Home, Monitor, Settings } from "lucide-react";
+import { Clapperboard, Gamepad2, Home, Monitor, Settings, Users } from "lucide-react";
 import type { DockMode, OrchestratorSnapshot, ViewId } from "../types";
 
 interface OrbDockProps {
@@ -85,6 +85,15 @@ export function OrbDock({
             subtitle="Motion editor"
             onClick={() => closeAndCall(() => onSetView("animation-studio"))}
             busy={busyKey === "view:animation-studio"}
+          />
+          <DockButton
+            active={activeDockMode === "character-studio"}
+            disabled={!snapshot}
+            icon={<Users size={14} />}
+            label="Character Studio"
+            subtitle="Character editor"
+            onClick={() => closeAndCall(() => onSetView("character-studio"))}
+            busy={busyKey === "view:character-studio"}
           />
           <DockButton
             active={activeDockMode === "game"}
