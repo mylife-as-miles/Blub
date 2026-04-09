@@ -11,9 +11,11 @@ import {
 } from "../../../packages/dev-sync/src/node";
 import type { DevSyncGameRegistration } from "../../../packages/dev-sync/src/shared";
 
-const HOST = "127.0.0.1";
+const HOST = "0.0.0.0";
+const INTERNAL_HOST = "127.0.0.1";
 const TRIDENT_PORT = 8080;
 const ANIMATION_STUDIO_PORT = 8081;
+const CHARACTER_STUDIO_PORT = 8082;
 const GAME_PORT_START = 4301;
 const STATE_VERSION = 1;
 const LOG_LIMIT = 120;
@@ -21,7 +23,7 @@ const SHUTDOWN_GRACE_MS = 3_000;
 const STARTUP_TIMEOUT_MS = 20_000;
 
 export type PackageManager = "bun" | "npm" | "pnpm" | "yarn";
-export type ViewId = "blob" | "animation-studio" | "game";
+export type ViewId = "blob" | "animation-studio" | "character-studio" | "game";
 type RuntimeStatus = "stopped" | "starting" | "running" | "error";
 
 type StoredProject = {
@@ -55,6 +57,7 @@ type ManagedRuntime = {
   port: number;
   process: ChildProcess | null;
   projectId: string | null;
+  publicUrl: string;
   startedAt: number | null;
   status: RuntimeStatus;
   url: string;
@@ -150,11 +153,18 @@ export class OrchestratorService {
         label: "Animation Studio",
         port: ANIMATION_STUDIO_PORT
       }),
+      "character-studio": createManagedRuntime({
+        cwd: join(repoRoot, "apps/reze-studio"),
+        id: "character-studio",
+        kind: "editor",
+        label: "Character Studio",
+        port: CHARACTER_STUDIO_PORT
+      }),
       blob: createManagedRuntime({
         cwd: join(repoRoot, "apps/editor"),
         id: "blob",
         kind: "editor",
-        label: "Blob",
+        label: "World Studio",
         port: TRIDENT_PORT
       })
     };
@@ -177,7 +187,7 @@ export class OrchestratorService {
       (await listLiveGameRegistrations()).map((registration) => [registration.projectRoot, registration])
     );
     const selectedProject = state.projects.find((project) => project.id === state.activeProjectId) ?? null;
-    const editors = [this.editors.blob, this.editors["animation-studio"]]
+    const editors = [this.editors.blob, this.editors["animation-studio"], this.editors["character-studio"]]
       .filter((editor): editor is ManagedRuntime => Boolean(editor))
       .map((editor) => ({
         id: editor.id as Exclude<ViewId, "game">,
@@ -389,6 +399,7 @@ export class OrchestratorService {
 
     runtime.port = project.preferredPort ?? (await findAvailablePort(project.preferredPort ?? GAME_PORT_START));
     runtime.url = createUrl(runtime.port);
+    runtime.publicUrl = createPublicUrl(runtime.port);
     runtime.label = project.name;
     runtime.cwd = project.projectRoot;
 
@@ -485,7 +496,7 @@ export class OrchestratorService {
     await mkdir(dirname(this.statePath), { recursive: true });
     this.state = await this.readStateFile();
     this.registerCleanupHooks();
-    await Promise.allSettled([this.ensureEditorRunning("blob"), this.ensureEditorRunning("animation-studio")]);
+    await Promise.allSettled([this.ensureEditorRunning("blob"), this.ensureEditorRunning("animation-studio"), this.ensureEditorRunning("character-studio")]);
   }
 
   private async readStateFile(): Promise<StoredState> {
@@ -521,6 +532,17 @@ export class OrchestratorService {
     const runtime = this.editors[editorId];
 
     if (!runtime || runtime.status === "running" || runtime.status === "starting") {
+      return;
+    }
+
+    // Character Studio runs as a Vite dev server — no build step needed.
+    if (editorId === "character-studio") {
+      const command = {
+        args: ["--port", String(CHARACTER_STUDIO_PORT), "--host", HOST],
+        command: join(this.repoRoot, "apps/reze-studio/node_modules/.bin/vite"),
+        cwd: join(this.repoRoot, "apps/reze-studio")
+      };
+      await this.startRuntime(runtime, command);
       return;
     }
 
@@ -604,7 +626,7 @@ export class OrchestratorService {
     await access(distPath);
   }
 
-  private async startRuntime(runtime: ManagedRuntime, command: RuntimeCommand) {
+  private async startRuntime(runtime: ManagedRuntime, command: RuntimeCommand, timeoutMs = STARTUP_TIMEOUT_MS) {
     if (!(await isPortFree(runtime.port))) {
       runtime.status = "error";
       runtime.lastError = `Port ${runtime.port} is already in use.`;
@@ -661,7 +683,7 @@ export class OrchestratorService {
     });
 
     try {
-      await waitForHttp(runtime.url, STARTUP_TIMEOUT_MS);
+      await waitForHttp(runtime.url, timeoutMs);
 
       if (runtime.process) {
         runtime.status = "running";
@@ -731,7 +753,7 @@ function normalizeState(state: Partial<StoredState>): StoredState {
   return {
     activeProjectId: state.activeProjectId ?? null,
     activeView:
-      state.activeView === "animation-studio" || state.activeView === "game" || state.activeView === "blob"
+      state.activeView === "animation-studio" || state.activeView === "game" || state.activeView === "blob" || state.activeView === "character-studio"
         ? state.activeView
         : "blob",
     projects: Array.isArray(state.projects)
@@ -779,6 +801,7 @@ function createManagedRuntime(options: {
     port: options.port,
     process: null,
     projectId: options.projectId ?? null,
+    publicUrl: createPublicUrl(options.port),
     startedAt: null,
     status: "stopped",
     url: createUrl(options.port)
@@ -807,7 +830,7 @@ function toRuntimeSnapshot(runtime: ManagedRuntime, registration?: DevSyncGameRe
     sceneIds: registration?.sceneIds ?? [],
     startedAt: runtime.startedAt,
     status: runtime.status,
-    url: runtime.url
+    url: runtime.publicUrl
   };
 }
 
@@ -819,7 +842,7 @@ function resolveViewport(options: {
   if (options.activeView === "blob") {
     const editor = options.editors.find((entry) => entry.id === "blob");
     return {
-      label: "Blob",
+      label: "World Studio",
       subtitle: editor?.status === "running" ? "World editing" : "Preview server unavailable",
       url: editor?.status === "running" ? editor.url : null,
       view: "blob"
@@ -833,6 +856,16 @@ function resolveViewport(options: {
       subtitle: editor?.status === "running" ? "Animation authoring" : "Preview server unavailable",
       url: editor?.status === "running" ? editor.url : null,
       view: "animation-studio"
+    };
+  }
+
+  if (options.activeView === "character-studio") {
+    const editor = options.editors.find((entry) => entry.id === "character-studio");
+    return {
+      label: "Character Studio",
+      subtitle: editor?.status === "running" ? "Character editing" : "Preview server unavailable",
+      url: editor?.status === "running" ? editor.url : null,
+      view: "character-studio"
     };
   }
 
@@ -1027,7 +1060,7 @@ function isPortFree(port: number) {
     server.on("error", () => {
       resolvePromise(false);
     });
-    server.listen(port, HOST, () => {
+    server.listen(port, INTERNAL_HOST, () => {
       server.close(() => resolvePromise(true));
     });
   });
@@ -1049,7 +1082,15 @@ function sleep(durationMs: number) {
 }
 
 function createUrl(port: number) {
-  return `http://${HOST}:${port}`;
+  return `http://${INTERNAL_HOST}:${port}`;
+}
+
+function createPublicUrl(port: number) {
+  const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+  if (replitDomain) {
+    return `https://${replitDomain}:${port}`;
+  }
+  return `http://${INTERNAL_HOST}:${port}`;
 }
 
 function formatCommand(command: RuntimeCommand) {

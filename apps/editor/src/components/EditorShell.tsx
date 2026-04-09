@@ -17,15 +17,19 @@ import type {
 } from "@blud/shared";
 import type { PrimitiveNodeData, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
+import type { FloorPresetId } from "@/lib/floor-presets";
 import type { WorkerJob } from "@blud/workers";
-import type { ReactNode } from "react";
-import type { CopilotSession } from "@/lib/copilot/types";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
+import { buildGameBlobUrl } from "@/lib/game-html";
 import { AiModelPromptBar } from "@/components/editor-shell/AiModelPromptBar";
 import { CopilotPanel } from "@/components/editor-shell/CopilotPanel";
+import { GameBridgePanel } from "@/components/editor-shell/GameBridgePanel";
 import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
 import { InspectorSidebar } from "@/components/editor-shell/InspectorSidebar";
 import { SpatialAnalysisPanel } from "@/components/editor-shell/SpatialAnalysisPanel";
 import { StatusBar } from "@/components/editor-shell/StatusBar";
+import { ToolIconSidebar } from "@/components/editor-shell/ToolIconSidebar";
 import { ToolPalette } from "@/components/editor-shell/ToolPalette";
 import { LogicViewerSheet } from "@/components/editor-shell/logic-viewer/LogicViewerSheet";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -46,11 +50,13 @@ type EditorShellProps = {
   aiModelPlacementActive: boolean;
   copilot: {
     session: CopilotSession;
-    sendMessage: (prompt: string) => void;
+    sendMessage: (prompt: string, images?: CopilotImageAttachment[]) => void;
     abort: () => void;
     clearHistory: () => void;
     isConfigured: boolean;
     refreshConfigured: () => void;
+    latestGame: { title: string; html: string } | null;
+    clearLatestGame: () => void;
   };
   copilotPanelOpen: boolean;
   gameConnectionControl?: ReactNode;
@@ -99,6 +105,7 @@ type EditorShellProps = {
   onPausePhysics: () => void;
   onMeshEditToolbarAction: (action: MeshEditToolbarActionRequest["kind"]) => void;
   onPlaceEntity: (type: EntityType) => void;
+  onPlaceFloorPreset: (presetId: FloorPresetId) => void;
   onPlaceLight: (type: LightType) => void;
   onPlaceBlockoutOpenRoom: () => void;
   onPlaceBlockoutPlatform: () => void;
@@ -228,6 +235,7 @@ export function EditorShell({
   onPausePhysics,
   onMeshEditToolbarAction,
   onPlaceEntity,
+  onPlaceFloorPreset,
   onPlaceLight,
   onPlaceBlockoutOpenRoom,
   onPlaceBlockoutPlatform,
@@ -305,6 +313,34 @@ export function EditorShell({
   viewportQuality,
   viewports
 }: EditorShellProps) {
+  const [gameViewUrl, setGameViewUrl] = useState<string | null>(null);
+  const gameViewUrlRef = useRef<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const handlePlayInViewport = useCallback(() => {
+    if (!copilot.latestGame) return;
+    if (gameViewUrlRef.current) URL.revokeObjectURL(gameViewUrlRef.current);
+    const url = buildGameBlobUrl(copilot.latestGame.html);
+    gameViewUrlRef.current = url;
+    setGameViewUrl(url);
+  }, [copilot.latestGame]);
+
+  const handleExitGameView = useCallback(() => {
+    setGameViewUrl(null);
+    if (gameViewUrlRef.current) {
+      setTimeout(() => {
+        if (gameViewUrlRef.current) URL.revokeObjectURL(gameViewUrlRef.current);
+        gameViewUrlRef.current = null;
+      }, 500);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!copilot.latestGame) {
+      handleExitGameView();
+    }
+  }, [copilot.latestGame, handleExitGameView]);
+
   const selectionEnabled = physicsPlayback === "stopped";
   const nodes = Array.from(editor.scene.nodes.values());
   const entities = Array.from(editor.scene.entities.values());
@@ -391,9 +427,9 @@ export function EditorShell({
   };
 
   return (
-    <div className="editor-shell flex h-screen flex-col text-foreground">
-      <header className="relative z-20 shrink-0 px-3 pt-3">
-        <div className="glass-panel glass-panel-strong rounded-[28px]">
+    <div className="editor-shell flex flex-col text-foreground" style={{ height: "100dvh" }}>
+      <header className="relative z-20 shrink-0 px-2 pt-2 sm:px-3 sm:pt-3">
+        <div className="glass-panel glass-panel-strong rounded-[20px] sm:rounded-[28px]">
           <EditorMenuBar
             canRedo={canRedo}
             canUndo={canUndo}
@@ -425,11 +461,30 @@ export function EditorShell({
         </div>
       </header>
 
-      <main className="relative flex min-h-0 flex-1 gap-3 px-3 pb-3 pt-2">
+      <main className="relative flex min-h-0 flex-1 gap-2 px-2 pb-2 pt-1.5 sm:gap-3 sm:px-3 sm:pb-3 sm:pt-2">
         <div className="editor-stage relative min-w-0 flex-1 rounded-[32px]">
           <div className="absolute inset-0">
             <ViewportLayout renderViewportPane={renderViewportPane} viewMode={viewMode} />
           </div>
+
+          {gameViewUrl && (
+            <div className="absolute inset-0 z-20 rounded-[32px] overflow-hidden">
+              <iframe
+                ref={iframeRef}
+                src={gameViewUrl}
+                className="size-full border-0"
+                allow="autoplay"
+                title="Game preview"
+              />
+              <button
+                className="absolute left-4 top-4 z-30 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm hover:bg-black/80 hover:text-white transition-colors"
+                onClick={handleExitGameView}
+              >
+                ← Editor
+              </button>
+              <GameBridgePanel iframeRef={iframeRef} />
+            </div>
+          )}
 
         <ToolPalette
           activeBrushShape={activeBrushShape}
@@ -444,6 +499,7 @@ export function EditorShell({
           onMeshEditToolbarAction={onMeshEditToolbarAction}
           onImportGlb={onImportGlb}
           onPlaceEntity={onPlaceEntity}
+          onPlaceFloorPreset={onPlaceFloorPreset}
           onPlaceLight={onPlaceLight}
           onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
           onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
@@ -464,7 +520,6 @@ export function EditorShell({
           onSetSnapSize={onSetSnapSize}
           onStopPhysics={onStopPhysics}
           onSetTransformMode={onSetTransformMode}
-          onSetToolId={onSetToolId}
           onSetViewMode={onSetViewMode}
           physicsPlayback={physicsPlayback}
           sculptMode={sculptMode}
@@ -473,10 +528,11 @@ export function EditorShell({
           selectedGeometry={selectedIsGeometry}
           selectedMesh={selectedIsMesh}
           snapEnabled={activeViewport.grid.enabled}
-          tools={tools}
           transformMode={transformMode}
           viewMode={viewMode}
         />
+
+        <ToolIconSidebar activeToolId={activeToolId} onSetToolId={onSetToolId} />
 
         <AiModelPromptBar
           active={aiModelPlacementActive}
@@ -576,12 +632,15 @@ export function EditorShell({
         </div>
 
         {copilotPanelOpen && (
-          <div className="w-[22rem] shrink-0">
+          <div className="w-64 shrink-0 sm:w-80 lg:w-[22rem]">
             <CopilotPanel
               isConfigured={copilot.isConfigured}
+              latestGame={copilot.latestGame}
               onAbort={copilot.abort}
+              onClearGame={copilot.clearLatestGame}
               onClearHistory={copilot.clearHistory}
               onClose={onToggleCopilot}
+              onPlayInViewport={handlePlayInViewport}
               onSendMessage={copilot.sendMessage}
               onSettingsChanged={copilot.refreshConfigured}
               session={copilot.session}

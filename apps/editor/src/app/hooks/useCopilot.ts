@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditorCore } from "@blud/editor-core";
-import type { CopilotSession } from "@/lib/copilot/types";
+import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
 import { runAgenticLoop } from "@/lib/copilot/agentic-loop";
 import { createCopilotProvider } from "@/lib/copilot/provider";
 import { buildSystemPrompt } from "@/lib/copilot/system-prompt";
 import { loadCopilotSettings, isCopilotConfigured } from "@/lib/copilot/settings";
-import { COPILOT_TOOL_DECLARATIONS } from "@/lib/copilot/tool-declarations";
+import { COPILOT_TOOL_DECLARATIONS, GAME_TOOL_DECLARATIONS, isGameGenerationPrompt } from "@/lib/copilot/tool-declarations";
 import { executeTool, type CopilotToolExecutionContext } from "@/lib/copilot/tool-executor";
+
+export type GeneratedGame = { title: string; html: string };
 
 const EMPTY_SESSION: CopilotSession = {
   messages: [],
@@ -14,11 +16,33 @@ const EMPTY_SESSION: CopilotSession = {
   iterationCount: 0
 };
 
+function extractHtmlFromMessages(messages: CopilotSession["messages"]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role !== "assistant" || !msg.content) continue;
+    const match = /```html\s*([\s\S]+?)```/i.exec(msg.content);
+    if (match) return match[1].trim();
+  }
+  return null;
+}
+
 export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecutionContext = {}) {
   const [session, setSession] = useState<CopilotSession>(EMPTY_SESSION);
   const [configured, setConfigured] = useState(() => isCopilotConfigured());
+  const [latestGame, setLatestGame] = useState<GeneratedGame | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const codexThreadIdRef = useRef<string | undefined>(undefined);
+  const pendingGameTitleRef = useRef<string | null>(null);
+
+  const mergedToolContext = useMemo<CopilotToolExecutionContext>(
+    () => ({
+      ...toolContext,
+      onGeneratedGame: (title: string, _html: string) => {
+        pendingGameTitleRef.current = title;
+      }
+    }),
+    [toolContext]
+  );
 
   useEffect(() => {
     const check = () => setConfigured(isCopilotConfigured());
@@ -30,8 +54,18 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
     };
   }, []);
 
+  useEffect(() => {
+    if (session.status !== "idle" || !pendingGameTitleRef.current) return;
+    const title = pendingGameTitleRef.current;
+    pendingGameTitleRef.current = null;
+    const html = extractHtmlFromMessages(session.messages);
+    if (html) {
+      setLatestGame({ title, html });
+    }
+  }, [session.status, session.messages]);
+
   const sendMessage = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, images?: CopilotImageAttachment[]) => {
       const settings = loadCopilotSettings();
 
       if (!isCopilotConfigured(settings)) {
@@ -40,7 +74,7 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
           status: "error",
           error: settings.provider === "codex"
             ? 'Codex not configured. Run "codex login" in your terminal.'
-            : "No API key configured. Open Vibe settings to add one."
+            : "No API key configured. Open Copilot settings to add one."
         }));
         return;
       }
@@ -50,6 +84,9 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
 
       const copilotProvider = createCopilotProvider(settings.provider);
       const systemPrompt = buildSystemPrompt(editor);
+      const gameMode = isGameGenerationPrompt(prompt);
+      const tools = gameMode ? GAME_TOOL_DECLARATIONS : COPILOT_TOOL_DECLARATIONS;
+      console.log(`[COPILOT] Mode: ${gameMode ? "game-generation (1 tool)" : `editor (${tools.length} tools)`}`);
 
       const providerConfig = {
         apiKey: settings.provider === "gemini" ? settings.gemini.apiKey : "",
@@ -58,25 +95,23 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
       };
 
       if (copilotProvider.kind === "session-based") {
-        // Codex path: provider manages its own tool-calling loop
         await copilotProvider.provider.runSession({
           messages: session.messages,
           userPrompt: prompt,
-          tools: COPILOT_TOOL_DECLARATIONS,
+          tools,
           systemPrompt,
           providerConfig,
           threadId: codexThreadIdRef.current,
           onThreadId: (threadId) => {
             codexThreadIdRef.current = threadId;
           },
-          executeTool: (toolCall) => executeTool(editor, toolCall, toolContext),
+          executeTool: (toolCall) => executeTool(editor, toolCall, mergedToolContext),
           onUpdate: (updated) => {
             setSession({ ...updated, messages: [...updated.messages] });
           },
           signal: controller.signal
         });
       } else {
-        // Gemini path: agentic loop
         await runAgenticLoop(
           prompt,
           session.messages,
@@ -85,19 +120,20 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
             provider: copilotProvider.provider,
             providerConfig,
             systemPrompt,
-            tools: COPILOT_TOOL_DECLARATIONS,
-            executeTool: (toolCall) => executeTool(editor, toolCall, toolContext),
+            tools,
+            executeTool: (toolCall) => executeTool(editor, toolCall, mergedToolContext),
             onUpdate: (updated) => {
               setSession({ ...updated, messages: [...updated.messages] });
             }
           },
-          controller.signal
+          controller.signal,
+          images
         );
       }
 
       abortRef.current = null;
     },
-    [editor, session.messages, toolContext]
+    [editor, session.messages, mergedToolContext]
   );
 
   const abort = useCallback(() => {
@@ -109,8 +145,11 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
     abortRef.current?.abort();
     abortRef.current = null;
     codexThreadIdRef.current = undefined;
+    pendingGameTitleRef.current = null;
     setSession(EMPTY_SESSION);
   }, []);
+
+  const clearLatestGame = useCallback(() => setLatestGame(null), []);
 
   return {
     session,
@@ -118,6 +157,8 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
     abort,
     clearHistory,
     isConfigured: configured,
-    refreshConfigured: () => setConfigured(isCopilotConfigured())
+    refreshConfigured: () => setConfigured(isCopilotConfigured()),
+    latestGame,
+    clearLatestGame
   };
 }

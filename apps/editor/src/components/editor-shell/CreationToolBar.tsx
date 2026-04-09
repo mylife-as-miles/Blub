@@ -153,6 +153,7 @@ export function CreationToolBar({
         <CreationButton disabled={disabled} icon={OpenRoomIcon} label="Open Room" onClick={onPlaceBlockoutOpenRoom} />
         <CreationButton disabled={disabled} icon={StairBlockoutIcon} label="Blockout Stairs" onClick={onPlaceBlockoutStairs} />
       </CreationGroup>
+
     </div>
   );
 }

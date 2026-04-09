@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { type Entity, type GameplayObject, type GameplayValue, type GeometryNode, type SceneEventDefinition, type SceneHook, type ScenePathDefinition, type SceneSettings } from "@blud/shared";
-import { CircleHelp, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
+import { CircleHelp, Loader2, Play, Plus, SlidersHorizontal, Trash2, Volume2 } from "lucide-react";
 import type { ToolId } from "@blud/tool-system";
 import { Button } from "@/components/ui/button";
 import { DragInput } from "@/components/ui/drag-input";
@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitl
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { generateSoundEffectUrl } from "@/lib/elevenlabs-client";
 import {
   createEmptyEventCondition,
   createEmptyGrant,
@@ -223,6 +224,17 @@ export function HooksPanel({
                       />
                     ))}
                 </div>
+                {hook.type === "sound_effect" && (
+                  <SoundEffectActions
+                    description={(getGameplayValue(hook.config, "description") as string) ?? ""}
+                    onGenerated={(url) =>
+                      updateHook(hook.id, (currentHook) => ({
+                        ...currentHook,
+                        config: setGameplayValue(currentHook.config, "audioUrl", url)
+                      }))
+                    }
+                  />
+                )}
               </>
             ) : (
               <>
@@ -1774,6 +1786,56 @@ function normalizeSequenceAction(value: Partial<GameplayObject>): GameplayObject
         type: "emit"
       };
   }
+}
+
+function SoundEffectActions({
+  description,
+  onGenerated,
+}: {
+  description: string;
+  onGenerated: (url: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    if (!description.trim()) return;
+    setLoading(true);
+    try {
+      const url = await generateSoundEffectUrl(description.trim());
+      setAudioUrl(url);
+      onGenerated(url);
+    } catch (err) {
+      console.error("[SoundEffect] generation failed", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlay = () => {
+    if (!audioUrl) return;
+    const audio = new Audio(audioUrl);
+    audio.play().catch(() => {});
+  };
+
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      <Button
+        className="flex-1 text-xs"
+        disabled={loading || !description.trim()}
+        onClick={handleGenerate}
+        size="xs"
+        variant="ghost"
+      >
+        {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Generate Sound"}
+      </Button>
+      {audioUrl && (
+        <Button onClick={handlePlay} size="xs" variant="ghost">
+          <Play className="h-3 w-3" />
+        </Button>
+      )}
+    </div>
+  );
 }
 
 function startCase(value: string) {

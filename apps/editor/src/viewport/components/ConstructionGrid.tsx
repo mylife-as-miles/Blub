@@ -1,43 +1,110 @@
-import { snapValue, vec3 } from "@blud/shared";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import * as THREE from "three";
 import type { ViewportCanvasProps } from "@/viewport/types";
-import { createIndexedGeometry } from "@/viewport/utils/geometry";
-import { resolveViewportSnapSize } from "@/viewport/utils/snap";
+import { getFloorPreset } from "@/lib/floor-presets";
+
+const VERTEX_SHADER = /* glsl */ `
+  varying vec3 vWorldPos;
+  void main() {
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vWorldPos = wp.xyz;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }
+`;
+
+const FRAGMENT_SHADER = /* glsl */ `
+  uniform vec3 uBaseColor;
+  uniform vec3 uMinorColor;
+  uniform vec3 uMajorColor;
+  uniform float uMinorStep;
+  uniform float uMajorStep;
+  uniform float uFadeDist;
+  uniform float uBaseAlpha;
+
+  varying vec3 vWorldPos;
+
+  float gridLine(float coord, float step, float pixelWidth) {
+    float fw = fwidth(coord);
+    float half_step = step * 0.5;
+    float d = abs(mod(coord + half_step, step) - half_step);
+    return clamp((fw * pixelWidth - d) / fw, 0.0, 1.0);
+  }
+
+  void main() {
+    float dist = length(vWorldPos.xz);
+    float fade = 1.0 - smoothstep(uFadeDist * 0.2, uFadeDist, dist);
+
+    float mx = gridLine(vWorldPos.x, uMinorStep, 0.5);
+    float mz = gridLine(vWorldPos.z, uMinorStep, 0.5);
+    float minor = max(mx, mz) * fade;
+
+    float Mx = gridLine(vWorldPos.x, uMajorStep, 1.2);
+    float Mz = gridLine(vWorldPos.z, uMajorStep, 1.2);
+    float major = max(Mx, Mz) * fade;
+
+    vec3 color = mix(uBaseColor, uMinorColor, minor * 0.65);
+    color = mix(color, uMajorColor, major);
+
+    float gridAlpha = max(minor * 0.65, major);
+    float alpha = uBaseAlpha + gridAlpha * (1.0 - uBaseAlpha);
+
+    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.96));
+  }
+`;
+
+const DEFAULT_MINOR = new THREE.Color("#2a3c4a");
+const DEFAULT_MAJOR = new THREE.Color("#4a6880");
+
+function hexToThreeColor(hex: string): THREE.Color {
+  return new THREE.Color(hex);
+}
 
 export function ConstructionGrid({
   activeToolId,
   onPlaceAsset,
   renderMode,
-  viewportPlane,
-  viewport
-}: Pick<ViewportCanvasProps, "activeToolId" | "onPlaceAsset" | "renderMode" | "viewport" | "viewportPlane">) {
+  sceneSettings,
+  viewport,
+  viewportPlane
+}: Pick<ViewportCanvasProps, "activeToolId" | "onPlaceAsset" | "renderMode" | "sceneSettings" | "viewport" | "viewportPlane">) {
   if (!viewport.grid.visible) {
     return null;
   }
 
-  const snapSize = resolveViewportSnapSize(viewport);
   const minorStep = viewport.grid.snapSize;
   const majorStep = minorStep * viewport.grid.majorLineEvery;
   const extent = viewport.grid.size;
   const transform = resolveConstructionPlaneTransform(viewportPlane, viewport);
   const editorFloorVisible = renderMode === "lit" && viewport.projection === "perspective";
 
+  const floorPresetId = sceneSettings.world.floorPresetId;
+  const preset = floorPresetId ? getFloorPreset(floorPresetId as Parameters<typeof getFloorPreset>[0]) : undefined;
+  const baseColor = preset ? hexToThreeColor(preset.color) : new THREE.Color(editorFloorVisible ? "#cec8c0" : "#657a90");
+  const minorColor = preset ? hexToThreeColor(preset.gridMinorColor) : DEFAULT_MINOR;
+  const majorColor = preset ? hexToThreeColor(preset.gridMajorColor) : DEFAULT_MAJOR;
+
   return (
     <group position={transform.position} rotation={transform.rotation}>
-      <mesh
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.05, 0]}
-      >
-        <planeGeometry args={[extent, extent]} />
-        {editorFloorVisible ? (
-          <meshStandardMaterial color="#cec8c0" metalness={0} roughness={0.96} />
-        ) : (
-          <meshBasicMaterial color="#657a90" transparent opacity={0.32} />
-        )}
-      </mesh>
-      <GridLines color={editorFloorVisible ? "#b4ada4" : "#9fb4cb"} opacity={editorFloorVisible ? 0.78 : 0.5} size={extent} step={minorStep} y={0.002} />
-      <GridLines color={editorFloorVisible ? "#7b746c" : "#dce7f5"} opacity={editorFloorVisible ? 0.82 : 0.72} size={extent} step={majorStep} y={0.006} />
+      {editorFloorVisible ? (
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+          <planeGeometry args={[extent, extent]} />
+          <meshStandardMaterial
+            color={baseColor}
+            metalness={preset?.metalness ?? 0}
+            roughness={preset?.roughness ?? 0.96}
+          />
+        </mesh>
+      ) : null}
+      <GridShaderPlane
+        baseAlpha={editorFloorVisible ? 0.78 : 0.32}
+        baseColor={editorFloorVisible ? baseColor : new THREE.Color("#657a90")}
+        extent={extent}
+        fadeDist={extent * 0.5}
+        majorColor={majorColor}
+        majorStep={majorStep}
+        minorColor={minorColor}
+        minorStep={minorStep}
+      />
     </group>
   );
 }
@@ -66,52 +133,67 @@ function resolveConstructionPlaneTransform(
   }
 }
 
-function snapPointToConstructionPlane(
-  point: { x: number; y: number; z: number },
-  plane: ViewportCanvasProps["viewportPlane"],
-  viewport: ViewportCanvasProps["viewport"],
-  snapSize: number
-) {
-  switch (plane) {
-    case "xy":
-      return vec3(snapValue(point.x, snapSize), snapValue(point.y, snapSize), viewport.camera.target.z);
-    case "yz":
-      return vec3(viewport.camera.target.x, snapValue(point.y, snapSize), snapValue(point.z, snapSize));
-    case "xz":
-    default:
-      return vec3(snapValue(point.x, snapSize), viewport.grid.elevation, snapValue(point.z, snapSize));
-  }
-}
-
-function GridLines({
-  color,
-  opacity,
-  size,
-  step,
-  y
+function GridShaderPlane({
+  baseAlpha,
+  baseColor,
+  extent,
+  fadeDist,
+  majorColor,
+  majorStep,
+  minorColor,
+  minorStep
 }: {
-  color: string;
-  opacity: number;
-  size: number;
-  step: number;
-  y: number;
+  baseAlpha: number;
+  baseColor: THREE.Color;
+  extent: number;
+  fadeDist: number;
+  majorColor: THREE.Color;
+  majorStep: number;
+  minorColor: THREE.Color;
+  minorStep: number;
 }) {
-  const geometry = useMemo(() => {
-    const positions: number[] = [];
-    const halfSize = size / 2;
-    const safeStep = Math.max(step, 1);
+  const matRef = useRef<THREE.ShaderMaterial>(null);
 
-    for (let offset = -halfSize; offset <= halfSize + 0.0001; offset += safeStep) {
-      positions.push(-halfSize, y, offset, halfSize, y, offset);
-      positions.push(offset, y, -halfSize, offset, y, halfSize);
+  const uniforms = useMemo(
+    () => ({
+      uBaseAlpha: { value: baseAlpha },
+      uBaseColor: { value: baseColor.clone() },
+      uMinorColor: { value: minorColor.clone() },
+      uMajorColor: { value: majorColor.clone() },
+      uMinorStep: { value: minorStep },
+      uMajorStep: { value: majorStep },
+      uFadeDist: { value: fadeDist }
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  useEffect(() => {
+    if (!matRef.current) {
+      return;
     }
 
-    return createIndexedGeometry(positions);
-  }, [size, step, y]);
+    matRef.current.uniforms.uBaseAlpha.value = baseAlpha;
+    matRef.current.uniforms.uBaseColor.value.copy(baseColor);
+    matRef.current.uniforms.uMinorColor.value.copy(minorColor);
+    matRef.current.uniforms.uMajorColor.value.copy(majorColor);
+    matRef.current.uniforms.uMinorStep.value = minorStep;
+    matRef.current.uniforms.uMajorStep.value = majorStep;
+    matRef.current.uniforms.uFadeDist.value = fadeDist;
+  }, [baseAlpha, baseColor, minorColor, majorColor, minorStep, majorStep, fadeDist]);
 
   return (
-    <lineSegments frustumCulled={false} geometry={geometry} renderOrder={1}>
-      <lineBasicMaterial color={color} depthWrite={false} opacity={opacity} toneMapped={false} transparent />
-    </lineSegments>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={0}>
+      <planeGeometry args={[extent, extent, 1, 1]} />
+      <shaderMaterial
+        ref={matRef}
+        depthWrite={false}
+        fragmentShader={FRAGMENT_SHADER}
+        side={THREE.DoubleSide}
+        transparent
+        uniforms={uniforms}
+        vertexShader={VERTEX_SHADER}
+      />
+    </mesh>
   );
 }

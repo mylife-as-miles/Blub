@@ -1011,6 +1011,32 @@ const hookDefinitionEntries: Array<HookDefinition & { defaultConfig: SceneHook["
     label: "Condition Listener",
     listens: [],
     type: "condition_listener"
+  },
+  {
+    category: "Audio",
+    defaultConfig: {
+      description: "",
+      audioUrl: ""
+    },
+    description: "Attach a generated sound effect to this node. Describe the sound and generate an audio clip via ElevenLabs.",
+    emits: ["audio.play", "audio.stop"],
+    fields: [
+      {
+        kind: "text",
+        label: "Description",
+        path: "description",
+        placeholder: "Heavy wooden door creaking open"
+      },
+      {
+        kind: "text",
+        label: "Audio URL (generated)",
+        path: "audioUrl",
+        placeholder: "Generate to populate"
+      }
+    ],
+    label: "Sound Effect",
+    listens: [],
+    type: "sound_effect"
   }
 ];
 

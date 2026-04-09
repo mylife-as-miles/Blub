@@ -1,4 +1,6 @@
 import { Canvas, useThree, type RootState } from "@react-three/fiber";
+import { ContactShadows } from "@react-three/drei";
+import { useRendererGlConfig } from "@/viewport/hooks/useRendererGlConfig";
 import {
   arcEditableMeshEdges,
   bevelEditableMeshEdges,
@@ -95,7 +97,7 @@ import {
 import { composeTransformRotation, rebaseTransformPivot } from "@/viewport/utils/geometry";
 import { resolveViewportSnapSize } from "@/viewport/utils/snap";
 import { useEffect, useMemo, useRef, useState, type PointerEventHandler } from "react";
-import { BufferGeometry, Camera, Color, Float32BufferAttribute, Matrix4, Object3D, Plane, Raycaster, Vector2, Vector3 } from "three";
+import { ACESFilmicToneMapping, BufferGeometry, Camera, Color, Float32BufferAttribute, Matrix4, Object3D, Plane, Raycaster, Vector2, Vector3 } from "three";
 import type {
   ArcState,
   BevelState,
@@ -153,6 +155,51 @@ function ViewportWorldSettings({ renderMode, sceneSettings }: Pick<ViewportCanva
     };
   }, [renderMode, scene, sceneSettings]);
 
+  return null;
+}
+
+const SKY_VERT = /* glsl */ `
+  varying vec3 vDir;
+  void main() {
+    vDir = normalize(position);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const SKY_FRAG = /* glsl */ `
+  varying vec3 vDir;
+  void main() {
+    float t = clamp(vDir.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 zenith  = vec3(0.040, 0.055, 0.085);
+    vec3 horizon = vec3(0.068, 0.088, 0.120);
+    vec3 nadir   = vec3(0.022, 0.026, 0.034);
+    vec3 col = t > 0.5
+      ? mix(horizon, zenith, (t - 0.5) * 2.0)
+      : mix(nadir,   horizon, t * 2.0);
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
+function EditorSkyDome() {
+  return (
+    <mesh renderOrder={-1}>
+      <sphereGeometry args={[900, 32, 16]} />
+      <shaderMaterial
+        vertexShader={SKY_VERT}
+        fragmentShader={SKY_FRAG}
+        side={1}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+function ViewportRendererSetup() {
+  const { gl } = useThree();
+  useEffect(() => {
+    gl.toneMapping = ACESFilmicToneMapping;
+    gl.toneMappingExposure = 0.92;
+  }, [gl]);
   return null;
 }
 
@@ -217,6 +264,8 @@ export function ViewportCanvas({
   const viewportRootRef = useRef<HTMLDivElement | null>(null);
   const meshObjectsRef = useRef(new Map<string, Object3D>());
   const raycasterRef = useRef(new Raycaster());
+  const glConfig = useRendererGlConfig();
+
   const [brushEditHandleIds, setBrushEditHandleIds] = useState<string[]>([]);
   const [brushCreateState, setBrushCreateState] = useState<BrushCreateState | null>(null);
   const [arcState, setArcState] = useState<ArcState | null>(null);
@@ -2988,6 +3037,7 @@ export function ViewportCanvas({
       <Canvas
         camera={canvasCamera}
         dpr={Math.max(0.5, Math.min((typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1) * dprScale, 2.5))}
+        gl={glConfig}
         orthographic={viewport.projection === "orthographic"}
         onCreated={(state: RootState) => {
           cameraRef.current = state.camera;
@@ -3022,12 +3072,26 @@ export function ViewportCanvas({
         }}
         shadows={renderMode === "lit"}
       >
+        <ViewportRendererSetup />
         <ViewportWorldSettings renderMode={renderMode} sceneSettings={sceneSettings} />
+        {renderMode !== "lit" ? <EditorSkyDome /> : null}
         {renderMode === "lit" ? (
           <ambientLight color={sceneSettings.world.ambientColor} intensity={sceneSettings.world.ambientIntensity} />
         ) : null}
-        {renderMode === "lit" ? <hemisphereLight args={["#9ec5f8", "#0f1721", 0.7]} /> : null}
+        {renderMode === "lit" ? <hemisphereLight args={["#b8d4f0", "#0a1420", 0.85]} /> : null}
+        {renderMode !== "lit" ? <hemisphereLight args={["#4a6890", "#060c14", 0.45]} /> : null}
         {renderMode === "lit" ? <DefaultViewportSun center={renderScene.boundsCenter} /> : null}
+        {renderMode === "lit" ? (
+          <ContactShadows
+            opacity={0.42}
+            scale={80}
+            blur={2.2}
+            far={24}
+            resolution={512}
+            color="#000814"
+            position={[renderScene.boundsCenter.x, renderScene.boundsCenter.y - 0.01, renderScene.boundsCenter.z]}
+          />
+        ) : null}
         <EditorCameraRig
           controlsEnabled={
             isActiveViewport &&
@@ -3050,6 +3114,7 @@ export function ViewportCanvas({
             activeToolId={activeToolId}
             onPlaceAsset={onPlaceAsset}
             renderMode={renderMode}
+            sceneSettings={sceneSettings}
             viewport={viewport}
             viewportPlane={viewportPlane}
           />
@@ -3236,26 +3301,31 @@ function emptyEditableMesh(): EditableMesh {
 }
 
 function DefaultViewportSun({ center }: { center: Vec3 }) {
-  const lightRef = useRef<any>(null);
+  const sunRef = useRef<any>(null);
+  const fillRef = useRef<any>(null);
   const targetRef = useRef<Object3D | null>(null);
 
   useEffect(() => {
-    if (!lightRef.current || !targetRef.current) {
-      return;
-    }
+    if (!sunRef.current || !targetRef.current) return;
+    sunRef.current.target = targetRef.current;
+    targetRef.current.updateMatrixWorld();
+  }, [center.x, center.y, center.z]);
 
-    lightRef.current.target = targetRef.current;
+  useEffect(() => {
+    if (!fillRef.current || !targetRef.current) return;
+    fillRef.current.target = targetRef.current;
     targetRef.current.updateMatrixWorld();
   }, [center.x, center.y, center.z]);
 
   return (
     <>
+      {/* Primary sun — warm, from upper-right-front */}
       <directionalLight
         castShadow
-        color="#fff5dd"
-        intensity={1.55}
+        color="#fff5e8"
+        intensity={1.6}
         position={[center.x + 28, center.y + 42, center.z + 24]}
-        ref={lightRef}
+        ref={sunRef}
         shadow-bias={-0.00015}
         shadow-camera-bottom={-72}
         shadow-camera-far={180}
@@ -3264,7 +3334,20 @@ function DefaultViewportSun({ center }: { center: Vec3 }) {
         shadow-camera-top={72}
         shadow-mapSize-height={2048}
         shadow-mapSize-width={2048}
-        shadow-normalBias={0.03}
+        shadow-normalBias={0.025}
+      />
+      {/* Cool fill — from the opposite lower-left-back, no shadows */}
+      <directionalLight
+        color="#a8c8f0"
+        intensity={0.38}
+        position={[center.x - 22, center.y + 8, center.z - 18]}
+        ref={fillRef}
+      />
+      {/* Rim light — backlit edge definition */}
+      <directionalLight
+        color="#d0e8ff"
+        intensity={0.22}
+        position={[center.x - 10, center.y + 30, center.z - 40]}
       />
       <object3D position={[center.x, center.y, center.z]} ref={targetRef} />
     </>

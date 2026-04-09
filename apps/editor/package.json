@@ -23,6 +23,8 @@
     "@xyflow/react": "^12.9.3",
     "@blud/dev-sync": "*",
     "@blud/editor-core": "*",
+    "@blud/engine-config": "*",
+    "@blud/renderer-backend": "*",
     "@blud/geometry-kernel": "*",
     "@blud/render-pipeline": "*",
     "@blud/runtime-build": "*",

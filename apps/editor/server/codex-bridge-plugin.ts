@@ -203,6 +203,15 @@ async function startCodexSession(
     agentText: ""
   };
 
+  // Handle spawn errors (e.g. codex CLI not installed) gracefully
+  await new Promise<void>((resolve, reject) => {
+    proc.once("error", (err) => {
+      readline.close();
+      reject(new Error(`Failed to start Codex process: ${err.message}. Install with: npm install -g @openai/codex`));
+    });
+    proc.once("spawn", () => resolve());
+  });
+
   // Set up stdio message handling
   readline.on("line", (line) => {
     try {
@@ -210,6 +219,16 @@ async function startCodexSession(
       handleCodexMessage(session, msg);
     } catch {
       // Ignore non-JSON lines (e.g. log output)
+    }
+  });
+
+  proc.on("error", (err) => {
+    if (ws.readyState === ws.OPEN) {
+      sendToClient(ws, {
+        type: "error",
+        message: `Codex process error: ${err.message}`,
+        fatal: true
+      });
     }
   });
 

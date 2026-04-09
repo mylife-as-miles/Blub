@@ -68,6 +68,7 @@ export type CopilotToolExecutionContext = {
     projectName?: string;
     projectSlug?: string;
   }) => void;
+  onGeneratedGame?: (title: string, html: string) => void;
 };
 
 function num(args: Args, key: string, fallback = 0): number {
@@ -1040,6 +1041,12 @@ function executeToolInner(editor: EditorCore, name: string, args: Args, context:
       );
       editor.execute(command);
       return ok({ splitIds });
+    }
+
+    case "generate_game_html": {
+      const title = str(args, "title", "Generated Game");
+      context.onGeneratedGame?.(title, "");
+      return ok({ registered: true, title });
     }
 
     default:

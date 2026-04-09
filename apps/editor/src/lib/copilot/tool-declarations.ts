@@ -411,6 +411,21 @@ export const COPILOT_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
     }
   },
   {
+    name: "generate_game_html",
+    description:
+      "Call this after you have written the complete standalone HTML game in a ```html code block in your message. This tool registers the game artifact so it appears as a playable card in the UI. Do NOT put the HTML in the tool arguments — write it in your message text first, then call this tool with only the title.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "A short, descriptive title for the game shown in the UI (e.g. 'Terrain Vehicle Demo')"
+        }
+      },
+      required: ["title"]
+    }
+  },
+  {
     name: "push_scene_to_connected_game",
     description:
       "Pushes the current editor scene into the connected scaffolded game dev server. Use it when the user asks to sync or send the current scene to the game.",
@@ -836,3 +851,63 @@ export const COPILOT_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
     }
   }
 ];
+
+/** Only `generate_game_html` — used when the model's task is purely game generation */
+export const GAME_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
+  COPILOT_TOOL_DECLARATIONS.find((t) => t.name === "generate_game_html")!
+];
+
+/**
+ * Return `true` when the user's prompt is clearly a standalone-game request
+ * (not a scene-editing request). In that case we expose only `generate_game_html`
+ * instead of all 59 editor tools so the model context stays lean.
+ */
+export function isGameGenerationPrompt(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  const gameKeywords = [
+    "make me a game",
+    "create a game",
+    "build a game",
+    "make a game",
+    "generate a game",
+    "make a playable",
+    "create a playable",
+    "build a playable",
+    "create a prototype",
+    "make a prototype",
+    "build a prototype",
+    "generate a prototype",
+    "create a demo",
+    "make a demo",
+    "build a demo",
+    "generate a demo",
+    "open world",
+    "car game",
+    "vehicle game",
+    "terrain vehicle",
+    "3d game",
+    "webgpu game",
+    "three.js game",
+    "threejs game",
+    "standalone game",
+    "html game",
+    "browser game",
+    "platformer",
+    "fps game",
+    "racing game",
+    "shooter game",
+    "sandbox game",
+    "brick builder",
+    "lego",
+    "voxel",
+    "city builder",
+    "build and place",
+    "place blocks",
+    "block builder",
+    "sculpting tool",
+    "building tool",
+    "building simulator",
+    "construction game",
+  ];
+  return gameKeywords.some((kw) => lower.includes(kw));
+}

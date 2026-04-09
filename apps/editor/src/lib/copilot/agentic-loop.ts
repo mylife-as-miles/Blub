@@ -1,4 +1,5 @@
 import type {
+  CopilotImageAttachment,
   CopilotMessage,
   CopilotProvider,
   CopilotProviderConfig,
@@ -22,13 +23,14 @@ function uid(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-const TAG = "[AI-VIBE]";
+const TAG = "[COPILOT]";
 
 export async function runAgenticLoop(
   userPrompt: string,
   existingMessages: CopilotMessage[],
   config: AgenticLoopConfig,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  images?: CopilotImageAttachment[]
 ): Promise<CopilotSession> {
   console.group(`${TAG} Session start`);
   console.log(`${TAG} User prompt:`, userPrompt);
@@ -45,6 +47,7 @@ export async function runAgenticLoop(
       id: uid(),
       role: "user",
       content: userPrompt,
+      images: images && images.length > 0 ? images : undefined,
       timestamp: Date.now()
     }
   ];

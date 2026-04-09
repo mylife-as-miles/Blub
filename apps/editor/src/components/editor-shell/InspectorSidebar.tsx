@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { BellRing, Cable, FolderTree, Globe2, SlidersHorizontal, SwatchBook, User } from "lucide-react";
+import { useEffect, useRef, useState, useCallback, type ChangeEvent } from "react";
+import { BellRing, Cable, ChevronLeft, ChevronRight, FolderTree, Globe2, Loader2, Mic, SlidersHorizontal, SwatchBook, User } from "lucide-react";
 import {
   type EditableMesh,
   isInstancingNode,
@@ -27,11 +27,14 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { EventsPanel, HooksPanel, PathsPanel } from "@/components/editor-shell/GameplayPanels";
+import { NpcVoiceInspector } from "@/components/editor-shell/NpcVoiceInspector";
+import { VoicesPanel } from "@/components/editor-shell/VoicesPanel";
 import { MaterialLibraryPanel } from "@/components/editor-shell/MaterialLibraryPanel";
 import { SceneHierarchyPanel } from "@/components/editor-shell/SceneHierarchyPanel";
 import { rebaseTransformPivot } from "@/viewport/utils/geometry";
 import { readFileAsDataUrl } from "@/lib/model-assets";
 import { cn } from "@/lib/utils";
+import { generateSoundEffectUrl } from "@/lib/elevenlabs-client";
 import type { MeshEditMode } from "@/viewport/editing";
 import type { MeshEditToolbarActionRequest } from "@/viewport/types";
 import type { RightPanelId } from "@/state/ui-store";
@@ -382,49 +385,77 @@ export function InspectorSidebar({
   };
 
   const collapsed = activeRightPanel === null;
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      setSidebarOpen(false);
+    }
+  }, []);
 
   return (
     <div className={cn(
-      "pointer-events-none absolute right-4 top-4 z-20 flex w-88 max-h-[calc(100%-7rem)]",
-      collapsed ? "h-auto" : "h-[clamp(26rem,58vh,42rem)]"
+      "pointer-events-none absolute z-20 flex flex-col gap-2",
+      /* Always a left sidebar — from just below menu bar to near bottom */
+      "left-2 top-16",
+      sidebarOpen ? "bottom-2 w-48 sm:w-64 md:w-72 lg:w-80" : "w-auto",
     )}>
-      <FloatingPanel className="flex min-h-0 w-full flex-col overflow-hidden">
+      {/* Collapse toggle — always visible at all screen sizes */}
+      <div className="flex justify-start">
+        <button
+          className="pointer-events-auto flex size-8 items-center justify-center rounded-full glass-panel text-foreground/60 hover:text-foreground transition-colors duration-150"
+          onClick={() => setSidebarOpen((v) => !v)}
+          title={sidebarOpen ? "Collapse inspector" : "Expand inspector"}
+          type="button"
+        >
+          {sidebarOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+        </button>
+      </div>
+
+      {/* Panel body */}
+      {sidebarOpen && (
+      <FloatingPanel className="flex min-h-0 flex-1 w-full flex-col overflow-hidden">
         <Tabs
           className="flex min-h-0 flex-1 flex-col gap-0"
           onValueChange={(value) => onChangeRightPanel(value as RightPanelId)}
           value={activeRightPanel ?? ""}
         >
-          <div className={cn("px-3 pt-3", collapsed ? "pb-3" : "pb-2")}>
-            <TabsList className="glass-panel-subtle !grid !h-14 !w-full !grid-cols-7 !items-stretch !rounded-[22px] !p-1" variant="default">
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="scene" onClick={() => handleTabClick("scene")}>
+          <div className={cn("px-2 pt-2 sm:px-3 sm:pt-3", collapsed ? "pb-2 sm:pb-3" : "pb-1 sm:pb-2")}>
+            <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsList className="glass-panel-subtle !grid !h-12 sm:!h-14 !w-full !grid-cols-8 !items-stretch !rounded-[18px] sm:!rounded-[22px] !p-1" variant="default">
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="scene" onClick={() => handleTabClick("scene")}>
                 <FolderTree />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Scene</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Scene</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="world" onClick={() => handleTabClick("world")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="world" onClick={() => handleTabClick("world")}>
                 <Globe2 />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>World</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>World</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="player" onClick={() => handleTabClick("player")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="player" onClick={() => handleTabClick("player")}>
                 <User />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Player</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Player</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="inspector" onClick={() => handleTabClick("inspector")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="inspector" onClick={() => handleTabClick("inspector")}>
                 <SlidersHorizontal />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Inspect</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Inspect</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="hooks" onClick={() => handleTabClick("hooks")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="hooks" onClick={() => handleTabClick("hooks")}>
                 <Cable />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Hooks</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Hooks</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="events" onClick={() => handleTabClick("events")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="events" onClick={() => handleTabClick("events")}>
                 <BellRing />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Events</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Events</span>
               </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col")} value="materials" onClick={() => handleTabClick("materials")}>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="materials" onClick={() => handleTabClick("materials")}>
                 <SwatchBook />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Mats</span>
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Mats</span>
+              </TabsTrigger>
+              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="voices" onClick={() => handleTabClick("voices")}>
+                <Mic />
+                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Voices</span>
               </TabsTrigger>
             </TabsList>
+            </div>
           </div>
 
           <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="scene">
@@ -970,6 +1001,11 @@ export function InspectorSidebar({
                     value={draftWorldSettings.fogFar}
                   />
                 </ToolSection>
+
+                <AmbientAudioSection
+                  onUpdateSceneSettings={onUpdateSceneSettings}
+                  sceneSettings={sceneSettings}
+                />
               </div>
             </ScrollArea>
           </TabsContent>
@@ -1250,6 +1286,9 @@ export function InspectorSidebar({
                     {selectedEntity ? (
                       <EntityInspector entity={selectedEntity} onUpdateEntityProperties={onUpdateEntityProperties} />
                     ) : null}
+                    {selectedEntity && (selectedEntity.type === "npc-spawn" || selectedEntity.type === "smart-object") ? (
+                      <NpcVoiceInspector entity={selectedEntity} onUpdateEntityProperties={onUpdateEntityProperties} />
+                    ) : null}
 
                     {activeToolId === "clip" ? (
                       <ToolSection title="Clip">
@@ -1356,8 +1395,15 @@ export function InspectorSidebar({
               textures={textures}
             />
           </TabsContent>
+
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="voices">
+            <ScrollArea className="h-full pr-1">
+              <VoicesPanel />
+            </ScrollArea>
+          </TabsContent>
         </Tabs>
       </FloatingPanel>
+      )}
     </div>
   );
 }
@@ -1865,4 +1911,84 @@ function startCase(value: string) {
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (segment) => segment.toUpperCase());
+}
+
+function AmbientAudioSection({
+  sceneSettings,
+  onUpdateSceneSettings
+}: {
+  sceneSettings: SceneSettings;
+  onUpdateSceneSettings: (settings: SceneSettings, before?: SceneSettings) => void;
+}) {
+  const [description, setDescription] = useState(
+    sceneSettings.world.ambientAudio?.description ?? ""
+  );
+  const [loading, setLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const existing = sceneSettings.world.ambientAudio;
+
+  const handleGenerate = useCallback(async () => {
+    if (!description.trim()) return;
+    setLoading(true);
+    try {
+      const url = await generateSoundEffectUrl(description.trim());
+      const next: SceneSettings = {
+        ...sceneSettings,
+        world: {
+          ...sceneSettings.world,
+          ambientAudio: { description: description.trim(), audioUrl: url }
+        }
+      };
+      onUpdateSceneSettings(next, sceneSettings);
+    } catch (err) {
+      console.error("[AmbientAudio] generation failed", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [description, sceneSettings.world, onUpdateSceneSettings]);
+
+  const handlePlay = useCallback(() => {
+    const url = existing?.audioUrl;
+    if (!url) return;
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.play().catch(() => {});
+  }, [existing?.audioUrl]);
+
+  return (
+    <ToolSection title="Ambient Audio">
+      <div className="space-y-2">
+        <textarea
+          className="glass-section w-full resize-none rounded-xl px-3 py-2 text-xs placeholder:text-foreground/40 focus:outline-none"
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Describe the soundscape (e.g. wind through pine trees, distant waterfall)"
+          rows={2}
+          value={description}
+        />
+        <div className="flex gap-2">
+          <Button
+            className="flex-1 text-xs"
+            disabled={loading || !description.trim()}
+            onClick={handleGenerate}
+            size="xs"
+            variant="ghost"
+          >
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Generate Soundscape"}
+          </Button>
+          {existing?.audioUrl && (
+            <Button onClick={handlePlay} size="xs" variant="ghost">
+              ▶
+            </Button>
+          )}
+        </div>
+        {existing?.audioUrl && (
+          <p className="truncate text-[10px] text-foreground/50">{existing.description}</p>
+        )}
+      </div>
+    </ToolSection>
+  );
 }

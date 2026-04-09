@@ -6,6 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import { createCodexBridgePlugin } from "./server/codex-bridge-plugin";
 import { createEditorGameSyncPlugin } from "./server/editor-game-sync-plugin";
+import { createElevenLabsApiPlugin } from "./server/elevenlabs-api";
 import { createObjectGenerationApiPlugin } from "./server/object-generation-api";
 import { createTextureGenerationApiPlugin } from "./server/texture-generation-api";
 
@@ -16,8 +17,11 @@ const editorThreePath = path.resolve(__dirname, "node_modules/three");
 const workspaceAliases = {
   "@blud/dev-sync": path.resolve(repoRoot, "packages/dev-sync/src/index.ts"),
   "@blud/editor-core": path.resolve(repoRoot, "packages/editor-core/src/index.ts"),
+  "@blud/engine-config": path.resolve(repoRoot, "packages/engine-config/src/index.ts"),
   "@blud/geometry-kernel": path.resolve(repoRoot, "packages/geometry-kernel/src/index.ts"),
+  "@blud/physics-backend": path.resolve(repoRoot, "packages/physics-backend/src/index.ts"),
   "@blud/render-pipeline": path.resolve(repoRoot, "packages/render-pipeline/src/index.ts"),
+  "@blud/renderer-backend": path.resolve(repoRoot, "packages/renderer-backend/src/index.ts"),
   "@blud/runtime-build": path.resolve(repoRoot, "packages/runtime-build/src/index.ts"),
   "@blud/shared": path.resolve(repoRoot, "packages/shared/src/index.ts"),
   "@blud/three-runtime": path.resolve(repoRoot, "packages/three-runtime/src/index.ts"),
@@ -46,6 +50,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       createCodexBridgePlugin(),
       createEditorGameSyncPlugin(),
+      createElevenLabsApiPlugin(),
       createObjectGenerationApiPlugin(),
       createTextureGenerationApiPlugin()
     ],
@@ -57,6 +62,10 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "three"]
     },
     server: {
+      host: "0.0.0.0",
+      port: 5000,
+      strictPort: true,
+      allowedHosts: true,
       fs: {
         allow: [searchForWorkspaceRoot(process.cwd())]
       }
