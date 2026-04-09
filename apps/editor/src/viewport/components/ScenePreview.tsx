@@ -5,7 +5,6 @@ import {
   BackSide,
   Box3,
   BoxGeometry,
-  CapsuleGeometry,
   Color,
   ConeGeometry,
   CylinderGeometry,
@@ -39,6 +38,7 @@ import {
   type DerivedRenderScene
 } from "@blud/render-pipeline";
 import { createBlockoutTextureDataUri, resolveTransformPivot, toTuple } from "@blud/shared";
+import { DefaultHumanoidCharacter } from "@/viewport/components/DefaultHumanoidCharacter";
 import { GrassField } from "@/viewport/components/GrassField";
 import { createIndexedGeometry } from "@/viewport/utils/geometry";
 import type { PreviewSessionMode } from "@/viewport/types";
@@ -248,41 +248,19 @@ export function ScenePreview({
 
       {visibleEntityMarkers.map((entity) => {
         const selected = selectedIdSet.has(entity.entityId);
-        const color = selected ? "#ffb35a" : entity.color;
 
         return (
-          <group
+          <RenderEntityMarker
+            entity={entity}
+            hovered={hoveredNodeId === entity.entityId}
+            interactive={interactive}
             key={entity.entityId}
-            name={`entity:${entity.entityId}`}
-            onClick={(event) => {
-              if (!interactive) {
-                return;
-              }
-
-              event.stopPropagation();
-              onSelectNode([entity.entityId]);
-            }}
-            onDoubleClick={(event) => {
-              if (!interactive) {
-                return;
-              }
-
-              event.stopPropagation();
-              onFocusNode(entity.entityId);
-            }}
-            position={toTuple(entity.position)}
-            rotation={toTuple(entity.rotation)}
-            scale={toTuple(entity.scale)}
-          >
-            <mesh position={[0, 0.8, 0]}>
-              <octahedronGeometry args={[0.35, 0]} />
-              <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} />
-            </mesh>
-            <mesh position={[0, 0.35, 0]}>
-              <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
-              <meshStandardMaterial color="#d8e0ea" metalness={0.1} roughness={0.55} />
-            </mesh>
-          </group>
+            onFocusNode={onFocusNode}
+            onHoverEnd={() => setHoveredNodeId(undefined)}
+            onHoverStart={setHoveredNodeId}
+            onSelectNodes={onSelectNode}
+            selected={selected}
+          />
         );
       })}
 
@@ -473,6 +451,105 @@ function readHookVec3Tuple(config: SceneHook["config"], key: string, fallback: [
   ];
 }
 
+function RenderEntityMarker({
+  entity,
+  hovered,
+  interactive,
+  onFocusNode,
+  onHoverEnd,
+  onHoverStart,
+  onSelectNodes,
+  selected
+}: {
+  entity: DerivedEntityMarker;
+  hovered: boolean;
+  interactive: boolean;
+  onFocusNode: (nodeId: string) => void;
+  onHoverEnd: () => void;
+  onHoverStart: (nodeId: string) => void;
+  onSelectNodes: (nodeIds: string[]) => void;
+  selected: boolean;
+}) {
+  const isHumanoidSpawn = entity.entityType === "player-spawn" || entity.entityType === "npc-spawn";
+  const emphasis = selected ? "selected" : hovered ? "hover" : "default";
+  const markerColor = selected ? "#ffb35a" : hovered ? "#d8f4f0" : entity.color;
+  const humanoidVariant = entity.entityType === "npc-spawn" ? "npc" : entity.entityType === "player-spawn" ? "player" : "neutral";
+  const humanoidHeight = entity.entityType === "npc-spawn" ? 1.74 : 1.82;
+
+  return (
+    <group
+      name={`entity:${entity.entityId}`}
+      onClick={(event) => {
+        if (!interactive) {
+          return;
+        }
+
+        event.stopPropagation();
+        onSelectNodes([entity.entityId]);
+      }}
+      onDoubleClick={(event) => {
+        if (!interactive) {
+          return;
+        }
+
+        event.stopPropagation();
+        onFocusNode(entity.entityId);
+      }}
+      onPointerOut={(event) => {
+        if (!interactive) {
+          return;
+        }
+
+        event.stopPropagation();
+        onHoverEnd();
+      }}
+      onPointerOver={(event) => {
+        if (!interactive) {
+          return;
+        }
+
+        event.stopPropagation();
+        onHoverStart(entity.entityId);
+      }}
+      position={toTuple(entity.position)}
+      rotation={toTuple(entity.rotation)}
+      scale={toTuple(entity.scale)}
+    >
+      {isHumanoidSpawn ? (
+        <>
+          <DefaultHumanoidCharacter
+            accentColor={markerColor}
+            emphasis={emphasis}
+            height={humanoidHeight}
+            pose={entity.entityType === "player-spawn" ? "runtime" : "idle"}
+            showSpawnBase
+            variant={humanoidVariant}
+          />
+          <mesh position={[0, 0.015, 0]} raycast={() => null} rotation={[-Math.PI * 0.5, 0, 0]}>
+            <circleGeometry args={[0.42, 28]} />
+            <meshBasicMaterial color={markerColor} opacity={selected ? 0.18 : hovered ? 0.12 : 0.08} toneMapped={false} transparent />
+          </mesh>
+        </>
+      ) : (
+        <>
+          <mesh position={[0, 0.8, 0]}>
+            <octahedronGeometry args={[0.35, 0]} />
+            <meshStandardMaterial color={markerColor} emissive={markerColor} emissiveIntensity={0.25} />
+          </mesh>
+          <mesh position={[0, 0.35, 0]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
+            <meshStandardMaterial color="#d8e0ea" metalness={0.1} roughness={0.55} />
+          </mesh>
+        </>
+      )}
+      <mesh>
+        <boxGeometry args={isHumanoidSpawn ? [0.9, humanoidHeight, 0.9] : [0.7, 1.4, 0.7]} />
+        <meshBasicMaterial opacity={0} transparent />
+      </mesh>
+    </group>
+  );
+}
+
 function RenderGroupNode({
   group,
   hovered,
@@ -616,19 +693,11 @@ function RuntimePlayer({
     : standingHeight;
   const colliderRadius = useMemo(() => clampNumber(standingHeight * 0.18, 0.24, 0.42), [standingHeight]);
   const capsuleHalfHeight = useMemo(() => Math.max(0.12, standingHeight * 0.5 - colliderRadius), [colliderRadius, standingHeight]);
-  const capsuleCylinderHeight = Math.max(0.12, standingHeight - colliderRadius * 2);
   const footOffset = capsuleHalfHeight + colliderRadius;
-  const playerGeometry = useMemo(() => new CapsuleGeometry(colliderRadius, capsuleCylinderHeight, 6, 14), [capsuleCylinderHeight, colliderRadius]);
   const spawnPosition = useMemo<[number, number, number]>(
     () => [spawn.position.x, spawn.position.y + standingHeight * 0.5 + 0.04, spawn.position.z],
     [spawn.position.x, spawn.position.y, spawn.position.z, standingHeight]
   );
-
-  useEffect(() => {
-    return () => {
-      playerGeometry.dispose();
-    };
-  }, [playerGeometry]);
 
   useEffect(() => {
     yawRef.current = spawn.rotation.y;
@@ -932,119 +1001,23 @@ function RuntimePlayer({
       <group>
         <object3D ref={eyeAnchorRef} />
         <group ref={visualRef} visible={!possessed || sceneSettings.player.cameraMode !== "fps"}>
-          <PreviewPlayerAvatar
-            bodyGeometry={playerGeometry}
-            colliderRadius={colliderRadius}
-            leftArmRef={leftArmRef}
-            leftLegRef={leftLegRef}
-            mannequinCoreRef={mannequinCoreRef}
-            rightArmRef={rightArmRef}
-            rightLegRef={rightLegRef}
-            standingHeight={standingHeight}
+          <DefaultHumanoidCharacter
+            accentColor="#72dbf6"
+            emphasis="default"
+            height={standingHeight}
+            pose="runtime"
+            rigRefs={{
+              coreRef: mannequinCoreRef,
+              leftArmRef,
+              leftLegRef,
+              rightArmRef,
+              rightLegRef
+            }}
+            variant="player"
           />
         </group>
       </group>
     </RigidBody>
-  );
-}
-
-function PreviewPlayerAvatar({
-  bodyGeometry,
-  colliderRadius,
-  leftArmRef,
-  leftLegRef,
-  mannequinCoreRef,
-  rightArmRef,
-  rightLegRef,
-  standingHeight
-}: {
-  bodyGeometry: CapsuleGeometry;
-  colliderRadius: number;
-  leftArmRef: { current: Object3D | null };
-  leftLegRef: { current: Object3D | null };
-  mannequinCoreRef: { current: Object3D | null };
-  rightArmRef: { current: Object3D | null };
-  rightLegRef: { current: Object3D | null };
-  standingHeight: number;
-}) {
-  const shellColor = "#e4e8ef";
-  const panelColor = "#c7cfdb";
-  const jointColor = "#3b4453";
-  const glowColor = "#71d6f6";
-  const armRadius = colliderRadius * 0.26;
-  const legRadius = colliderRadius * 0.29;
-  const armLength = standingHeight * 0.18;
-  const legLength = standingHeight * 0.24;
-
-  return (
-    <group position={[0, 0.04, 0]}>
-      <group ref={mannequinCoreRef}>
-        <mesh castShadow position={[0, 0, 0]} receiveShadow scale={[0.62, 0.58, 0.48]}>
-          <primitive attach="geometry" object={bodyGeometry} />
-          <meshStandardMaterial color={shellColor} emissive={glowColor} emissiveIntensity={0.03} roughness={0.42} />
-        </mesh>
-        <mesh castShadow position={[0, standingHeight * 0.1, colliderRadius * 0.16]} receiveShadow>
-          <boxGeometry args={[colliderRadius * 1.15, standingHeight * 0.18, colliderRadius * 0.42]} />
-          <meshStandardMaterial color={panelColor} roughness={0.36} />
-        </mesh>
-        <mesh castShadow position={[0, standingHeight * 0.31, 0]} receiveShadow>
-          <sphereGeometry args={[colliderRadius * 0.76, 18, 18]} />
-          <meshStandardMaterial color={shellColor} roughness={0.3} />
-        </mesh>
-        <mesh castShadow position={[0, standingHeight * 0.3, colliderRadius * 0.48]} receiveShadow>
-          <boxGeometry args={[colliderRadius * 0.72, colliderRadius * 0.28, colliderRadius * 0.08]} />
-          <meshStandardMaterial color={jointColor} roughness={0.2} metalness={0.08} />
-        </mesh>
-        <mesh castShadow position={[0, -standingHeight * 0.13, 0]} receiveShadow>
-          <boxGeometry args={[colliderRadius * 1.08, standingHeight * 0.18, colliderRadius * 0.64]} />
-          <meshStandardMaterial color={panelColor} roughness={0.46} />
-        </mesh>
-      </group>
-
-      <group position={[colliderRadius * 1.02, standingHeight * 0.18, 0]} ref={leftArmRef}>
-        <mesh castShadow position={[0, -armLength * 0.62, 0]} receiveShadow>
-          <capsuleGeometry args={[armRadius, armLength, 5, 10]} />
-          <meshStandardMaterial color={shellColor} roughness={0.4} />
-        </mesh>
-        <mesh castShadow position={[0, -armLength * 1.18, 0]} receiveShadow>
-          <sphereGeometry args={[armRadius * 0.82, 12, 12]} />
-          <meshStandardMaterial color={jointColor} roughness={0.28} />
-        </mesh>
-      </group>
-
-      <group position={[-colliderRadius * 1.02, standingHeight * 0.18, 0]} ref={rightArmRef}>
-        <mesh castShadow position={[0, -armLength * 0.62, 0]} receiveShadow>
-          <capsuleGeometry args={[armRadius, armLength, 5, 10]} />
-          <meshStandardMaterial color={shellColor} roughness={0.4} />
-        </mesh>
-        <mesh castShadow position={[0, -armLength * 1.18, 0]} receiveShadow>
-          <sphereGeometry args={[armRadius * 0.82, 12, 12]} />
-          <meshStandardMaterial color={jointColor} roughness={0.28} />
-        </mesh>
-      </group>
-
-      <group position={[colliderRadius * 0.44, -standingHeight * 0.18, 0]} ref={leftLegRef}>
-        <mesh castShadow position={[0, -legLength * 0.72, 0]} receiveShadow>
-          <capsuleGeometry args={[legRadius, legLength, 5, 10]} />
-          <meshStandardMaterial color={panelColor} roughness={0.46} />
-        </mesh>
-        <mesh castShadow position={[0, -legLength * 1.36, colliderRadius * 0.08]} receiveShadow>
-          <boxGeometry args={[legRadius * 1.55, legRadius * 0.7, legRadius * 2.1]} />
-          <meshStandardMaterial color={jointColor} roughness={0.24} />
-        </mesh>
-      </group>
-
-      <group position={[-colliderRadius * 0.44, -standingHeight * 0.18, 0]} ref={rightLegRef}>
-        <mesh castShadow position={[0, -legLength * 0.72, 0]} receiveShadow>
-          <capsuleGeometry args={[legRadius, legLength, 5, 10]} />
-          <meshStandardMaterial color={panelColor} roughness={0.46} />
-        </mesh>
-        <mesh castShadow position={[0, -legLength * 1.36, colliderRadius * 0.08]} receiveShadow>
-          <boxGeometry args={[legRadius * 1.55, legRadius * 0.7, legRadius * 2.1]} />
-          <meshStandardMaterial color={jointColor} roughness={0.24} />
-        </mesh>
-      </group>
-    </group>
   );
 }
 

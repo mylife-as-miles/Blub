@@ -15,6 +15,7 @@
 
 import type { GameplayRuntime } from "@blud/gameplay-runtime";
 import { vec3, type SceneSettings, type Vec3 } from "@blud/shared";
+import { createDefaultHumanoidRig, disposeDefaultHumanoidRig, type DefaultHumanoidRig } from "@blud/three-runtime";
 import {
   CRASHCAT_OBJECT_LAYER_MOVING,
   CastRayStatus,
@@ -31,11 +32,8 @@ import {
   type CrashcatRigidBody
 } from "@blud/runtime-physics-crashcat";
 import {
-  CapsuleGeometry,
   Group,
   MathUtils,
-  Mesh,
-  MeshStandardMaterial,
   PerspectiveCamera,
   Vector3
 } from "three";
@@ -112,7 +110,8 @@ export class StarterPlayerController implements PlayerController {
   private readonly supportVelocity = new Vector3();
 
   // Visual
-  private readonly visual: Mesh;
+  private readonly humanoid: DefaultHumanoidRig;
+  private readonly visual: Group;
 
   // Scratch vectors — re-used per call, never allocated in hot paths
   private readonly _eyePosition = new Vector3();
@@ -139,19 +138,14 @@ export class StarterPlayerController implements PlayerController {
     this.groundProbeSettings.collideWithBackfaces = true;
     this.groundProbeSettings.treatConvexAsSolid = false;
 
-    // Visual representation of the capsule
-    const visualCylHeight = Math.max(0.2, this.halfHeight * 2);
-    this.visual = new Mesh(
-      new CapsuleGeometry(this.radius, visualCylHeight, 4, 12),
-      new MeshStandardMaterial({
-        color: "#7dd3fc",
-        emissive: "#0f4c81",
-        emissiveIntensity: 0.12,
-        roughness: 0.62
-      })
-    );
-    this.visual.castShadow = true;
-    this.visual.receiveShadow = true;
+    // Shared default mannequin used by the editor and starter runtime.
+    this.humanoid = createDefaultHumanoidRig({
+      accentColor: "#72dbf6",
+      height: this.standingHeight,
+      pose: "runtime",
+      variant: "player"
+    });
+    this.visual = this.humanoid.root;
     this.object.add(this.visual);
 
     // Physics body
@@ -198,6 +192,7 @@ export class StarterPlayerController implements PlayerController {
   dispose(): void {
     this.gameplayRuntime.removeActor("player");
     rigidBody.remove(this.world, this.body);
+    disposeDefaultHumanoidRig(this.humanoid);
   }
 
   // ----------------------------------------------------------- update hooks
@@ -295,9 +290,26 @@ export class StarterPlayerController implements PlayerController {
   /** Fixed-rate update — sync the Three.js object to the physics body position. */
   updateAfterStep(_deltaSeconds: number): void {
     const t = this.body.position;
+    const planarSpeed = Math.hypot(
+      this.body.motionProperties.linearVelocity[0],
+      this.body.motionProperties.linearVelocity[2]
+    );
+    const strideIntensity = MathUtils.clamp(
+      planarSpeed / Math.max(this.sceneSettings.player.movementSpeed, 0.001),
+      0,
+      1.15
+    );
+    const strideWave = Math.sin(performance.now() * 0.0085) * strideIntensity * 0.64;
+
     this.object.position.set(t[0], t[1], t[2]);
     this.visual.rotation.set(0, this.yaw, 0);
     this.visual.visible = this.camera.showPlayerBody;
+    this.humanoid.core.rotation.set(0.04 + strideIntensity * 0.03, 0, 0);
+    this.humanoid.chest.rotation.set(0.04 + strideIntensity * 0.04, 0, 0);
+    this.humanoid.leftArm.rotation.set(-strideWave * 0.92 + 0.1, 0, 0.12);
+    this.humanoid.rightArm.rotation.set(strideWave * 0.92, 0, -0.12);
+    this.humanoid.leftLeg.rotation.set(strideWave * 0.82, 0, 0.012);
+    this.humanoid.rightLeg.rotation.set(-strideWave * 0.82, 0, -0.012);
 
     this.gameplayRuntime.updateActor({
       height: this.standingHeight,
