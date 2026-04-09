@@ -1,5 +1,6 @@
 import { getFaceVertices, reconstructBrushFaces, triangulateMeshFace } from "@blud/geometry-kernel";
 import type { SceneDocumentSnapshot } from "@blud/editor-core";
+import { importHtmlJsProject, type HtmlJsImportInput, type HtmlJsImportResult } from "@blud/scene-importer";
 import {
   createBlockoutTextureDataUri,
   crossVec3,
@@ -59,7 +60,13 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 
-export type WorkerExportKind = "whmap-load" | "whmap-save" | "engine-export" | "gltf-export" | "ai-model-generate";
+export type WorkerExportKind =
+  | "whmap-load"
+  | "whmap-save"
+  | "engine-export"
+  | "gltf-export"
+  | "ai-model-generate"
+  | "htmljs-import";
 
 export type WorkerRequest =
   | {
@@ -81,14 +88,24 @@ export type WorkerRequest =
       id: string;
       kind: "ai-model-generate";
       prompt: string;
-    };
+    }
+  | ({
+      id: string;
+      kind: "htmljs-import";
+    } & HtmlJsImportInput);
+
+export type WorkerPayload =
+  | string
+  | SceneDocumentSnapshot
+  | WebHammerEngineBundle
+  | HtmlJsImportResult;
 
 export type WorkerResponse =
   | {
       id: string;
       kind: WorkerExportKind;
       ok: true;
-      payload: string | SceneDocumentSnapshot | WebHammerEngineBundle;
+      payload: WorkerPayload;
     }
   | {
       id: string;
@@ -137,6 +154,15 @@ export async function executeWorkerRequest(request: WorkerRequest): Promise<Work
         kind: request.kind,
         ok: true,
         payload: await generateAiModel(request.prompt)
+      };
+    }
+
+    if (request.kind === "htmljs-import") {
+      return {
+        id: request.id,
+        kind: request.kind,
+        ok: true,
+        payload: await importHtmlJsProject(request)
       };
     }
 

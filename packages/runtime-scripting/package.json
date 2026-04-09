@@ -1,7 +1,7 @@
 {
-  "name": "@blud/workers",
+  "name": "@blud/runtime-scripting",
   "version": "0.1.11",
-  "description": "Worker task contracts and managers for Web Hammer export and processing flows.",
+  "description": "Generated custom script runtime bridge for Blob scenes.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -27,22 +27,18 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vibe-stack/blob.git",
-    "directory": "packages/workers"
+    "directory": "packages/runtime-scripting"
   },
   "bugs": {
     "url": "https://github.com/vibe-stack/blob/issues"
   },
-  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/workers",
+  "homepage": "https://github.com/vibe-stack/blob/tree/main/packages/runtime-scripting",
   "dependencies": {
-    "@types/three": "^0.181.0",
-    "@blud/editor-core": "*",
-    "@blud/geometry-kernel": "*",
-    "@blud/runtime-build": "*",
-    "@blud/runtime-format": "*",
-    "@blud/scene-importer": "*",
+    "@blud/gameplay-runtime": "*",
     "@blud/shared": "*",
-    "comlink": "^4.4.2",
-    "three": "^0.181.1",
-    "three-mesh-bvh": "^0.9.2"
+    "three": "^0.181.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.181.0"
   }
 }

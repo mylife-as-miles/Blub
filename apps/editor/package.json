@@ -29,6 +29,7 @@
     "@blud/geometry-kernel": "*",
     "@blud/render-pipeline": "*",
     "@blud/runtime-build": "*",
+    "@blud/runtime-scripting": "*",
     "@blud/shared": "*",
     "@blud/three-runtime": "*",
     "@blud/tool-system": "*",

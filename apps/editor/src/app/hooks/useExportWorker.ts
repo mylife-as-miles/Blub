@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { SceneDocumentSnapshot } from "@blud/editor-core";
-import type { WebHammerEngineBundle } from "@blud/three-runtime";
-import type { WorkerJob, WorkerRequest, WorkerResponse } from "@blud/workers";
+import type { WorkerJob, WorkerPayload, WorkerRequest, WorkerResponse } from "@blud/workers";
 
 export type ExportWorkerRequest = WorkerRequest extends infer Request
   ? Request extends { id: string }
@@ -18,7 +16,7 @@ export function useExportWorker() {
       string,
       {
         reject: (reason?: unknown) => void;
-        resolve: (payload: string | SceneDocumentSnapshot | WebHammerEngineBundle) => void;
+        resolve: (payload: WorkerPayload) => void;
       }
     >()
   );
@@ -60,7 +58,7 @@ export function useExportWorker() {
   const runWorkerRequest = (
     request: ExportWorkerRequest,
     label: string
-  ): Promise<string | SceneDocumentSnapshot | WebHammerEngineBundle> => {
+  ): Promise<WorkerPayload> => {
     const id = `export:${requestCounterRef.current++}`;
     const workerTask =
       request.kind === "whmap-save"
@@ -69,6 +67,8 @@ export function useExportWorker() {
           ? { task: "whmap-load" as const, worker: "exportWorker" as const }
           : request.kind === "ai-model-generate"
             ? { task: "ai-model-generate" as const, worker: "exportWorker" as const }
+            : request.kind === "htmljs-import"
+              ? { task: "htmljs-import" as const, worker: "exportWorker" as const }
           : request.kind === "gltf-export"
             ? { task: "gltf" as const, worker: "exportWorker" as const }
             : { task: "engine-format" as const, worker: "exportWorker" as const };
