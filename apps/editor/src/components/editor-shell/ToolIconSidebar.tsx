@@ -20,7 +20,7 @@ export function ToolIconSidebar({ activeToolId, onSetToolId }: ToolIconSidebarPr
   }, []);
 
   return (
-    <div className="pointer-events-none absolute left-4 top-[3.75rem] z-30 flex flex-col items-start gap-2">
+    <div className="pointer-events-none absolute left-4 top-[6.5rem] z-30 flex flex-col items-start gap-2">
       <div className="editor-toolbar-rail pointer-events-auto flex flex-col gap-2 rounded-[18px] p-2">
         <div className="flex items-center justify-between gap-2 px-1">
           <span className="editor-toolbar-label">Tools</span>

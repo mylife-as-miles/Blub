@@ -27,7 +27,7 @@ import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
 import { InspectorSidebar } from "@/components/editor-shell/InspectorSidebar";
 import { StatusBar } from "@/components/editor-shell/StatusBar";
 import { ToolIconSidebar } from "@/components/editor-shell/ToolIconSidebar";
-import { ToolPalette } from "@/components/editor-shell/ToolPalette";
+import { ToolPalette, ViewportToolbarControls } from "@/components/editor-shell/ToolPalette";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ViewportCanvas } from "@/viewport/ViewportCanvas";
 import type { MeshEditMode } from "@/viewport/editing";
@@ -370,13 +370,32 @@ export function EditorShell({
 
   const renderViewportPane = (viewportId: ViewportPaneId) => {
     const definition = viewportPaneDefinitions[viewportId];
+    const isActiveViewport = activeViewportId === viewportId;
 
     return (
       <ViewportPaneFrame
+        active={isActiveViewport}
         key={viewportId}
-        active={activeViewportId === viewportId}
         label={definition.label}
         renderMode={definition.renderMode}
+        toolbar={
+          isActiveViewport ? (
+            <ViewportToolbarControls
+              currentSnapSize={activeViewport.grid.snapSize}
+              gridSnapValues={gridSnapValues}
+              onPausePhysics={onPausePhysics}
+              onPlaceFloorPreset={onPlaceFloorPreset}
+              onPlayPhysics={onPlayPhysics}
+              onSetSnapEnabled={onSetSnapEnabled}
+              onSetSnapSize={onSetSnapSize}
+              onSetViewMode={onSetViewMode}
+              onStopPhysics={onStopPhysics}
+              physicsPlayback={physicsPlayback}
+              snapEnabled={activeViewport.grid.enabled}
+              viewMode={viewMode}
+            />
+          ) : null
+        }
         viewport={viewports[viewportId]}
       >
         <ViewportCanvas
@@ -385,7 +404,7 @@ export function EditorShell({
           activeToolId={activeToolId}
           dprScale={resolveViewportDprScale(viewportQuality)}
           hiddenSceneItemIds={effectiveHiddenSceneItemIds}
-          isActiveViewport={activeViewportId === viewportId}
+          isActiveViewport={isActiveViewport}
           meshEditMode={meshEditMode}
           meshEditToolbarAction={meshEditToolbarAction}
           sculptBrushRadius={sculptBrushRadius}
@@ -731,12 +750,14 @@ function ViewportPaneFrame({
   children,
   label,
   renderMode,
+  toolbar,
   viewport
 }: {
   active: boolean;
   children: ReactNode;
   label: string;
   renderMode: "lit" | "wireframe";
+  toolbar?: ReactNode;
   viewport: ViewportState;
 }) {
   const target = viewport.camera.target;
@@ -749,25 +770,32 @@ function ViewportPaneFrame({
       )}
     >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0)_12%),radial-gradient(circle_at_top,rgba(148,163,184,0.16),transparent_48%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[linear-gradient(180deg,rgba(33,38,47,0.96),rgba(16,19,26,0.9))] px-4 py-2.5 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <span className="editor-toolbar-segment rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/82 uppercase">
-            {label}
-          </span>
-          <span className="text-[10px] font-medium tracking-[0.18em] text-white/42 uppercase">
-            {viewport.projection === "perspective" ? "Camera" : "Ortho"}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="editor-toolbar-segment rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/62 uppercase">
-            {renderMode === "lit" ? "Lit" : "Wireframe"}
-          </span>
-          {active ? (
-            <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase">
-              Active
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 border-b border-white/8 bg-[linear-gradient(180deg,rgba(33,38,47,0.96),rgba(16,19,26,0.9))] px-4 py-2.5 backdrop-blur-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="editor-toolbar-segment rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/82 uppercase">
+              {label}
             </span>
-          ) : null}
+            <span className="text-[10px] font-medium tracking-[0.18em] text-white/42 uppercase">
+              {viewport.projection === "perspective" ? "Camera" : "Ortho"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="editor-toolbar-segment rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/62 uppercase">
+              {renderMode === "lit" ? "Lit" : "Wireframe"}
+            </span>
+            {active ? (
+              <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase">
+                Active
+              </span>
+            ) : null}
+          </div>
         </div>
+        {active && toolbar ? (
+          <div className="pointer-events-auto mt-2 flex max-w-full overflow-hidden">
+            {toolbar}
+          </div>
+        ) : null}
       </div>
       <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
         Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}

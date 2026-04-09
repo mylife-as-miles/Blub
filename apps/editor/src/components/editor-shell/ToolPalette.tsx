@@ -100,20 +100,7 @@ export function ToolPalette({
 }: ToolPaletteProps) {
   return (
     <>
-      <div className="pointer-events-none absolute left-[4.75rem] top-[3.75rem] z-30 flex max-w-[calc(100%-7rem)] flex-col items-start gap-2">
-        <div className="editor-toolbar-shell flex max-w-full flex-wrap items-center gap-2 rounded-[18px] p-2">
-          <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
-          <SnapControl
-            currentSnapSize={currentSnapSize}
-            gridSnapValues={gridSnapValues}
-            onSetSnapEnabled={onSetSnapEnabled}
-            onSetSnapSize={onSetSnapSize}
-            snapEnabled={snapEnabled}
-          />
-          <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
-          <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
-        </div>
-
+      <div className="pointer-events-none absolute left-[4.75rem] top-[7.25rem] z-30 flex max-w-[calc(100%-7rem)] flex-col items-start gap-2">
         <AnimatePresence initial={false}>
           {activeToolId === "brush" ? (
             <motion.div
@@ -203,5 +190,49 @@ export function ToolPalette({
         </AnimatePresence>
       </div>
     </>
+  );
+}
+
+export function ViewportToolbarControls({
+  currentSnapSize,
+  gridSnapValues,
+  onPausePhysics,
+  onPlaceFloorPreset,
+  onPlayPhysics,
+  onSetSnapEnabled,
+  onSetSnapSize,
+  onSetViewMode,
+  onStopPhysics,
+  physicsPlayback,
+  snapEnabled,
+  viewMode
+}: Pick<
+  ToolPaletteProps,
+  | "currentSnapSize"
+  | "gridSnapValues"
+  | "onPausePhysics"
+  | "onPlaceFloorPreset"
+  | "onPlayPhysics"
+  | "onSetSnapEnabled"
+  | "onSetSnapSize"
+  | "onSetViewMode"
+  | "onStopPhysics"
+  | "physicsPlayback"
+  | "snapEnabled"
+  | "viewMode"
+>) {
+  return (
+    <div className="editor-toolbar-shell flex max-w-full items-center gap-2 overflow-x-auto rounded-[16px] p-1.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
+      <SnapControl
+        currentSnapSize={currentSnapSize}
+        gridSnapValues={gridSnapValues}
+        onSetSnapEnabled={onSetSnapEnabled}
+        onSetSnapSize={onSetSnapSize}
+        snapEnabled={snapEnabled}
+      />
+      <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
+      <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
+    </div>
   );
 }
