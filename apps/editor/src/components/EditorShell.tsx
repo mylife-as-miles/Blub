@@ -121,6 +121,7 @@ type EditorShellProps = {
   onPlaceBlockoutPlatform: () => void;
   onPlaceBlockoutRoom: () => void;
   onPlaceBlockoutStairs: () => void;
+  onPlaceSkateparkElement?: (type: SkateparkElementType) => void;
   onMirrorSelection: (axis: TransformAxis) => void;
   onGenerateAiModel: () => void;
   onImportGlb: () => void;
@@ -262,6 +263,7 @@ export function EditorShell({
   onPlaceBlockoutPlatform,
   onPlaceBlockoutRoom,
   onPlaceBlockoutStairs,
+  onPlaceSkateparkElement,
   onMirrorSelection,
   onGenerateAiModel,
   onImportGlb,
