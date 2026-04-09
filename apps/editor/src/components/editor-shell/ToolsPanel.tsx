@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Wrench, X } from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
+import { BellRing, Cable, FolderTree, Globe2, Mic, SlidersHorizontal, SwatchBook, User, Wrench, X } from "lucide-react";
 import type { GridSnapValue } from "@blud/render-pipeline";
 import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
 import { defaultTools, type ToolId } from "@blud/tool-system";
@@ -14,12 +14,30 @@ import { ViewModeControl } from "@/components/editor-shell/ViewModeControl";
 import { toolIconFor } from "@/components/editor-shell/icons";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import { cn } from "@/lib/utils";
+import type { RightPanelId } from "@/state/ui-store";
 import type { MeshEditMode } from "@/viewport/editing";
 import type { MeshEditToolbarActionRequest } from "@/viewport/types";
 import type { ViewModeId } from "@/viewport/viewports";
 
+const rightPanelOptions: Array<{
+  id: RightPanelId;
+  label: string;
+  shortLabel: string;
+  Icon: ComponentType<{ className?: string }>;
+}> = [
+  { id: "scene", label: "Scene", shortLabel: "Scene", Icon: FolderTree },
+  { id: "world", label: "World", shortLabel: "World", Icon: Globe2 },
+  { id: "player", label: "Player", shortLabel: "Player", Icon: User },
+  { id: "inspector", label: "Inspect", shortLabel: "Inspect", Icon: SlidersHorizontal },
+  { id: "hooks", label: "Hooks", shortLabel: "Hooks", Icon: Cable },
+  { id: "events", label: "Events", shortLabel: "Events", Icon: BellRing },
+  { id: "materials", label: "Mats", shortLabel: "Mats", Icon: SwatchBook },
+  { id: "voices", label: "Voices", shortLabel: "Voices", Icon: Mic }
+];
+
 type ToolsPanelProps = {
   activeBrushShape: BrushShape;
+  activeRightPanel: RightPanelId | null;
   aiModelPlacementActive: boolean;
   activeToolId: ToolId;
   currentSnapSize: GridSnapValue;
@@ -42,6 +60,7 @@ type ToolsPanelProps = {
   onRaiseTop: () => void;
   onSetSculptBrushRadius: (value: number) => void;
   onSetSculptBrushStrength: (value: number) => void;
+  onSetRightPanel: (panel: RightPanelId | null) => void;
   onStartAiModelPlacement: () => void;
   onSelectBrushShape: (shape: BrushShape) => void;
   onSetMeshEditMode: (mode: MeshEditMode) => void;
@@ -55,6 +74,7 @@ type ToolsPanelProps = {
   sculptMode?: "deflate" | "inflate" | null;
   sculptBrushRadius: number;
   sculptBrushStrength: number;
+  selectionEnabled: boolean;
   selectedGeometry: boolean;
   selectedMesh: boolean;
   snapEnabled: boolean;
@@ -64,6 +84,7 @@ type ToolsPanelProps = {
 
 export function ToolsPanel({
   activeBrushShape,
+  activeRightPanel,
   aiModelPlacementActive,
   activeToolId,
   currentSnapSize,
@@ -86,6 +107,7 @@ export function ToolsPanel({
   onRaiseTop,
   onSetSculptBrushRadius,
   onSetSculptBrushStrength,
+  onSetRightPanel,
   onStartAiModelPlacement,
   onSelectBrushShape,
   onSetMeshEditMode,
@@ -99,6 +121,7 @@ export function ToolsPanel({
   sculptMode,
   sculptBrushRadius,
   sculptBrushStrength,
+  selectionEnabled,
   selectedGeometry,
   selectedMesh,
   snapEnabled,
@@ -106,6 +129,8 @@ export function ToolsPanel({
   viewMode
 }: ToolsPanelProps) {
   const activeTool = defaultTools.find((tool) => tool.id === activeToolId);
+  const activeRightPanelLabel =
+    rightPanelOptions.find((panel) => panel.id === activeRightPanel)?.label ?? "Inspector";
 
   return (
     <div className="editor-dock-panel flex h-full flex-col overflow-hidden rounded-[32px]">
@@ -143,6 +168,41 @@ export function ToolsPanel({
                   onClick={() => onSetToolId(tool.id)}
                   toolId={tool.id}
                 />
+              ))}
+            </div>
+          </PanelSection>
+
+          <PanelSection title="Details">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="truncate text-[11px] font-medium text-foreground/72">
+                  {activeRightPanelLabel}
+                </div>
+                <div className="mt-1 text-[10px] text-foreground/42">
+                  Scene and runtime panels
+                </div>
+              </div>
+              <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[9px] font-semibold tracking-[0.18em] uppercase">
+                {selectionEnabled ? "Editable" : "Sim"}
+              </span>
+            </div>
+
+            <div className="editor-toolbar-segment grid grid-cols-4 gap-1.5 rounded-[16px] p-1.5">
+              {rightPanelOptions.map(({ id, shortLabel, Icon }) => (
+                <button
+                  className={cn(
+                    "editor-toolbar-button flex flex-col items-center justify-center gap-1 rounded-[10px] border px-1 py-2 text-center transition-colors duration-150",
+                    activeRightPanel === id && "editor-toolbar-button-active text-[#fff0cb]"
+                  )}
+                  key={id}
+                  onClick={() => onSetRightPanel(activeRightPanel === id ? null : id)}
+                  type="button"
+                >
+                  <Icon className="size-3.5" />
+                  <span className="text-[0.52rem] font-semibold tracking-[0.08em] text-inherit uppercase">
+                    {shortLabel}
+                  </span>
+                </button>
               ))}
             </div>
           </PanelSection>

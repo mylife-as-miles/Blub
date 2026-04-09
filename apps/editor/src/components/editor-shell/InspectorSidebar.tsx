@@ -390,6 +390,11 @@ export function InspectorSidebar({
       setSidebarOpen(false);
     }
   }, []);
+  useEffect(() => {
+    if (activeRightPanel) {
+      setSidebarOpen(true);
+    }
+  }, [activeRightPanel]);
 
   return (
     <div className={cn(

@@ -44,7 +44,6 @@ export function EditorCameraRig({
   const lookDistanceRef = useRef(12);
   const yawRef = useRef(0);
   const pitchRef = useRef(0);
-  const [altPressed, setAltPressed] = useState(false);
   const [flyLookActive, setFlyLookActive] = useState(false);
 
   const setViewportNavigationState = useCallback((mode?: "fly") => {
@@ -246,10 +245,6 @@ export function EditorCameraRig({
         return;
       }
 
-      if (event.key === "Alt") {
-        setAltPressed(true);
-      }
-
       if (
         controlsEnabled &&
         viewport.projection === "perspective" &&
@@ -261,15 +256,11 @@ export function EditorCameraRig({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === "Alt") {
-        setAltPressed(false);
-      }
-
       keyStateRef.current.delete(event.code);
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (!controlsEnabled || viewport.projection !== "perspective" || event.altKey || event.button !== 2) {
+      if (!controlsEnabled || viewport.projection !== "perspective" || event.button !== 2) {
         return;
       }
 
@@ -328,7 +319,6 @@ export function EditorCameraRig({
     };
 
     const handleWindowBlur = () => {
-      setAltPressed(false);
       keyStateRef.current.clear();
 
       if (!flyLookActiveRef.current) {
@@ -443,11 +433,11 @@ export function EditorCameraRig({
 
   const perspectiveMouseButtons = useMemo(
     () => ({
-      LEFT: altPressed ? MOUSE.ROTATE : -1,
+      LEFT: MOUSE.ROTATE,
       MIDDLE: MOUSE.PAN,
-      RIGHT: altPressed ? MOUSE.DOLLY : -1
+      RIGHT: -1
     }),
-    [altPressed]
+    []
   );
 
   if (viewport.projection === "orthographic") {

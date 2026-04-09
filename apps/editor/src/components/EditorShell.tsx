@@ -379,8 +379,6 @@ export function EditorShell({
       <ViewportPaneFrame
         active={isActiveViewport}
         key={viewportId}
-        label={definition.label}
-        renderMode={definition.renderMode}
         viewport={viewports[viewportId]}
       >
         <ViewportCanvas
@@ -480,6 +478,7 @@ export function EditorShell({
           <div className="w-64 shrink-0 sm:w-80 lg:w-[22rem]">
             <ToolsPanel
               activeBrushShape={activeBrushShape}
+              activeRightPanel={activeRightPanel}
               aiModelPlacementActive={aiModelPlacementActive || aiModelPlacementArmed}
               activeToolId={activeToolId}
               currentSnapSize={activeViewport.grid.snapSize}
@@ -504,6 +503,7 @@ export function EditorShell({
                 onSetActiveBrushShape(shape);
                 onSetToolId("brush");
               }}
+              onSetRightPanel={onSetRightPanel}
               onSetMeshEditMode={onSetMeshEditMode}
               onSetSculptBrushRadius={onSetSculptBrushRadius}
               onSetSculptBrushStrength={onSetSculptBrushStrength}
@@ -517,6 +517,7 @@ export function EditorShell({
               physicsPlayback={physicsPlayback}
               sculptBrushRadius={sculptBrushRadius}
               sculptBrushStrength={sculptBrushStrength}
+              selectionEnabled={selectionEnabled}
               sculptMode={sculptMode}
               selectedGeometry={selectedIsGeometry}
               selectedMesh={selectedIsMesh}
@@ -738,14 +739,10 @@ function ViewportLayout({
 function ViewportPaneFrame({
   active,
   children,
-  label,
-  renderMode,
   viewport
 }: {
   active: boolean;
   children: ReactNode;
-  label: string;
-  renderMode: "lit" | "wireframe";
   viewport: ViewportState;
 }) {
   const target = viewport.camera.target;
@@ -758,28 +755,6 @@ function ViewportPaneFrame({
       )}
     >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0)_12%),radial-gradient(circle_at_top,rgba(148,163,184,0.16),transparent_48%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 border-b border-white/8 bg-[linear-gradient(180deg,rgba(33,38,47,0.96),rgba(16,19,26,0.9))] px-4 py-2.5 backdrop-blur-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="editor-toolbar-segment rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/82 uppercase">
-              {label}
-            </span>
-            <span className="text-[10px] font-medium tracking-[0.18em] text-white/42 uppercase">
-              {viewport.projection === "perspective" ? "Camera" : "Ortho"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="editor-toolbar-segment rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/62 uppercase">
-              {renderMode === "lit" ? "Lit" : "Wireframe"}
-            </span>
-            {active ? (
-              <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase">
-                Active
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </div>
       <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
         Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}
       </div>
