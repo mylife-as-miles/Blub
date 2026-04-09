@@ -76,6 +76,7 @@ export function ConstructionGrid({
   const extent = viewport.grid.size;
   const transform = resolveConstructionPlaneTransform(viewportPlane, viewport);
   const editorFloorVisible = renderMode === "lit" && viewport.projection === "perspective";
+  const showPerimeterWalls = viewportPlane === "xz";
 
   const floorPresetId = sceneSettings.world.floorPresetId;
   const preset = floorPresetId ? getFloorPreset(floorPresetId as Parameters<typeof getFloorPreset>[0]) : undefined;
@@ -94,6 +95,15 @@ export function ConstructionGrid({
             roughness={preset?.roughness ?? 0.96}
           />
         </mesh>
+      ) : null}
+      {showPerimeterWalls ? (
+        <PerimeterWalls
+          baseColor={baseColor}
+          majorColor={majorColor}
+          minorColor={minorColor}
+          renderMode={renderMode}
+          size={extent}
+        />
       ) : null}
       <GridShaderPlane
         baseAlpha={editorFloorVisible ? 0.78 : 0.32}
@@ -131,6 +141,83 @@ function resolveConstructionPlaneTransform(
         rotation: [0, 0, 0] as [number, number, number]
       };
   }
+}
+
+function PerimeterWalls({
+  baseColor,
+  majorColor,
+  minorColor,
+  renderMode,
+  size
+}: {
+  baseColor: THREE.Color;
+  majorColor: THREE.Color;
+  minorColor: THREE.Color;
+  renderMode: "lit" | "wireframe";
+  size: number;
+}) {
+  const wallHeight = THREE.MathUtils.clamp(size * 0.14, 12, 28);
+  const wallThickness = THREE.MathUtils.clamp(size * 0.016, 1.8, 4.5);
+  const capHeight = THREE.MathUtils.clamp(wallThickness * 0.35, 0.45, 1.25);
+  const halfSize = size * 0.5;
+  const halfWallHeight = wallHeight * 0.5;
+  const wallOffset = halfSize - wallThickness * 0.5;
+  const wallColor = baseColor.clone().lerp(new THREE.Color("#4a535c"), 0.46);
+  const capColor = majorColor.clone().lerp(baseColor, 0.35);
+  const wireColor = majorColor.clone().lerp(minorColor, 0.32);
+  const horizontalSpan = size + wallThickness * 2;
+  const verticalSpan = size;
+  const capY = wallHeight + capHeight * 0.5;
+  const renderWallMaterial = () =>
+    renderMode === "lit" ? (
+      <meshStandardMaterial color={wallColor} metalness={0.08} roughness={0.88} />
+    ) : (
+      <meshBasicMaterial color={wireColor} opacity={0.88} transparent wireframe />
+    );
+  const renderCapMaterial = () =>
+    renderMode === "lit" ? (
+      <meshStandardMaterial color={capColor} metalness={0.1} roughness={0.62} />
+    ) : (
+      <meshBasicMaterial color={wireColor.clone().offsetHSL(0, 0, 0.08)} opacity={0.96} transparent wireframe />
+    );
+
+  return (
+    <group>
+      <mesh castShadow={renderMode === "lit"} position={[0, halfWallHeight, -wallOffset]} receiveShadow>
+        <boxGeometry args={[horizontalSpan, wallHeight, wallThickness]} />
+        {renderWallMaterial()}
+      </mesh>
+      <mesh castShadow={renderMode === "lit"} position={[0, halfWallHeight, wallOffset]} receiveShadow>
+        <boxGeometry args={[horizontalSpan, wallHeight, wallThickness]} />
+        {renderWallMaterial()}
+      </mesh>
+      <mesh castShadow={renderMode === "lit"} position={[-wallOffset, halfWallHeight, 0]} receiveShadow>
+        <boxGeometry args={[wallThickness, wallHeight, verticalSpan]} />
+        {renderWallMaterial()}
+      </mesh>
+      <mesh castShadow={renderMode === "lit"} position={[wallOffset, halfWallHeight, 0]} receiveShadow>
+        <boxGeometry args={[wallThickness, wallHeight, verticalSpan]} />
+        {renderWallMaterial()}
+      </mesh>
+
+      <mesh castShadow={renderMode === "lit"} position={[0, capY, -wallOffset]} receiveShadow>
+        <boxGeometry args={[horizontalSpan, capHeight, wallThickness + 0.2]} />
+        {renderCapMaterial()}
+      </mesh>
+      <mesh castShadow={renderMode === "lit"} position={[0, capY, wallOffset]} receiveShadow>
+        <boxGeometry args={[horizontalSpan, capHeight, wallThickness + 0.2]} />
+        {renderCapMaterial()}
+      </mesh>
+      <mesh castShadow={renderMode === "lit"} position={[-wallOffset, capY, 0]} receiveShadow>
+        <boxGeometry args={[wallThickness + 0.2, capHeight, verticalSpan]} />
+        {renderCapMaterial()}
+      </mesh>
+      <mesh castShadow={renderMode === "lit"} position={[wallOffset, capY, 0]} receiveShadow>
+        <boxGeometry args={[wallThickness + 0.2, capHeight, verticalSpan]} />
+        {renderCapMaterial()}
+      </mesh>
+    </group>
+  );
 }
 
 function GridShaderPlane({
