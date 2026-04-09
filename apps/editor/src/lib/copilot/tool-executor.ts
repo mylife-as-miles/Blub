@@ -4,17 +4,17 @@ import {
   buildHalfPipe,
   buildBank,
   buildSpine,
-  buildGapToRail,
-  buildFloor,
+  buildBowl,
+  buildFunBox,
   buildLedge,
   buildRail,
   buildStairSet,
-  buildHubba,
-  buildBowl,
-  buildTaco,
-  buildHandrail,
   buildKicker,
-  SKATE_MATERIALS
+  buildManualPad,
+  buildPyramid,
+  buildHip,
+  buildHubbaLedge,
+  skateparkMaterials
 } from "@blud/skatepark";
 import {
   createAssignMaterialCommand,
@@ -442,37 +442,70 @@ function executeToolInner(editor: EditorCore, name: string, args: Args, context:
       const width = num(args, "width", 4);
       const height = num(args, "height", 2);
       const length = num(args, "length", 4);
-      const materialId = str(args, "materialId") || "material:skate:concrete";
+      const materialId = str(args, "materialId") || "concrete-smooth";
 
-      // Register material if needed
+      // Register material if needed (skateparkMaterials uses IDs like 'concrete-smooth')
       const existingMat = scene.materials.get(materialId);
       if (!existingMat) {
-        const skateMat = Object.values(SKATE_MATERIALS).find(m => m.id === materialId);
+        const skateMat = skateparkMaterials[materialId];
         if (skateMat) {
           editor.execute(createUpsertMaterialCommand(scene, skateMat));
         }
       }
 
-      let polygons: Vec3[][] = [];
+      let meshData: EditableMesh | undefined;
+      const segments = 12;
+
       switch (type) {
-        case "quarter-pipe": polygons = buildQuarterPipe({ width, height, length }); break;
-        case "half-pipe": polygons = buildHalfPipe({ width, height, length }); break;
-        case "bank": polygons = buildBank({ width, height, length }); break;
-        case "spine": polygons = buildSpine({ width, height, length }); break;
-        case "gap-to-rail": polygons = buildGapToRail({ width, height, length }); break;
-        case "floor": polygons = buildFloor({ width, length }); break;
-        case "ledge": polygons = buildLedge({ width, height, length }); break;
-        case "rail": polygons = buildRail({ length }); break;
-        case "stair-set": polygons = buildStairSet({ width, height, length }); break;
-        case "hubba": polygons = buildHubba({ width, height, length }); break;
-        case "bowl": polygons = buildBowl({ width, height, length }); break;
-        case "taco": polygons = buildTaco({ width, height, length }); break;
-        case "handrail": polygons = buildHandrail({ length }); break;
-        case "kicker": polygons = buildKicker({ width, height, length }); break;
+        case "quarter-pipe":
+          meshData = buildQuarterPipe({ width, height, radius: length, segments, materialId });
+          break;
+        case "half-pipe":
+          meshData = buildHalfPipe({ width, height, flatLength: length * 0.5, radius: length * 0.5, segments, materialId });
+          break;
+        case "bank":
+          meshData = buildBank({ width, height, depth: length, materialId });
+          break;
+        case "spine":
+          meshData = buildSpine({ width, height, radius: length * 0.5, segments, materialId });
+          break;
+        case "bowl":
+          meshData = buildBowl({ radiusX: width * 0.5, radiusZ: length * 0.5, depth: height, segments, materialId });
+          break;
+        case "fun-box":
+          meshData = buildFunBox({ width, height, length, rampLength: 2, materialId });
+          break;
+        case "ledge":
+          meshData = buildLedge({ width, height, length, materialId });
+          break;
+        case "manual-pad":
+          meshData = buildManualPad({ width, height, length, materialId });
+          break;
+        case "rail":
+          meshData = buildRail({ length, railHeight: height, railRadius: 0.1, legCount: Math.ceil(length / 2), materialId });
+          break;
+        case "stair-set":
+          meshData = buildStairSet({ width, stepCount: Math.floor(height / 0.2), stepDepth: 0.3, stepHeight: 0.2, materialId });
+          break;
+        case "kicker":
+          meshData = buildKicker({ width, height, depth: length, materialId });
+          break;
+        case "pyramid":
+          meshData = buildPyramid({ width, height, length, rampLength: 2, materialId });
+          break;
+        case "hip":
+          meshData = buildHip({ radius: length, height, width, segments, materialId });
+          break;
+        case "hubba-ledge":
+          meshData = buildHubbaLedge({ width, height, length, stairHeight: height * 0.5, materialId });
+          break;
       }
 
-      const meshData = createEditableMeshFromPolygons(polygons);
-      meshData.materialId = materialId;
+      if (!meshData) {
+        return fail(`Unsupported skatepark element type: ${type}`);
+      }
+
+      meshData.role = "prop";
 
       const transform = makeTransform(vec3(num(args, "x"), num(args, "y"), num(args, "z")));
       if (typeof args.rotationY === "number") {
