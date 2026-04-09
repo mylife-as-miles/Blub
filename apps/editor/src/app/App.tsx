@@ -1903,6 +1903,85 @@ export function App() {
     uiStore.toolsPanelOpen = !uiStore.toolsPanelOpen;
   };
 
+  const handlePlaceSkateparkElement = (type: SkateparkElementType) => {
+    // 1. Ensure all skatepark materials are registered in the scene
+    Object.values(skateparkMaterials as Record<string, Material>).forEach((mat) => {
+      if (!editor.scene.materials.has(mat.id)) {
+        editor.execute(createUpsertMaterialCommand(editor.scene, mat));
+      }
+    });
+
+    // 2. Resolve placement position
+    const activeViewportState = resolveActiveViewportState();
+    const snapSize = resolveViewportSnapSize(activeViewportState);
+    const position = snapVec3(activeViewportState.camera.target, snapSize);
+    position.y = 0;
+    const transform = makeTransform(position);
+
+    // 3. Build geometry based on type
+    let mesh: EditableMesh | undefined;
+    const name = type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ");
+
+    const defaultConcrete = "concrete-smooth";
+    const defaultMetal = "rail-metal";
+
+    switch (type) {
+      case "bank":
+        mesh = buildBank({ width: 4, height: 1.5, depth: 3, materialId: defaultConcrete });
+        break;
+      case "bowl":
+        mesh = buildBowl({ radiusX: 6, radiusZ: 6, depth: 3, segments: 4, materialId: defaultConcrete });
+        break;
+      case "fun-box":
+        mesh = buildFunBox({ width: 4, height: 0.6, length: 4, rampLength: 2, materialId: defaultConcrete });
+        break;
+      case "half-pipe":
+        mesh = buildHalfPipe({ width: 6, height: 2, flatLength: 4, radius: 3, segments: 16, materialId: defaultConcrete });
+        break;
+      case "hip":
+        mesh = buildHip({ width: 2, height: 1.5, radius: 3, segments: 8, materialId: defaultConcrete });
+        break;
+      case "hubba-ledge":
+        mesh = buildHubbaLedge({ width: 0.8, height: 0.6, length: 4, stairHeight: 1, materialId: defaultConcrete });
+        break;
+      case "kicker":
+        mesh = buildKicker({ width: 2, height: 0.6, depth: 1.5, materialId: defaultConcrete });
+        break;
+      case "ledge":
+        mesh = buildLedge({ width: 1, height: 0.5, length: 3, materialId: defaultConcrete });
+        break;
+      case "manual-pad":
+        mesh = buildManualPad({ width: 2, height: 0.2, length: 4, materialId: defaultConcrete });
+        break;
+      case "pyramid":
+        mesh = buildPyramid({ width: 2, height: 0.8, length: 2, rampLength: 2, materialId: defaultConcrete });
+        break;
+      case "quarter-pipe":
+        mesh = buildQuarterPipe({ width: 4, height: 1.5, radius: 2.5, segments: 12, materialId: defaultConcrete });
+        break;
+      case "rail":
+        mesh = buildRail({ length: 4, railHeight: 0.5, railRadius: 0.05, legCount: 2, materialId: defaultMetal });
+        break;
+      case "spine":
+        mesh = buildSpine({ width: 4, height: 1.5, radius: 2, segments: 12, materialId: defaultConcrete });
+        break;
+      case "stair-set":
+        mesh = buildStairSet({ width: 3, stepCount: 5, stepDepth: 0.35, stepHeight: 0.18, materialId: defaultConcrete });
+        break;
+    }
+
+    if (mesh) {
+      const { command, nodeId } = createPlaceMeshNodeCommand(editor.scene, transform, {
+        data: mesh,
+        name: `Skatepark ${name}`
+      });
+
+      editor.execute(command);
+      editor.select([nodeId], "object");
+      enqueueWorkerJob("Skatepark placement", { task: "triangulation", worker: "geometryWorker" }, 650);
+    }
+  };
+
   useAppHotkeys({
     activeToolId,
     editor,
