@@ -25,7 +25,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { EventsPanel, HooksPanel, PathsPanel } from "@/components/editor-shell/GameplayPanels";
 import { NpcVoiceInspector } from "@/components/editor-shell/NpcVoiceInspector";
 import { VoicesPanel } from "@/components/editor-shell/VoicesPanel";
@@ -96,8 +95,8 @@ type InspectorSidebarProps = {
 
 const AXES = ["x", "y", "z"] as const;
 const RIGHT_PANEL_TAB_TRIGGER_CLASS =
-  "glass-tabs-trigger !h-12 !gap-0.5 !px-0 !py-1.5 !text-foreground/70 [&_svg]:size-3.5 [&_svg]:shrink-0";
-const RIGHT_PANEL_TAB_LABEL_CLASS = "glass-tabs-label";
+  "editor-toolbar-button !h-11 !gap-1 !rounded-[10px] !border !border-transparent !px-2 !py-2 !text-[10px] !font-semibold !tracking-[0.12em] !text-foreground/72 !uppercase hover:!translate-y-0 active:!scale-100 data-active:!border-[#f6d07d]/22 data-active:!bg-[#f6d07d]/10 data-active:!text-[#fff0cb] [&_svg]:size-3.5 [&_svg]:shrink-0";
+const RIGHT_PANEL_TAB_LABEL_CLASS = "text-[0.52rem] font-semibold tracking-[0.08em] text-inherit uppercase";
 
 function inferSkyboxFormat(file: File): SceneSettings["world"]["skybox"]["format"] {
   return file.name.toLowerCase().endsWith(".hdr") ? "hdr" : "image";
@@ -396,73 +395,85 @@ export function InspectorSidebar({
     <div className={cn(
       "pointer-events-none absolute z-20 flex flex-col gap-2",
       /* Always a left sidebar — from just below menu bar to near bottom */
-      "left-2 top-16",
-      sidebarOpen ? "bottom-2 w-48 sm:w-64 md:w-72 lg:w-80" : "w-auto",
+      "right-2 top-16 items-end",
+      sidebarOpen ? "bottom-2 w-56 sm:w-72 md:w-80 lg:w-[23rem]" : "w-auto",
     )}>
       {/* Collapse toggle — always visible at all screen sizes */}
-      <div className="flex justify-start">
+      <div className="flex w-full justify-end">
         <button
-          className="pointer-events-auto flex size-8 items-center justify-center rounded-full glass-panel text-foreground/60 hover:text-foreground transition-colors duration-150"
+          className="editor-toolbar-shell pointer-events-auto flex size-8 items-center justify-center rounded-[12px] text-foreground/60 transition-colors duration-150 hover:text-foreground"
           onClick={() => setSidebarOpen((v) => !v)}
           title={sidebarOpen ? "Collapse inspector" : "Expand inspector"}
           type="button"
         >
-          {sidebarOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+          {sidebarOpen ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </button>
       </div>
 
       {/* Panel body */}
       {sidebarOpen && (
-      <FloatingPanel className="flex min-h-0 flex-1 w-full flex-col overflow-hidden">
+        <div className="editor-dock-panel flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-[20px]">
         <Tabs
           className="flex min-h-0 flex-1 flex-col gap-0"
           onValueChange={(value) => onChangeRightPanel(value as RightPanelId)}
           value={activeRightPanel ?? ""}
         >
-          <div className={cn("px-2 pt-2 sm:px-3 sm:pt-3", collapsed ? "pb-2 sm:pb-3" : "pb-1 sm:pb-2")}>
-            <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="glass-panel-subtle !grid !h-12 sm:!h-14 !w-full !grid-cols-8 !items-stretch !rounded-[18px] sm:!rounded-[22px] !p-1" variant="default">
+          <div className={cn("editor-dock-header px-3 pt-3", collapsed ? "pb-3" : "pb-2")}>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="editor-toolbar-label">Details</div>
+                <div className="mt-1 truncate text-[11px] font-medium text-foreground/56">
+                  {activeRightPanel ? startCase(activeRightPanel) : "Inspector"}
+                </div>
+              </div>
+              <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[9px] font-semibold tracking-[0.18em] uppercase">
+                {selectionEnabled ? "Editable" : "Sim"}
+              </span>
+            </div>
+            <TabsList className="editor-toolbar-segment !grid !h-auto !w-full !grid-cols-4 !items-stretch !gap-1.5 !rounded-[16px] !p-1.5" variant="default">
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="scene" onClick={() => handleTabClick("scene")}>
                 <FolderTree />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Scene</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Scene</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="world" onClick={() => handleTabClick("world")}>
                 <Globe2 />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>World</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>World</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="player" onClick={() => handleTabClick("player")}>
                 <User />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Player</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Player</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="inspector" onClick={() => handleTabClick("inspector")}>
                 <SlidersHorizontal />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Inspect</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Inspect</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="hooks" onClick={() => handleTabClick("hooks")}>
                 <Cable />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Hooks</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Hooks</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="events" onClick={() => handleTabClick("events")}>
                 <BellRing />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Events</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Events</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="materials" onClick={() => handleTabClick("materials")}>
                 <SwatchBook />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Mats</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Mats</span>
               </TabsTrigger>
               <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="voices" onClick={() => handleTabClick("voices")}>
                 <Mic />
-                <span className={cn(RIGHT_PANEL_TAB_LABEL_CLASS, "hidden sm:block")}>Voices</span>
+                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Voices</span>
               </TabsTrigger>
             </TabsList>
-            </div>
           </div>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="scene">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="scene">
             <div className="flex h-full min-h-0 flex-col gap-3">
               <div className="grid grid-cols-2 gap-1.5 px-1">
                 <Button
-                  className={cn(sceneSection === "hierarchy" && "glass-button-active text-emerald-50")}
+                  className={cn(
+                    "editor-toolbar-button rounded-[10px] hover:translate-y-0 active:scale-100",
+                    sceneSection === "hierarchy" && "editor-toolbar-button-active text-[#fff0cb]"
+                  )}
                   onClick={() => setSceneSection("hierarchy")}
                   size="xs"
                   variant="ghost"
@@ -470,7 +481,10 @@ export function InspectorSidebar({
                   Hierarchy
                 </Button>
                 <Button
-                  className={cn(sceneSection === "paths" && "glass-button-active text-emerald-50")}
+                  className={cn(
+                    "editor-toolbar-button rounded-[10px] hover:translate-y-0 active:scale-100",
+                    sceneSection === "paths" && "editor-toolbar-button-active text-[#fff0cb]"
+                  )}
                   onClick={() => setSceneSection("paths")}
                   size="xs"
                   variant="ghost"
@@ -510,7 +524,7 @@ export function InspectorSidebar({
             </div>
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="world">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="world">
             <ScrollArea className="h-full pr-1">
               <div className="space-y-4 px-1 pb-1">
                 <ToolSection title="Physics">
@@ -774,7 +788,7 @@ export function InspectorSidebar({
                       />
                     </>
                   ) : (
-                    <div className="glass-section rounded-xl px-3 py-2 text-[11px] text-foreground/52">
+                    <div className="editor-dock-note rounded-xl px-3 py-2 text-[11px]">
                       Turn grass on to preview a soft instanced field around the current scene.
                     </div>
                   )}
@@ -799,7 +813,7 @@ export function InspectorSidebar({
                     }
                     checked={draftWorldSettings.lod.enabled}
                   />
-                  <div className="rounded-xl border border-white/8 bg-white/4 px-3 py-2 text-[11px] text-foreground/56">
+                  <div className="editor-dock-note rounded-xl px-3 py-2 text-[11px]">
                     Runtime bundle export keeps the authored mesh as high detail and generates `mid` + `low` variants from
                     these ratios. Games choose the switch distances at load time.
                   </div>
@@ -1010,7 +1024,7 @@ export function InspectorSidebar({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="player">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="player">
             <ScrollArea className="h-full pr-1">
               <div className="space-y-4 px-1 pb-1">
                 <ToolSection title="Camera">
@@ -1181,7 +1195,7 @@ export function InspectorSidebar({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="inspector">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="inspector">
             <ScrollArea className="h-full pr-1">
               <div className="space-y-4 px-1 pb-1">
                 {selectedTarget ? (
@@ -1357,7 +1371,7 @@ export function InspectorSidebar({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="hooks">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="hooks">
             <ScrollArea className="h-full pr-1">
               <HooksPanel
                 entities={entities}
@@ -1371,13 +1385,13 @@ export function InspectorSidebar({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="events">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="events">
             <ScrollArea className="h-full pr-1">
               <EventsPanel onUpdateSceneSettings={onUpdateSceneSettings} sceneSettings={sceneSettings} />
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent className="flex min-h-0 flex-1 px-3 pb-3" value="materials">
+          <TabsContent className="flex min-h-0 flex-1 px-3 pb-3 pt-2" value="materials">
             <MaterialLibraryPanel
               materials={materials}
               onApplyMaterial={onApplyMaterial}
@@ -1396,13 +1410,13 @@ export function InspectorSidebar({
             />
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3" value="voices">
+          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="voices">
             <ScrollArea className="h-full pr-1">
               <VoicesPanel />
             </ScrollArea>
           </TabsContent>
         </Tabs>
-      </FloatingPanel>
+      </div>
       )}
     </div>
   );
@@ -1512,7 +1526,7 @@ function MeshPhysicsInspector({
           }
         />
       ) : (
-        <div className="glass-section rounded-xl px-3 py-2 text-[11px] text-foreground/52">
+        <div className="editor-dock-note rounded-xl px-3 py-2 text-[11px]">
           Enable physics to simulate this mesh at runtime.
         </div>
       )}
@@ -1527,7 +1541,7 @@ function InstancingInspector({
 }) {
   return (
     <ToolSection title="Instancing">
-      <div className="glass-section rounded-xl px-3 py-2 text-[11px] text-foreground/56">
+      <div className="editor-dock-note rounded-xl px-3 py-2 text-[11px]">
         This node instances <span className="font-mono text-foreground/72">{node.data.sourceNodeId}</span>. Only transform
         values are editable here.
       </div>
@@ -1696,7 +1710,7 @@ function EntityInspector({
 }
 
 function SectionTitle({ children }: { children: string }) {
-  return <div className="px-1 text-[10px] font-medium tracking-[0.18em] text-foreground/42 uppercase">{children}</div>;
+  return <div className="px-1 text-[10px] font-semibold tracking-[0.18em] text-[#f6d07d]/58 uppercase">{children}</div>;
 }
 
 function ToolSection({
@@ -1707,7 +1721,7 @@ function ToolSection({
   title: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="editor-dock-section space-y-2 rounded-[14px] p-2.5">
       <SectionTitle>{title}</SectionTitle>
       {children}
     </div>
@@ -1764,7 +1778,10 @@ function EnumGrid({
     <div className="grid grid-cols-3 gap-1.5">
       {entries.map((entry) => (
         <Button
-          className={cn(activeValue === entry.value && "glass-button-active text-emerald-50")}
+          className={cn(
+            "editor-toolbar-button rounded-[10px] hover:translate-y-0 active:scale-100",
+            activeValue === entry.value && "editor-toolbar-button-active text-[#fff0cb]"
+          )}
           key={entry.value}
           onClick={() => onSelect(entry.value)}
           size="xs"
@@ -1787,10 +1804,10 @@ function BooleanField({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="glass-section flex items-center justify-between gap-3 rounded-xl px-3 py-2">
+    <div className="editor-toolbar-segment flex items-center justify-between gap-3 rounded-xl px-3 py-2">
       <span className="text-xs text-foreground/72">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-medium tracking-[0.16em] text-foreground/36 uppercase">
+        <span className="text-[10px] font-medium tracking-[0.16em] text-[#f6d07d]/42 uppercase">
           {checked ? "On" : "Off"}
         </span>
         <Switch checked={checked} onCheckedChange={onCheckedChange} />
@@ -1833,8 +1850,8 @@ function TextField({
 }) {
   return (
     <div className="space-y-1">
-      <div className="px-1 text-[10px] font-medium tracking-[0.18em] text-foreground/42 uppercase">{label}</div>
-      <Input className="h-9 rounded-xl border-white/8 bg-white/5 text-xs" onChange={(event) => onChange(event.target.value)} value={value} />
+      <div className="px-1 text-[10px] font-semibold tracking-[0.18em] text-[#f6d07d]/58 uppercase">{label}</div>
+      <Input className="h-9 rounded-xl border-white/8 bg-black/24 text-xs" onChange={(event) => onChange(event.target.value)} value={value} />
     </div>
   );
 }
@@ -1849,10 +1866,10 @@ function ColorField({
   value: string;
 }) {
   return (
-    <div className="glass-section flex items-center gap-3 rounded-xl px-3 py-2">
+    <div className="editor-toolbar-segment flex items-center gap-3 rounded-xl px-3 py-2">
       <span className="text-xs text-foreground/72">{label}</span>
       <Input
-        className="h-8 flex-1 rounded-lg border-white/8 bg-white/5 text-xs"
+        className="h-8 flex-1 rounded-lg border-white/8 bg-black/24 text-xs"
         onChange={(event) => onChange(event.target.value)}
         type="color"
         value={value}
@@ -1892,10 +1909,13 @@ function InteractKeyField({
   const displayLabel = value.replace(/^Key/, "").replace(/^Digit/, "");
 
   return (
-    <div className="glass-section flex items-center justify-between gap-3 rounded-xl px-3 py-2">
+    <div className="editor-toolbar-segment flex items-center justify-between gap-3 rounded-xl px-3 py-2">
       <span className="text-xs text-foreground/72">Interact Key</span>
       <Button
-        className={cn(listening && "glass-button-active text-emerald-50")}
+        className={cn(
+          "editor-toolbar-button rounded-[10px] hover:translate-y-0 active:scale-100",
+          listening && "editor-toolbar-button-active text-[#fff0cb]"
+        )}
         onClick={() => setListening((current) => !current)}
         size="xs"
         variant="ghost"
@@ -1963,7 +1983,7 @@ function AmbientAudioSection({
     <ToolSection title="Ambient Audio">
       <div className="space-y-2">
         <textarea
-          className="glass-section w-full resize-none rounded-xl px-3 py-2 text-xs placeholder:text-foreground/40 focus:outline-none"
+          className="editor-dock-note w-full resize-none rounded-xl px-3 py-2 text-xs placeholder:text-foreground/40 focus:outline-none"
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Describe the soundscape (e.g. wind through pine trees, distant waterfall)"
           rows={2}
