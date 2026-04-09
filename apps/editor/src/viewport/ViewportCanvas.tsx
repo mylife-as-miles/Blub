@@ -135,14 +135,16 @@ function ViewportWorldSettings({ renderMode, sceneSettings }: Pick<ViewportCanva
   useEffect(() => {
     if (renderMode !== "lit") {
       clearWebHammerWorldSettings(scene);
-      scene.background = new Color("#091018");
+      scene.background = new Color("#72879f");
       scene.environment = null;
       return;
     }
 
-    scene.background = new Color(sceneSettings.world.fogColor);
-
     void applyWebHammerWorldSettings(scene, { settings: sceneSettings });
+
+    if (!sceneSettings.world.skybox.enabled) {
+      scene.background = new Color("#a7bfd8");
+    }
 
     return () => {
       clearWebHammerWorldSettings(scene);
@@ -2558,6 +2560,13 @@ export function ViewportCanvas({
 
     const bounds = event.currentTarget.getBoundingClientRect();
     pointerPositionRef.current = new Vector2(event.clientX - bounds.left, event.clientY - bounds.top);
+
+    if (event.altKey) {
+      selectionClickOriginRef.current = null;
+      marqueeOriginRef.current = null;
+      return;
+    }
+
     selectionClickOriginRef.current =
       event.button === 0 && !event.shiftKey
         ? new Vector2(event.clientX - bounds.left, event.clientY - bounds.top)
@@ -2726,6 +2735,13 @@ export function ViewportCanvas({
 
   const handlePointerUp: PointerEventHandler<HTMLDivElement> = (event) => {
     if (!editorInteractionEnabled) {
+      return;
+    }
+
+    if (event.altKey) {
+      selectionClickOriginRef.current = null;
+      marqueeOriginRef.current = null;
+      setMarquee(null);
       return;
     }
 
@@ -2962,6 +2978,9 @@ export function ViewportCanvas({
     <div
       className="relative size-full overflow-hidden"
       ref={viewportRootRef}
+      onContextMenu={(event) => {
+        event.preventDefault();
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -3027,7 +3046,13 @@ export function ViewportCanvas({
           viewport={viewport}
         />
         {editorInteractionEnabled ? (
-          <ConstructionGrid activeToolId={activeToolId} onPlaceAsset={onPlaceAsset} viewport={viewport} viewportPlane={viewportPlane} />
+          <ConstructionGrid
+            activeToolId={activeToolId}
+            onPlaceAsset={onPlaceAsset}
+            renderMode={renderMode}
+            viewport={viewport}
+            viewportPlane={viewportPlane}
+          />
         ) : null}
         {renderMode === "lit" && editorInteractionEnabled ? <axesHelper args={[3]} /> : null}
         <ScenePreview
@@ -3185,6 +3210,8 @@ export function ViewportCanvas({
         ) : null}
       </Canvas>
 
+      <ViewportHud isActiveViewport={isActiveViewport} viewport={viewport} />
+
       {editorInteractionEnabled && (arcState || bevelState || extrudeState || sculptState || faceCutState || faceSubdivisionState) ? (
         <div className="pointer-events-none absolute inset-0 z-20 cursor-crosshair" />
       ) : null}
@@ -3225,7 +3252,8 @@ function DefaultViewportSun({ center }: { center: Vec3 }) {
     <>
       <directionalLight
         castShadow
-        intensity={1.35}
+        color="#fff5dd"
+        intensity={1.55}
         position={[center.x + 28, center.y + 42, center.z + 24]}
         ref={lightRef}
         shadow-bias={-0.00015}
@@ -3239,6 +3267,38 @@ function DefaultViewportSun({ center }: { center: Vec3 }) {
         shadow-normalBias={0.03}
       />
       <object3D position={[center.x, center.y, center.z]} ref={targetRef} />
+    </>
+  );
+}
+
+function ViewportHud({
+  isActiveViewport,
+  viewport
+}: Pick<ViewportCanvasProps, "isActiveViewport" | "viewport">) {
+  const navigationHint =
+    viewport.projection === "perspective"
+      ? "RMB look  RMB + WASD fly  Alt + LMB orbit  Alt + MMB pan  Alt + RMB dolly  F focus"
+      : "LMB select  Shift + LMB box select  RMB pan  Wheel zoom";
+
+  return (
+    <>
+      <div className="pointer-events-none absolute bottom-4 left-4 z-20 flex max-w-[min(42rem,calc(100%-8rem))] items-end gap-3">
+        <div className="rounded-xl border border-white/10 bg-black/26 px-3 py-2 backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-white/58 uppercase">
+            <span className="text-[#ef4444]">X</span>
+            <span className="text-[#10b981]">Y</span>
+            <span className="text-[#60a5fa]">Z</span>
+          </div>
+        </div>
+        {isActiveViewport ? (
+          <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[10px] font-medium tracking-[0.16em] text-white/58 uppercase backdrop-blur-sm">
+            {navigationHint}
+          </div>
+        ) : null}
+      </div>
+      <div className="pointer-events-none absolute right-4 top-14 z-20 rounded-xl border border-white/10 bg-black/28 px-3 py-2 text-[10px] font-medium tracking-[0.16em] text-white/58 uppercase backdrop-blur-sm">
+        Cam {viewport.camera.position.x.toFixed(1)} {viewport.camera.position.y.toFixed(1)} {viewport.camera.position.z.toFixed(1)}
+      </div>
     </>
   );
 }

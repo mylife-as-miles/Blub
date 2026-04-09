@@ -7,9 +7,10 @@ import { resolveViewportSnapSize } from "@/viewport/utils/snap";
 export function ConstructionGrid({
   activeToolId,
   onPlaceAsset,
+  renderMode,
   viewportPlane,
   viewport
-}: Pick<ViewportCanvasProps, "activeToolId" | "onPlaceAsset" | "viewport" | "viewportPlane">) {
+}: Pick<ViewportCanvasProps, "activeToolId" | "onPlaceAsset" | "renderMode" | "viewport" | "viewportPlane">) {
   if (!viewport.grid.visible) {
     return null;
   }
@@ -19,6 +20,7 @@ export function ConstructionGrid({
   const majorStep = minorStep * viewport.grid.majorLineEvery;
   const extent = viewport.grid.size;
   const transform = resolveConstructionPlaneTransform(viewportPlane, viewport);
+  const editorFloorVisible = renderMode === "lit" && viewport.projection === "perspective";
 
   return (
     <group position={transform.position} rotation={transform.rotation}>
@@ -28,10 +30,14 @@ export function ConstructionGrid({
         position={[0, -0.05, 0]}
       >
         <planeGeometry args={[extent, extent]} />
-        <meshBasicMaterial color="#0a0f13" transparent opacity={0.78} />
+        {editorFloorVisible ? (
+          <meshStandardMaterial color="#cec8c0" metalness={0} roughness={0.96} />
+        ) : (
+          <meshBasicMaterial color="#657a90" transparent opacity={0.32} />
+        )}
       </mesh>
-      <GridLines color="#3c4652" opacity={0.72} size={extent} step={minorStep} y={0.002} />
-      <GridLines color="#7f8b99" opacity={0.86} size={extent} step={majorStep} y={0.006} />
+      <GridLines color={editorFloorVisible ? "#b4ada4" : "#9fb4cb"} opacity={editorFloorVisible ? 0.78 : 0.5} size={extent} step={minorStep} y={0.002} />
+      <GridLines color={editorFloorVisible ? "#7b746c" : "#dce7f5"} opacity={editorFloorVisible ? 0.82 : 0.72} size={extent} step={majorStep} y={0.006} />
     </group>
   );
 }

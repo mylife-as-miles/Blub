@@ -45,10 +45,10 @@ export const viewportPaneDefinitions: Record<
 > = {
   perspective: {
     id: "perspective",
-    label: "3D View",
+    label: "Perspective",
     plane: "xz",
     renderMode: "lit",
-    shortLabel: "3D"
+    shortLabel: "Perspective"
   },
   top: {
     id: "top",
@@ -66,10 +66,10 @@ export const viewportPaneDefinitions: Record<
   },
   side: {
     id: "side",
-    label: "Side",
+    label: "Right",
     plane: "yz",
     renderMode: "wireframe",
-    shortLabel: "Side"
+    shortLabel: "Right"
   }
 };
 

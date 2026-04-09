@@ -9,6 +9,7 @@ type UseAppHotkeysOptions = {
   enabled?: boolean;
   handleDeleteSelection: () => void;
   handleDuplicateSelection: () => void;
+  handleFocusSelection: () => void;
   handleInstanceSelection: () => void;
   handleGroupSelection: () => void;
   handleInvertSelectionNormals: () => void;
@@ -20,6 +21,7 @@ type UseAppHotkeysOptions = {
   setActiveToolId: (toolId: ToolId) => void;
   setMeshEditMode: (mode: MeshEditMode) => void;
   setTransformMode: (mode: "rotate" | "scale" | "translate") => void;
+  transformMode: "rotate" | "scale" | "translate";
 };
 
 export function useAppHotkeys({
@@ -28,6 +30,7 @@ export function useAppHotkeys({
   enabled = true,
   handleDeleteSelection,
   handleDuplicateSelection,
+  handleFocusSelection,
   handleInstanceSelection,
   handleGroupSelection,
   handleInvertSelectionNormals,
@@ -38,9 +41,23 @@ export function useAppHotkeys({
   handleUndo,
   setActiveToolId,
   setMeshEditMode,
-  setTransformMode
+  setTransformMode,
+  transformMode
 }: UseAppHotkeysOptions) {
   const blocksSceneSelectionEdits = activeToolId === "mesh-edit" || activeToolId === "path-add" || activeToolId === "path-edit";
+  const cycleTransformMode = () => {
+    if (transformMode === "translate") {
+      setTransformMode("rotate");
+      return;
+    }
+
+    if (transformMode === "rotate") {
+      setTransformMode("scale");
+      return;
+    }
+
+    setTransformMode("translate");
+  };
 
   useEffect(() => {
     if (!enabled) {
@@ -56,6 +73,10 @@ export function useAppHotkeys({
         target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)
       ) {
+        return;
+      }
+
+      if (typeof document !== "undefined" && document.body.dataset.viewportNavigation === "fly") {
         return;
       }
 
@@ -80,6 +101,39 @@ export function useAppHotkeys({
       if (modifier && event.key.toLowerCase() === "l") {
         event.preventDefault();
         handleToggleCopilot();
+        return;
+      }
+
+      if (!modifier && !event.shiftKey && activeToolId !== "mesh-edit" && event.key.toLowerCase() === "q") {
+        event.preventDefault();
+        setActiveToolId("select");
+        return;
+      }
+
+      if (!modifier && !event.shiftKey && activeToolId !== "mesh-edit" && event.key.toLowerCase() === "w") {
+        event.preventDefault();
+        setActiveToolId("transform");
+        setTransformMode("translate");
+        return;
+      }
+
+      if (!modifier && !event.shiftKey && activeToolId !== "mesh-edit" && event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        setActiveToolId("transform");
+        setTransformMode("rotate");
+        return;
+      }
+
+      if (!modifier && !event.shiftKey && activeToolId !== "mesh-edit" && event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        setActiveToolId("transform");
+        setTransformMode("scale");
+        return;
+      }
+
+      if (!modifier && !event.shiftKey && activeToolId !== "mesh-edit" && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        handleFocusSelection();
         return;
       }
 
@@ -158,6 +212,12 @@ export function useAppHotkeys({
         return;
       }
 
+      if (event.code === "Space" && activeToolId === "transform") {
+        event.preventDefault();
+        cycleTransformMode();
+        return;
+      }
+
       if (activeToolId !== "transform" && activeToolId !== "mesh-edit") {
         return;
       }
@@ -168,7 +228,7 @@ export function useAppHotkeys({
         return;
       }
 
-      if (!event.shiftKey && event.key.toLowerCase() === "r") {
+      if (activeToolId === "mesh-edit" && !event.shiftKey && event.key.toLowerCase() === "r") {
         event.preventDefault();
         setTransformMode("rotate");
         return;
@@ -231,6 +291,7 @@ export function useAppHotkeys({
     enabled,
     handleDeleteSelection,
     handleDuplicateSelection,
+    handleFocusSelection,
     handleInstanceSelection,
     handleGroupSelection,
     handleInvertSelectionNormals,
@@ -241,6 +302,7 @@ export function useAppHotkeys({
     handleUndo,
     setActiveToolId,
     setMeshEditMode,
-    setTransformMode
+    setTransformMode,
+    transformMode
   ]);
 }

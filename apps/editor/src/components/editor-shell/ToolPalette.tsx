@@ -100,8 +100,8 @@ export function ToolPalette({
   viewMode
 }: ToolPaletteProps) {
   return (
-    <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 flex-col items-center gap-2">
-      <div className="flex items-stretch gap-3">
+    <div className="pointer-events-none absolute left-5 top-5 z-20 flex max-w-[calc(100%-2.5rem)] flex-col items-start gap-2">
+      <div className="flex max-w-full flex-wrap items-stretch gap-3">
         <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
         <PrimaryToolBar activeToolId={activeToolId} onSetToolId={onSetToolId} tools={tools} />
         <SnapControl currentSnapSize={currentSnapSize} gridSnapValues={gridSnapValues} onSetSnapEnabled={onSetSnapEnabled} onSetSnapSize={onSetSnapSize} snapEnabled={snapEnabled} />

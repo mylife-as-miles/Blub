@@ -330,7 +330,10 @@ export function EditorShell({
     return (
       <ViewportPaneFrame
         key={viewportId}
-        label={definition.shortLabel}
+        active={activeViewportId === viewportId}
+        label={definition.label}
+        renderMode={definition.renderMode}
+        viewport={viewports[viewportId]}
       >
         <ViewportCanvas
           activeBrushShape={activeBrushShape}
@@ -651,20 +654,50 @@ function ViewportLayout({
 }
 
 function ViewportPaneFrame({
+  active,
   children,
-  label
+  label,
+  renderMode,
+  viewport
 }: {
+  active: boolean;
   children: ReactNode;
   label: string;
+  renderMode: "lit" | "wireframe";
+  viewport: ViewportState;
 }) {
+  const target = viewport.camera.target;
+
   return (
     <div
-      className={cn("relative size-full overflow-hidden bg-[#040b10]")}
+      className={cn(
+        "relative size-full overflow-hidden bg-[#14181f]",
+        active ? "ring-1 ring-inset ring-[#f6d07d]/28" : "ring-1 ring-inset ring-white/7"
+      )}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(52,211,153,0.08),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0)_22%)]" />
-      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/6" />
-      <div className="glass-pill pointer-events-none absolute left-4 top-4 z-20 rounded-full px-3 py-1.5 text-[10px] font-medium tracking-[0.22em] text-foreground/72 uppercase">
-        {label}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0)_12%),radial-gradient(circle_at_top,rgba(148,163,184,0.16),transparent_48%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[linear-gradient(180deg,rgba(21,25,32,0.94),rgba(12,15,20,0.84))] px-4 py-2.5 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <span className="rounded-md border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/82 uppercase">
+            {label}
+          </span>
+          <span className="text-[10px] font-medium tracking-[0.18em] text-white/42 uppercase">
+            {viewport.projection === "perspective" ? "Camera" : "Ortho"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-md border border-white/10 bg-white/6 px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/62 uppercase">
+            {renderMode === "lit" ? "Lit" : "Wireframe"}
+          </span>
+          {active ? (
+            <span className="rounded-md border border-[#f6d07d]/30 bg-[#f6d07d]/12 px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-[#f9dfab] uppercase">
+              Active
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <div className="pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
+        Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}
       </div>
       {children}
     </div>
@@ -674,7 +707,7 @@ function ViewportPaneFrame({
 function ViewportSplitHandle({ direction = "vertical" }: { direction?: "horizontal" | "vertical" }) {
   return (
     <ResizableHandle
-      className="bg-white/[0.04] after:bg-white/[0.08] hover:bg-emerald-400/14 data-[dragging]:bg-emerald-400/20"
+      className="bg-white/[0.04] after:bg-white/[0.08] hover:bg-[#f6d07d]/14 data-[dragging]:bg-[#f6d07d]/20"
       withHandle={direction === "vertical"}
     />
   );

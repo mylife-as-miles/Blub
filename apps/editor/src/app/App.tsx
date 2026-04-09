@@ -363,30 +363,47 @@ export function App() {
     editor.clearSelection();
   };
 
-  const handleFocusNode = (nodeId: string) => {
+  const resolveSceneItemFocusPoint = (nodeId: string) => {
     const node = editor.scene.getNode(nodeId);
 
     if (!node) {
       const entity = editor.scene.getEntity(nodeId);
 
       if (!entity) {
-        return;
+        return undefined;
       }
 
-      viewportPaneIds.forEach((viewportId) => {
-        focusViewportOnPoint(
-          uiStore.viewports[viewportId],
-          renderScene.entityTransforms.get(entity.id)?.position ?? entity.transform.position
-        );
-      });
+      return renderScene.entityTransforms.get(entity.id)?.position ?? entity.transform.position;
+    }
+
+    return renderScene.nodeTransforms.get(node.id)?.position ?? node.transform.position;
+  };
+
+  const handleFocusSelection = () => {
+    const selectedId = editor.selection.ids[0];
+
+    if (!selectedId) {
+      return;
+    }
+
+    const focusPoint = resolveSceneItemFocusPoint(selectedId);
+
+    if (!focusPoint) {
+      return;
+    }
+
+    focusViewportOnPoint(uiStore.viewports[uiStore.activeViewportId], focusPoint);
+  };
+
+  const handleFocusNode = (nodeId: string) => {
+    const focusPoint = resolveSceneItemFocusPoint(nodeId);
+
+    if (!focusPoint) {
       return;
     }
 
     viewportPaneIds.forEach((viewportId) => {
-      focusViewportOnPoint(
-        uiStore.viewports[viewportId],
-        renderScene.nodeTransforms.get(node.id)?.position ?? node.transform.position
-      );
+      focusViewportOnPoint(uiStore.viewports[viewportId], focusPoint);
     });
   };
 
@@ -1655,6 +1672,7 @@ export function App() {
     enabled: physicsPlayback === "stopped",
     handleDeleteSelection,
     handleDuplicateSelection,
+    handleFocusSelection,
     handleInstanceSelection,
     handleGroupSelection,
     handleInvertSelectionNormals,
@@ -1665,7 +1683,8 @@ export function App() {
     handleUndo,
     setActiveToolId: handleSetToolId,
     setMeshEditMode,
-    setTransformMode
+    setTransformMode,
+    transformMode
   });
 
   return (

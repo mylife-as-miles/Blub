@@ -35,10 +35,22 @@ export function useGameConnection() {
   useEffect(() => {
     let disposed = false;
     let timer = 0;
+    let endpointUnavailable = false;
 
     const refresh = async () => {
       try {
         const response = await fetch("/api/editor-sync/games");
+
+        if (response.status === 404) {
+          endpointUnavailable = true;
+
+          if (!disposed) {
+            setGames([]);
+            setError(undefined);
+          }
+
+          return;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to load live game connections.");
@@ -61,9 +73,12 @@ export function useGameConnection() {
       } finally {
         if (!disposed) {
           setIsLoading(false);
-          timer = window.setTimeout(() => {
-            void refresh();
-          }, 2000);
+
+          if (!endpointUnavailable) {
+            timer = window.setTimeout(() => {
+              void refresh();
+            }, 2000);
+          }
         }
       }
     };
