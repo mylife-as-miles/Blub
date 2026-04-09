@@ -13,8 +13,7 @@ export function PhysicsPlaybackControl({
   onResume,
   onSimulate,
   onStep,
-  onStop
-  ,
+  onStop,
   onTogglePossession
 }: {
   mode: "paused" | "running" | "stopped";
@@ -40,10 +39,11 @@ export function PhysicsPlaybackControl({
           {active ? (playing ? "Play" : "Simulate") : "Stopped"}
         </span>
       </div>
-      <PlaybackButton active={playing} icon={Play} label="Play In Viewport" onClick={onPlay} />
-      <PlaybackButton active={simulating} icon={ScanEye} label="Simulate In Viewport" onClick={onSimulate} />
+      <PlaybackButton active={playing} icon={Play} label="Play In Selected Viewport" onClick={onPlay} />
+      <PlaybackButton active={simulating} icon={ScanEye} label="Simulate In Selected Viewport" onClick={onSimulate} />
       <PlaybackButton
         active={mode === "running"}
+        disabled={mode === "stopped"}
         icon={mode === "paused" ? Play : Pause}
         label={mode === "paused" ? "Resume Preview" : "Pause Preview"}
         onClick={mode === "paused" ? onResume : onPause}
@@ -62,7 +62,7 @@ export function PhysicsPlaybackControl({
         label={previewPossessed ? "Eject From Player" : "Possess Player"}
         onClick={onTogglePossession}
       />
-      <PlaybackButton active={mode === "stopped"} icon={Square} label="Stop Preview" onClick={onStop} />
+      <PlaybackButton active={mode === "stopped"} disabled={mode === "stopped"} icon={Square} label="Stop Preview" onClick={onStop} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { BallCollider, CapsuleCollider, ConeCollider, CuboidCollider, CylinderCollider, Physics, RigidBody, TrimeshCollider, type RapierRigidBody } from "@react-three/rapier";
+import { BallCollider, CapsuleCollider, ConeCollider, CuboidCollider, CylinderCollider, Physics, RigidBody, TrimeshCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BackSide,
@@ -41,6 +41,7 @@ import {
 import { createBlockoutTextureDataUri, resolveTransformPivot, toTuple } from "@blud/shared";
 import { GrassField } from "@/viewport/components/GrassField";
 import { createIndexedGeometry } from "@/viewport/utils/geometry";
+import type { PreviewSessionMode } from "@/viewport/types";
 import type { ViewportRenderMode } from "@/viewport/viewports";
 import type { SceneSettings } from "@blud/shared";
 
@@ -94,10 +95,14 @@ export function ScenePreview({
   interactive,
   onFocusNode,
   onMeshObjectChange,
+  onPreviewCursorCapturedChange,
   onSelectNode,
   pathDefinitions,
   physicsPlayback,
   physicsRevision,
+  previewPossessed,
+  previewSessionMode,
+  previewStepTick,
   renderMode = "lit",
   renderScene,
   sceneSettings,
@@ -109,10 +114,14 @@ export function ScenePreview({
   interactive: boolean;
   onFocusNode: (nodeId: string) => void;
   onMeshObjectChange: (nodeId: string, object: Object3D | null) => void;
+  onPreviewCursorCapturedChange?: (captured: boolean) => void;
   onSelectNode: (nodeIds: string[]) => void;
   pathDefinitions?: SceneSettings["paths"];
   physicsPlayback: "paused" | "running" | "stopped";
   physicsRevision: number;
+  previewPossessed: boolean;
+  previewSessionMode: PreviewSessionMode | null;
+  previewStepTick: number;
   renderMode?: ViewportRenderMode;
   renderScene: DerivedRenderScene;
   sceneSettings: SceneSettings;
@@ -206,6 +215,7 @@ export function ScenePreview({
           paused={physicsPlayback !== "running"}
           timeStep={1 / 60}
         >
+          <PhysicsStepController enabled={physicsPlayback === "paused"} stepTick={previewStepTick} />
           {staticMeshes.map((mesh) => (
             <StaticPhysicsCollider key={`collider:${mesh.nodeId}`} mesh={mesh} />
           ))}
@@ -226,7 +236,9 @@ export function ScenePreview({
           ))}
           {playerSpawn ? (
             <RuntimePlayer
+              onCursorCaptureChange={onPreviewCursorCapturedChange}
               physicsPlayback={physicsPlayback}
+              possessed={previewPossessed}
               sceneSettings={sceneSettings}
               spawn={playerSpawn}
             />
@@ -533,12 +545,43 @@ function RenderGroupNode({
   );
 }
 
+function PhysicsStepController({
+  enabled,
+  stepTick
+}: {
+  enabled: boolean;
+  stepTick: number;
+}) {
+  const { step } = useRapier();
+  const lastStepTickRef = useRef(stepTick);
+
+  useEffect(() => {
+    if (!enabled) {
+      lastStepTickRef.current = stepTick;
+      return;
+    }
+
+    if (stepTick === lastStepTickRef.current) {
+      return;
+    }
+
+    lastStepTickRef.current = stepTick;
+    step(1 / 60);
+  }, [enabled, step, stepTick]);
+
+  return null;
+}
+
 function RuntimePlayer({
+  onCursorCaptureChange,
   physicsPlayback,
+  possessed,
   sceneSettings,
   spawn
 }: {
+  onCursorCaptureChange?: (captured: boolean) => void;
   physicsPlayback: "paused" | "running" | "stopped";
+  possessed: boolean;
   sceneSettings: SceneSettings;
   spawn: DerivedEntityMarker;
 }) {
@@ -549,7 +592,13 @@ function RuntimePlayer({
   const yawRef = useRef(spawn.rotation.y);
   const pitchRef = useRef(sceneSettings.player.cameraMode === "fps" ? 0 : -0.2);
   const eyeAnchorRef = useRef<Object3D | null>(null);
+  const mannequinCoreRef = useRef<Object3D | null>(null);
+  const leftArmRef = useRef<Object3D | null>(null);
+  const rightArmRef = useRef<Object3D | null>(null);
+  const leftLegRef = useRef<Object3D | null>(null);
+  const rightLegRef = useRef<Object3D | null>(null);
   const visualRef = useRef<Object3D | null>(null);
+  const stridePhaseRef = useRef(0);
   const cameraPositionRef = useRef(new Vector3());
   const cameraTargetRef = useRef(new Vector3());
   const eyeWorldPositionRef = useRef(new Vector3());
@@ -588,6 +637,10 @@ function RuntimePlayer({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!possessed || physicsPlayback !== "running") {
+        return;
+      }
+
       if (isTextInputTarget(event.target)) {
         return;
       }
@@ -601,6 +654,10 @@ function RuntimePlayer({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
+      if (!possessed) {
+        return;
+      }
+
       keyStateRef.current.delete(event.code);
     };
 
@@ -619,14 +676,27 @@ function RuntimePlayer({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleWindowBlur);
     };
-  }, []);
+  }, [physicsPlayback, possessed]);
+
+  useEffect(() => {
+    if (possessed && physicsPlayback === "running") {
+      return;
+    }
+
+    keyStateRef.current.clear();
+    jumpQueuedRef.current = false;
+  }, [physicsPlayback, possessed]);
 
   useEffect(() => {
     const domElement = gl.domElement;
-    const canLookAround = true;
+    const syncCursorCapture = () => {
+      onCursorCaptureChange?.(
+        possessed && physicsPlayback === "running" && document.pointerLockElement === domElement
+      );
+    };
 
     const handleCanvasClick = () => {
-      if (!canLookAround || physicsPlayback !== "running" || document.pointerLockElement === domElement) {
+      if (!possessed || physicsPlayback !== "running" || document.pointerLockElement === domElement) {
         return;
       }
 
@@ -634,7 +704,7 @@ function RuntimePlayer({
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (!canLookAround || physicsPlayback !== "running" || document.pointerLockElement !== domElement) {
+      if (!possessed || physicsPlayback !== "running" || document.pointerLockElement !== domElement) {
         return;
       }
 
@@ -643,27 +713,44 @@ function RuntimePlayer({
         pitchRef.current - event.movementY * 0.0018,
         sceneSettings.player.cameraMode === "fps" ? -1.35 : -1.25,
         sceneSettings.player.cameraMode === "fps" ? 1.35 : sceneSettings.player.cameraMode === "top-down" ? -0.12 : 0.4
-      );
+        );
     };
 
+    const handlePointerLockChange = () => {
+      syncCursorCapture();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.shiftKey && event.code === "F1" && document.pointerLockElement === domElement) {
+        event.preventDefault();
+        document.exitPointerLock();
+      }
+    };
+
+    syncCursorCapture();
     domElement.addEventListener("click", handleCanvasClick);
     window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerlockchange", handlePointerLockChange);
 
     return () => {
       domElement.removeEventListener("click", handleCanvasClick);
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerlockchange", handlePointerLockChange);
+      onCursorCaptureChange?.(false);
     };
-  }, [gl, physicsPlayback, sceneSettings.player.cameraMode]);
+  }, [gl, onCursorCaptureChange, physicsPlayback, possessed, sceneSettings.player.cameraMode]);
 
   useEffect(() => {
     const domElement = gl.domElement;
 
-    if (physicsPlayback === "running" || document.pointerLockElement !== domElement) {
+    if ((possessed && physicsPlayback === "running") || document.pointerLockElement !== domElement) {
       return;
     }
 
     document.exitPointerLock();
-  }, [gl, physicsPlayback]);
+  }, [gl, physicsPlayback, possessed]);
 
   useFrame((_, delta) => {
     const body = bodyRef.current;
@@ -673,12 +760,13 @@ function RuntimePlayer({
     }
 
     const running = physicsPlayback === "running";
+    const controllingPlayer = running && possessed;
     const translation = body.translation();
     const linearVelocity = body.linvel();
     const keyState = keyStateRef.current;
-    const crouching = running && sceneSettings.player.canCrouch && (keyState.has("ControlLeft") || keyState.has("ControlRight") || keyState.has("KeyC"));
+    const crouching = controllingPlayer && sceneSettings.player.canCrouch && (keyState.has("ControlLeft") || keyState.has("ControlRight") || keyState.has("KeyC"));
     const currentHeight = crouching ? crouchHeight : standingHeight;
-    const speed = sceneSettings.player.canRun && running && (keyState.has("ShiftLeft") || keyState.has("ShiftRight"))
+    const speed = sceneSettings.player.canRun && controllingPlayer && (keyState.has("ShiftLeft") || keyState.has("ShiftRight"))
       ? sceneSettings.player.runningSpeed
       : sceneSettings.player.movementSpeed;
     const moveInputX = (keyState.has("KeyD") || keyState.has("ArrowRight") ? 1 : 0) - (keyState.has("KeyA") || keyState.has("ArrowLeft") ? 1 : 0);
@@ -700,7 +788,7 @@ function RuntimePlayer({
       .addScaledVector(rightDirection, moveInputX)
       .addScaledVector(forwardDirection, moveInputZ);
 
-    if (running) {
+    if (controllingPlayer) {
       if (moveDirection.lengthSq() > 0) {
         moveDirection.normalize().multiplyScalar(crouching ? speed * 0.58 : speed);
       }
@@ -734,12 +822,48 @@ function RuntimePlayer({
 
         jumpQueuedRef.current = false;
       }
+    } else if (running) {
+      body.setLinvel(
+        {
+          x: 0,
+          y: linearVelocity.y,
+          z: 0
+        },
+        true
+      );
+      jumpQueuedRef.current = false;
     }
+
+    const planarSpeed = Math.hypot(linearVelocity.x, linearVelocity.z);
+    const strideIntensity = clampNumber(planarSpeed / Math.max(sceneSettings.player.movementSpeed, 0.001), 0, 1.1);
+    stridePhaseRef.current += delta * Math.max(1.8, planarSpeed * 3.6);
+    const strideWave = Math.sin(stridePhaseRef.current) * strideIntensity;
 
     if (visualRef.current) {
       visualRef.current.rotation.set(0, yawRef.current, 0);
       visualRef.current.scale.y = clampNumber(currentHeight / standingHeight, 0.55, 1);
       visualRef.current.position.y = (standingHeight - currentHeight) * -0.22;
+    }
+
+    if (mannequinCoreRef.current) {
+      mannequinCoreRef.current.position.y = Math.sin(stridePhaseRef.current * 2) * 0.018 * strideIntensity;
+      mannequinCoreRef.current.rotation.z = Math.sin(stridePhaseRef.current) * 0.028 * strideIntensity;
+    }
+
+    if (leftArmRef.current) {
+      leftArmRef.current.rotation.set(-0.24 + strideWave * 0.72, 0, 0.14);
+    }
+
+    if (rightArmRef.current) {
+      rightArmRef.current.rotation.set(-0.24 - strideWave * 0.72, 0, -0.14);
+    }
+
+    if (leftLegRef.current) {
+      leftLegRef.current.rotation.set(-strideWave * 0.82, 0, 0.03);
+    }
+
+    if (rightLegRef.current) {
+      rightLegRef.current.rotation.set(strideWave * 0.82, 0, -0.03);
     }
 
     const eyeHeight = Math.max(colliderRadius * 1.5, currentHeight * 0.92);
@@ -753,30 +877,32 @@ function RuntimePlayer({
       eyePosition.set(translation.x, translation.y - standingHeight * 0.5 + eyeHeight, translation.z);
     }
 
-    cameraTargetRef.current.copy(eyePosition);
-    const nextCameraPosition = cameraPositionRef.current;
-    const nextLookTarget = lookTargetRef.current;
+    if (possessed) {
+      cameraTargetRef.current.copy(eyePosition);
+      const nextCameraPosition = cameraPositionRef.current;
+      const nextLookTarget = lookTargetRef.current;
 
-    if (sceneSettings.player.cameraMode === "fps") {
-      nextCameraPosition.copy(eyePosition);
-      nextLookTarget.copy(eyePosition).add(viewDirection);
-      camera.position.copy(nextCameraPosition);
-      camera.lookAt(nextLookTarget);
-    } else if (sceneSettings.player.cameraMode === "third-person") {
-      const followDistance = Math.max(3.2, standingHeight * 2.7);
+      if (sceneSettings.player.cameraMode === "fps") {
+        nextCameraPosition.copy(eyePosition);
+        nextLookTarget.copy(eyePosition).add(viewDirection);
+        camera.position.copy(nextCameraPosition);
+        camera.lookAt(nextLookTarget);
+      } else if (sceneSettings.player.cameraMode === "third-person") {
+        const followDistance = Math.max(3.2, standingHeight * 2.7);
 
-      nextCameraPosition.copy(eyePosition).addScaledVector(viewDirection, -followDistance);
-      nextCameraPosition.y += standingHeight * 0.24;
-      camera.position.lerp(nextCameraPosition, 1 - Math.exp(-delta * 10));
-      camera.lookAt(eyePosition);
-    } else {
-      const topDownDirection = resolveViewDirection(yawRef.current, pitchRef.current, orbitDirectionRef.current);
-      const followDistance = Math.max(8, standingHeight * 5.2);
+        nextCameraPosition.copy(eyePosition).addScaledVector(viewDirection, -followDistance);
+        nextCameraPosition.y += standingHeight * 0.24;
+        camera.position.lerp(nextCameraPosition, 1 - Math.exp(-delta * 10));
+        camera.lookAt(eyePosition);
+      } else {
+        const topDownDirection = resolveViewDirection(yawRef.current, pitchRef.current, orbitDirectionRef.current);
+        const followDistance = Math.max(8, standingHeight * 5.2);
 
-      nextCameraPosition.copy(eyePosition).addScaledVector(topDownDirection, -followDistance);
-      nextCameraPosition.y += standingHeight * 1.8;
-      camera.position.lerp(nextCameraPosition, 1 - Math.exp(-delta * 8));
-      camera.lookAt(eyePosition);
+        nextCameraPosition.copy(eyePosition).addScaledVector(topDownDirection, -followDistance);
+        nextCameraPosition.y += standingHeight * 1.8;
+        camera.position.lerp(nextCameraPosition, 1 - Math.exp(-delta * 8));
+        camera.lookAt(eyePosition);
+      }
     }
   });
 
@@ -805,14 +931,120 @@ function RuntimePlayer({
       />
       <group>
         <object3D ref={eyeAnchorRef} />
-        <group ref={visualRef} visible={sceneSettings.player.cameraMode !== "fps"}>
-          <mesh castShadow receiveShadow>
-            <primitive attach="geometry" object={playerGeometry} />
-            <meshStandardMaterial color="#7dd3fc" emissive="#0f4c81" emissiveIntensity={0.12} flatShading roughness={0.62} />
-          </mesh>
+        <group ref={visualRef} visible={!possessed || sceneSettings.player.cameraMode !== "fps"}>
+          <PreviewPlayerAvatar
+            bodyGeometry={playerGeometry}
+            colliderRadius={colliderRadius}
+            leftArmRef={leftArmRef}
+            leftLegRef={leftLegRef}
+            mannequinCoreRef={mannequinCoreRef}
+            rightArmRef={rightArmRef}
+            rightLegRef={rightLegRef}
+            standingHeight={standingHeight}
+          />
         </group>
       </group>
     </RigidBody>
+  );
+}
+
+function PreviewPlayerAvatar({
+  bodyGeometry,
+  colliderRadius,
+  leftArmRef,
+  leftLegRef,
+  mannequinCoreRef,
+  rightArmRef,
+  rightLegRef,
+  standingHeight
+}: {
+  bodyGeometry: CapsuleGeometry;
+  colliderRadius: number;
+  leftArmRef: { current: Object3D | null };
+  leftLegRef: { current: Object3D | null };
+  mannequinCoreRef: { current: Object3D | null };
+  rightArmRef: { current: Object3D | null };
+  rightLegRef: { current: Object3D | null };
+  standingHeight: number;
+}) {
+  const shellColor = "#e4e8ef";
+  const panelColor = "#c7cfdb";
+  const jointColor = "#3b4453";
+  const glowColor = "#71d6f6";
+  const armRadius = colliderRadius * 0.26;
+  const legRadius = colliderRadius * 0.29;
+  const armLength = standingHeight * 0.18;
+  const legLength = standingHeight * 0.24;
+
+  return (
+    <group position={[0, 0.04, 0]}>
+      <group ref={mannequinCoreRef}>
+        <mesh castShadow position={[0, 0, 0]} receiveShadow scale={[0.62, 0.58, 0.48]}>
+          <primitive attach="geometry" object={bodyGeometry} />
+          <meshStandardMaterial color={shellColor} emissive={glowColor} emissiveIntensity={0.03} roughness={0.42} />
+        </mesh>
+        <mesh castShadow position={[0, standingHeight * 0.1, colliderRadius * 0.16]} receiveShadow>
+          <boxGeometry args={[colliderRadius * 1.15, standingHeight * 0.18, colliderRadius * 0.42]} />
+          <meshStandardMaterial color={panelColor} roughness={0.36} />
+        </mesh>
+        <mesh castShadow position={[0, standingHeight * 0.31, 0]} receiveShadow>
+          <sphereGeometry args={[colliderRadius * 0.76, 18, 18]} />
+          <meshStandardMaterial color={shellColor} roughness={0.3} />
+        </mesh>
+        <mesh castShadow position={[0, standingHeight * 0.3, colliderRadius * 0.48]} receiveShadow>
+          <boxGeometry args={[colliderRadius * 0.72, colliderRadius * 0.28, colliderRadius * 0.08]} />
+          <meshStandardMaterial color={jointColor} roughness={0.2} metalness={0.08} />
+        </mesh>
+        <mesh castShadow position={[0, -standingHeight * 0.13, 0]} receiveShadow>
+          <boxGeometry args={[colliderRadius * 1.08, standingHeight * 0.18, colliderRadius * 0.64]} />
+          <meshStandardMaterial color={panelColor} roughness={0.46} />
+        </mesh>
+      </group>
+
+      <group position={[colliderRadius * 1.02, standingHeight * 0.18, 0]} ref={leftArmRef}>
+        <mesh castShadow position={[0, -armLength * 0.62, 0]} receiveShadow>
+          <capsuleGeometry args={[armRadius, armLength, 5, 10]} />
+          <meshStandardMaterial color={shellColor} roughness={0.4} />
+        </mesh>
+        <mesh castShadow position={[0, -armLength * 1.18, 0]} receiveShadow>
+          <sphereGeometry args={[armRadius * 0.82, 12, 12]} />
+          <meshStandardMaterial color={jointColor} roughness={0.28} />
+        </mesh>
+      </group>
+
+      <group position={[-colliderRadius * 1.02, standingHeight * 0.18, 0]} ref={rightArmRef}>
+        <mesh castShadow position={[0, -armLength * 0.62, 0]} receiveShadow>
+          <capsuleGeometry args={[armRadius, armLength, 5, 10]} />
+          <meshStandardMaterial color={shellColor} roughness={0.4} />
+        </mesh>
+        <mesh castShadow position={[0, -armLength * 1.18, 0]} receiveShadow>
+          <sphereGeometry args={[armRadius * 0.82, 12, 12]} />
+          <meshStandardMaterial color={jointColor} roughness={0.28} />
+        </mesh>
+      </group>
+
+      <group position={[colliderRadius * 0.44, -standingHeight * 0.18, 0]} ref={leftLegRef}>
+        <mesh castShadow position={[0, -legLength * 0.72, 0]} receiveShadow>
+          <capsuleGeometry args={[legRadius, legLength, 5, 10]} />
+          <meshStandardMaterial color={panelColor} roughness={0.46} />
+        </mesh>
+        <mesh castShadow position={[0, -legLength * 1.36, colliderRadius * 0.08]} receiveShadow>
+          <boxGeometry args={[legRadius * 1.55, legRadius * 0.7, legRadius * 2.1]} />
+          <meshStandardMaterial color={jointColor} roughness={0.24} />
+        </mesh>
+      </group>
+
+      <group position={[-colliderRadius * 0.44, -standingHeight * 0.18, 0]} ref={rightLegRef}>
+        <mesh castShadow position={[0, -legLength * 0.72, 0]} receiveShadow>
+          <capsuleGeometry args={[legRadius, legLength, 5, 10]} />
+          <meshStandardMaterial color={panelColor} roughness={0.46} />
+        </mesh>
+        <mesh castShadow position={[0, -legLength * 1.36, colliderRadius * 0.08]} receiveShadow>
+          <boxGeometry args={[legRadius * 1.55, legRadius * 0.7, legRadius * 2.1]} />
+          <meshStandardMaterial color={jointColor} roughness={0.24} />
+        </mesh>
+      </group>
+    </group>
   );
 }
 

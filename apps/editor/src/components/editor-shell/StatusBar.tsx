@@ -42,14 +42,14 @@ export function StatusBar({
   const previewActive = physicsPlayback !== "stopped";
   const previewText = previewActive
     ? previewPossessed
-      ? `play ${physicsPlayback}`
-      : `${previewSessionMode ?? "simulate"} ${physicsPlayback}`
+      ? `PIE ${physicsPlayback}`
+      : `${previewSessionMode === "play" ? "PIE" : "SIE"} ${physicsPlayback}`
     : "editor";
   const interactionHint =
     previewActive && previewPossessed
       ? "click viewport capture / Shift+F1 release / WASD move / Mouse look / Space jump / F8 eject"
       : previewActive
-        ? "free camera / Alt+S simulate / Alt+P possess / F8 toggle possess / Esc stop"
+        ? "free camera / RMB look / Alt+LMB orbit / F8 possess / Esc stop"
       : activeToolLabel === "Brush"
       ? resolveBrushInteractionHint(activeBrushShape)
       : activeToolLabel === "Mesh Edit" && meshEditMode === "vertex"

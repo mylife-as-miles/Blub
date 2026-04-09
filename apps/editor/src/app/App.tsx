@@ -1924,6 +1924,7 @@ export function App() {
         previewPossessed={previewPossessed}
         previewSessionMode={previewSessionMode}
         previewStepTick={previewStepTick}
+        projectName={resolvedProjectName}
         renderScene={renderScene}
         sceneSettings={editor.scene.settings}
         selectedScenePathId={selectedScenePathId}

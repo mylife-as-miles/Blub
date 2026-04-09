@@ -10,7 +10,7 @@ import { PhysicsPlaybackControl } from "@/components/editor-shell/PhysicsPlaybac
 import { SnapControl } from "@/components/editor-shell/SnapControl";
 import { ViewModeControl } from "@/components/editor-shell/ViewModeControl";
 import type { MeshEditMode } from "@/viewport/editing";
-import type { MeshEditToolbarActionRequest } from "@/viewport/types";
+import type { MeshEditToolbarActionRequest, PreviewSessionMode } from "@/viewport/types";
 import type { ViewModeId } from "@/viewport/viewports";
 
 type ToolPaletteProps = {
@@ -24,6 +24,7 @@ type ToolPaletteProps = {
   onInvertSelectionNormals: () => void;
   onLowerTop: () => void;
   onPausePhysics: () => void;
+  onResumePhysics?: () => void;
   onImportGlb: () => void;
   onPlaceEntity: (type: EntityType) => void;
   onPlaceFloorPreset: (presetId: FloorPresetId) => void;
@@ -34,7 +35,9 @@ type ToolPaletteProps = {
   onPlaceBlockoutStairs: () => void;
   onPlaceProp: (shape: PrimitiveShape) => void;
   onPlayPhysics: () => void;
+  onSimulatePhysics?: () => void;
   onRaiseTop: () => void;
+  onStepPhysics?: () => void;
   onSetSculptBrushRadius: (value: number) => void;
   onSetSculptBrushStrength: (value: number) => void;
   onStartAiModelPlacement: () => void;
@@ -43,9 +46,12 @@ type ToolPaletteProps = {
   onSetSnapEnabled: (enabled: boolean) => void;
   onSetSnapSize: (snapSize: GridSnapValue) => void;
   onStopPhysics: () => void;
+  onTogglePreviewPossession?: () => void;
   onSetTransformMode: (mode: "rotate" | "scale" | "translate") => void;
   onSetViewMode: (viewMode: ViewModeId) => void;
   physicsPlayback: "paused" | "running" | "stopped";
+  previewPossessed?: boolean;
+  previewSessionMode?: PreviewSessionMode | null;
   sculptMode?: "deflate" | "inflate" | null;
   sculptBrushRadius: number;
   sculptBrushStrength: number;
@@ -199,11 +205,17 @@ export function ViewportToolbarControls({
   onPausePhysics,
   onPlaceFloorPreset,
   onPlayPhysics,
+  onResumePhysics,
+  onSimulatePhysics,
+  onStepPhysics,
   onSetSnapEnabled,
   onSetSnapSize,
   onSetViewMode,
   onStopPhysics,
+  onTogglePreviewPossession,
   physicsPlayback,
+  previewPossessed = false,
+  previewSessionMode = null,
   snapEnabled,
   viewMode
 }: Pick<
@@ -213,11 +225,17 @@ export function ViewportToolbarControls({
   | "onPausePhysics"
   | "onPlaceFloorPreset"
   | "onPlayPhysics"
+  | "onResumePhysics"
+  | "onSimulatePhysics"
+  | "onStepPhysics"
   | "onSetSnapEnabled"
   | "onSetSnapSize"
   | "onSetViewMode"
   | "onStopPhysics"
+  | "onTogglePreviewPossession"
   | "physicsPlayback"
+  | "previewPossessed"
+  | "previewSessionMode"
   | "snapEnabled"
   | "viewMode"
 >) {
@@ -231,7 +249,18 @@ export function ViewportToolbarControls({
         onSetSnapSize={onSetSnapSize}
         snapEnabled={snapEnabled}
       />
-      <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
+      <PhysicsPlaybackControl
+        mode={physicsPlayback}
+        onPause={onPausePhysics}
+        onPlay={onPlayPhysics}
+        onResume={onResumePhysics ?? onPlayPhysics}
+        onSimulate={onSimulatePhysics ?? onPlayPhysics}
+        onStep={onStepPhysics ?? (() => undefined)}
+        onStop={onStopPhysics}
+        onTogglePossession={onTogglePreviewPossession ?? (() => undefined)}
+        previewPossessed={previewPossessed}
+        previewSessionMode={previewSessionMode}
+      />
       <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
     </div>
   );

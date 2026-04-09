@@ -3410,15 +3410,53 @@ function DefaultViewportSun({ center }: { center: Vec3 }) {
 
 function ViewportHud({
   isActiveViewport,
+  physicsPlayback,
+  previewMouseCaptured,
+  previewPossessed,
+  previewSessionMode,
   viewport
-}: Pick<ViewportCanvasProps, "isActiveViewport" | "viewport">) {
+}: {
+  isActiveViewport: boolean;
+  physicsPlayback: ViewportCanvasProps["physicsPlayback"];
+  previewMouseCaptured: boolean;
+  previewPossessed: boolean;
+  previewSessionMode: ViewportCanvasProps["previewSessionMode"];
+  viewport: ViewportCanvasProps["viewport"];
+}) {
+  const previewActive = physicsPlayback !== "stopped";
   const navigationHint =
     viewport.projection === "perspective"
       ? "RMB look  RMB + WASD fly  Alt + LMB orbit  Alt + MMB pan  Alt + RMB dolly  F focus"
       : "LMB select  Shift + LMB box select  RMB pan  Wheel zoom";
+  const previewModeLabel = previewSessionMode === "play" ? "Play In Selected Viewport" : "Simulate In Selected Viewport";
+  const previewPaused = physicsPlayback === "paused";
+  const previewHint = previewPaused
+    ? "Preview paused"
+    : previewPossessed
+      ? previewMouseCaptured
+        ? "Shift+F1 for Mouse Cursor"
+        : "Click for Mouse Control"
+      : previewSessionMode === "play"
+        ? "Ejected from Player"
+        : "Simulating in Selected Viewport";
+  const previewControls = previewPaused
+    ? "Resume or Step from toolbar  F8 toggle possess  Esc stop"
+    : previewPossessed
+      ? "WASD move  Mouse look  Space jump  F8 eject  Esc stop"
+      : "RMB look  Alt + LMB orbit  F8 possess  Esc stop";
 
   return (
     <>
+      {previewActive ? (
+        <div className="pointer-events-none absolute left-4 top-4 z-20 rounded-xl border border-[#f6d07d]/40 bg-black/62 px-3 py-2.5 shadow-[0_18px_48px_rgba(0,0,0,0.36)] backdrop-blur-md">
+          <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-[#f6d07d] uppercase">
+            <span className="text-[11px] leading-none text-[#f6d07d]">▶</span>
+            {previewModeLabel}
+          </div>
+          <div className="mt-1 text-[12px] font-semibold tracking-[0.04em] text-white">{previewHint}</div>
+          <div className="mt-1 text-[10px] font-medium tracking-[0.12em] text-white/56 uppercase">{previewControls}</div>
+        </div>
+      ) : null}
       <div className="pointer-events-none absolute bottom-4 left-4 z-20 flex max-w-[min(42rem,calc(100%-8rem))] items-end gap-3">
         <div className="rounded-xl border border-white/10 bg-black/26 px-3 py-2 backdrop-blur-sm">
           <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-white/58 uppercase">
@@ -3427,13 +3465,13 @@ function ViewportHud({
             <span className="text-[#60a5fa]">Z</span>
           </div>
         </div>
-        {isActiveViewport ? (
+        {isActiveViewport && !previewActive ? (
           <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[10px] font-medium tracking-[0.16em] text-white/58 uppercase backdrop-blur-sm">
             {navigationHint}
           </div>
         ) : null}
       </div>
-      <div className="pointer-events-none absolute right-4 top-14 z-20 rounded-xl border border-white/10 bg-black/28 px-3 py-2 text-[10px] font-medium tracking-[0.16em] text-white/58 uppercase backdrop-blur-sm">
+      <div className="pointer-events-none absolute right-4 top-4 z-20 rounded-xl border border-white/10 bg-black/28 px-3 py-2 text-[10px] font-medium tracking-[0.16em] text-white/58 uppercase backdrop-blur-sm">
         Cam {viewport.camera.position.x.toFixed(1)} {viewport.camera.position.y.toFixed(1)} {viewport.camera.position.z.toFixed(1)}
       </div>
     </>

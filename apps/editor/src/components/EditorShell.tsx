@@ -163,6 +163,7 @@ type EditorShellProps = {
   onToggleLogicViewer: () => void;
   onToggleTools: () => void;
   onToggleViewportQuality: () => void;
+  projectName: string;
   onSetViewMode: (viewMode: ViewModeId) => void;
   onSplitBrushAtCoordinate: (nodeId: string, axis: TransformAxis, coordinate: number) => void;
   onPreviewNodeTransform: (nodeId: string, transform: Transform) => void;
@@ -302,6 +303,7 @@ export function EditorShell({
   onToggleLogicViewer,
   onToggleTools,
   onToggleViewportQuality,
+  projectName,
   onSetViewMode,
   onSplitBrushAtCoordinate,
   onPreviewNodeTransform,
@@ -393,6 +395,8 @@ export function EditorShell({
       <ViewportPaneFrame
         active={isActiveViewport}
         key={viewportId}
+        previewActive={physicsPlayback !== "stopped"}
+        sceneLabel={projectName}
         viewport={viewports[viewportId]}
       >
         <ViewportCanvas
@@ -477,13 +481,23 @@ export function EditorShell({
             }}
             onLoadWhmap={onLoadWhmap}
             onNewFile={onNewFile}
+            onPausePreview={onPausePhysics}
+            onPlayPreview={onPlayPhysics}
             onRedo={onRedo}
+            onResumePreview={onResumePhysics}
             onSaveWhmap={onSaveWhmap}
+            onSimulatePreview={onSimulatePhysics}
+            onStepPreview={onStepPhysics}
+            onStopPreview={onStopPhysics}
             onToggleCopilot={onToggleCopilot}
             onToggleLogicViewer={onToggleLogicViewer}
+            onTogglePreviewPossession={onTogglePreviewPossession}
             onToggleTools={onToggleTools}
             onToggleViewportQuality={onToggleViewportQuality}
             onUndo={onUndo}
+            physicsPlayback={physicsPlayback}
+            previewPossessed={previewPossessed}
+            previewSessionMode={previewSessionMode}
             toolsPanelOpen={toolsPanelOpen}
             viewportQuality={viewportQuality}
           />
@@ -553,7 +567,12 @@ export function EditorShell({
 
         <div className="editor-stage relative min-w-0 flex-1 rounded-[32px]">
           <div className="absolute inset-0">
-            <ViewportLayout renderViewportPane={renderViewportPane} viewMode={viewMode} />
+            <ViewportLayout
+              activeViewportId={activeViewportId}
+              previewActive={physicsPlayback !== "stopped"}
+              renderViewportPane={renderViewportPane}
+              viewMode={viewMode}
+            />
           </div>
 
           {gameViewUrl && (
@@ -707,13 +726,21 @@ function resolveViewportDprScale(quality: ViewportQuality) {
 }
 
 function ViewportLayout({
+  activeViewportId,
+  previewActive,
   renderViewportPane,
   viewMode
 }: {
+  activeViewportId: ViewportPaneId;
+  previewActive: boolean;
   renderViewportPane: (viewportId: ViewportPaneId) => ReactNode;
   viewMode: ViewModeId;
 }) {
   const preset = getViewModePreset(viewMode);
+
+  if (previewActive) {
+    return <div className="size-full">{renderViewportPane(activeViewportId)}</div>;
+  }
 
   if (preset.layout === "single") {
     return <div className="size-full">{renderViewportPane("perspective")}</div>;
@@ -765,25 +792,45 @@ function ViewportLayout({
 function ViewportPaneFrame({
   active,
   children,
+  previewActive,
+  sceneLabel,
   viewport
 }: {
   active: boolean;
   children: ReactNode;
+  previewActive: boolean;
+  sceneLabel: string;
   viewport: ViewportState;
 }) {
   const target = viewport.camera.target;
+  const selectedViewportPreview = active && previewActive;
 
   return (
     <div
       className={cn(
         "relative size-full overflow-hidden bg-[#14181f]",
-        active ? "ring-1 ring-inset ring-[#f6d07d]/28" : "ring-1 ring-inset ring-white/7"
+        selectedViewportPreview
+          ? "ring-1 ring-inset ring-[#f6d07d]/72 shadow-[inset_0_0_0_1px_rgba(246,208,125,0.18)]"
+          : active
+            ? "ring-1 ring-inset ring-[#f6d07d]/28"
+            : "ring-1 ring-inset ring-white/7"
       )}
     >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0)_12%),radial-gradient(circle_at_top,rgba(148,163,184,0.16),transparent_48%)]" />
-      <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
-        Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}
-      </div>
+      {selectedViewportPreview ? (
+        <>
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-[#f6d07d]/92" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-px bg-[#f6d07d]/92" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-px bg-[#f6d07d]/72" />
+          <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.14em] text-[#d9e5f6]/78 uppercase backdrop-blur-sm">
+            Level: {sceneLabel} (Selected Viewport)
+          </div>
+        </>
+      ) : (
+        <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
+          Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}
+        </div>
+      )}
       {children}
     </div>
   );

@@ -1,4 +1,4 @@
-import { Bot, Cable, Gauge } from "lucide-react";
+import { Bot, Cable, Gauge, Pause, Play, ScanEye, SkipForward, Square, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,8 @@ import {
   MenubarTrigger
 } from "@/components/ui/menubar";
 import { BlobIcon } from "@/components/editor-shell/icons";
+import { cn } from "@/lib/utils";
+import type { PreviewSessionMode } from "@/viewport/types";
 import type { ViewportQuality } from "@/state/ui-store";
 
 type EditorMenuBarProps = {
@@ -28,13 +30,23 @@ type EditorMenuBarProps = {
   onFocusSelection: () => void;
   onLoadWhmap: () => void;
   onNewFile: () => void;
+  onPausePreview: () => void;
+  onPlayPreview: () => void;
   onRedo: () => void;
+  onResumePreview: () => void;
   onSaveWhmap: () => void;
+  onSimulatePreview: () => void;
+  onStepPreview: () => void;
+  onStopPreview: () => void;
   onToggleCopilot: () => void;
   onToggleLogicViewer: () => void;
+  onTogglePreviewPossession: () => void;
   onToggleTools: () => void;
   onToggleViewportQuality: () => void;
   onUndo: () => void;
+  physicsPlayback: "paused" | "running" | "stopped";
+  previewPossessed: boolean;
+  previewSessionMode: PreviewSessionMode | null;
   toolsPanelOpen: boolean;
   viewportQuality: ViewportQuality;
 };
@@ -55,16 +67,30 @@ export function EditorMenuBar({
   onFocusSelection,
   onLoadWhmap,
   onNewFile,
+  onPausePreview,
+  onPlayPreview,
   onRedo,
+  onResumePreview,
   onSaveWhmap,
+  onSimulatePreview,
+  onStepPreview,
+  onStopPreview,
   onToggleCopilot,
   onToggleLogicViewer,
+  onTogglePreviewPossession,
   onToggleTools,
   onToggleViewportQuality,
+  physicsPlayback,
+  previewPossessed,
+  previewSessionMode,
   toolsPanelOpen,
   viewportQuality,
   onUndo
 }: EditorMenuBarProps) {
+  const previewActive = physicsPlayback !== "stopped";
+  const previewPaused = physicsPlayback === "paused";
+  const previewModeLabel = previewSessionMode === "play" ? "PIE" : previewSessionMode === "simulate" ? "SIE" : "Selected Viewport";
+
   return (
     <div className="flex min-h-[3.25rem] flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-3.5">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
@@ -163,6 +189,28 @@ export function EditorMenuBar({
                     Tools
                   </MenubarTrigger>
                   <MenubarContent className="min-w-48 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs" onClick={onPlayPreview}>
+                      Play In Selected Viewport
+                      <MenubarShortcut>Alt+P</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onSimulatePreview}>
+                      Simulate In Viewport
+                      <MenubarShortcut>Alt+S</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" disabled={!previewActive} onClick={previewPaused ? onResumePreview : onPausePreview}>
+                      {previewPaused ? "Resume Preview" : "Pause Preview"}
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" disabled={!previewActive} onClick={onTogglePreviewPossession}>
+                      {previewPossessed ? "Eject From Player" : "Possess Player"}
+                      <MenubarShortcut>F8</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" disabled={!previewPaused} onClick={onStepPreview}>
+                      Step One Frame
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" disabled={!previewActive} onClick={onStopPreview}>
+                      Stop Preview
+                      <MenubarShortcut>Esc</MenubarShortcut>
+                    </MenubarItem>
                     <MenubarItem className="rounded-lg text-xs" onClick={onToggleTools}>
                       {toolsPanelOpen ? "Hide" : "Show"} Tools Panel
                     </MenubarItem>
@@ -214,6 +262,91 @@ export function EditorMenuBar({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        <div className="editor-toolbar-segment flex items-center gap-1 rounded-[14px] px-1.5 py-1">
+          <span className="hidden pl-1 text-[9px] font-semibold tracking-[0.16em] text-white/38 uppercase xl:block">
+            Preview
+          </span>
+          <span className="editor-toolbar-readout hidden rounded-[10px] px-2.5 py-1 text-[9px] font-semibold tracking-[0.18em] uppercase sm:block">
+            {previewModeLabel}
+          </span>
+          <Button
+            aria-label="Play in selected viewport"
+            className={cn(
+              "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100",
+              previewSessionMode === "play" && "editor-toolbar-button-active text-[#fff0cb]"
+            )}
+            onClick={onPlayPreview}
+            size="icon-sm"
+            title="Play In Selected Viewport (Alt+P)"
+            variant="ghost"
+          >
+            <Play className="size-3.5" />
+          </Button>
+          <Button
+            aria-label="Simulate in viewport"
+            className={cn(
+              "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100",
+              previewSessionMode === "simulate" && "editor-toolbar-button-active text-[#fff0cb]"
+            )}
+            onClick={onSimulatePreview}
+            size="icon-sm"
+            title="Simulate In Viewport (Alt+S)"
+            variant="ghost"
+          >
+            <ScanEye className="size-3.5" />
+          </Button>
+          <div className="editor-toolbar-divider hidden sm:block" />
+          <Button
+            aria-label={previewPaused ? "Resume preview" : "Pause preview"}
+            className={cn(
+              "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100",
+              previewActive && !previewPaused && "editor-toolbar-button-active text-[#fff0cb]"
+            )}
+            disabled={!previewActive}
+            onClick={previewPaused ? onResumePreview : onPausePreview}
+            size="icon-sm"
+            title={previewPaused ? "Resume Preview" : "Pause Preview"}
+            variant="ghost"
+          >
+            {previewPaused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
+          </Button>
+          <Button
+            aria-label="Step one frame"
+            className="editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100"
+            disabled={!previewPaused}
+            onClick={onStepPreview}
+            size="icon-sm"
+            title="Step One Frame"
+            variant="ghost"
+          >
+            <SkipForward className="size-3.5" />
+          </Button>
+          <Button
+            aria-label={previewPossessed ? "Eject from player" : "Possess player"}
+            className={cn(
+              "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100",
+              previewActive && previewPossessed && "editor-toolbar-button-active text-[#fff0cb]"
+            )}
+            disabled={!previewActive}
+            onClick={onTogglePreviewPossession}
+            size="icon-sm"
+            title={previewPossessed ? "Eject From Player (F8)" : "Possess Player (F8)"}
+            variant="ghost"
+          >
+            <UserRound className="size-3.5" />
+          </Button>
+          <Button
+            aria-label="Stop preview"
+            className="editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100"
+            disabled={!previewActive}
+            onClick={onStopPreview}
+            size="icon-sm"
+            title="Stop Preview (Esc)"
+            variant="ghost"
+          >
+            <Square className="size-3.5" />
+          </Button>
+        </div>
         {gameConnectionControl ? (
           <div className="editor-toolbar-segment flex items-center gap-1 rounded-[14px] px-1.5 py-1">
             <span className="hidden pl-1 text-[9px] font-semibold tracking-[0.16em] text-white/38 uppercase xl:block">
