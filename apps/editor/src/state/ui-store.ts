@@ -12,6 +12,7 @@ type UiStore = {
   rightPanel: RightPanelId | null;
   selectedAssetId: string;
   selectedMaterialId: string;
+  toolsPanelOpen: boolean;
   viewMode: ViewModeId;
   viewportQuality: ViewportQuality;
   viewports: Record<ViewportPaneId, ViewportState>;
@@ -24,6 +25,7 @@ export const uiStore = proxy<UiStore>({
   rightPanel: null,
   selectedAssetId: "",
   selectedMaterialId: "material:blockout:concrete",
+  toolsPanelOpen: false,
   viewMode: "3d-only",
   viewportQuality: 0.5,
   viewports: createEditorViewports()

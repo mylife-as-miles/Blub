@@ -32,8 +32,10 @@ type EditorMenuBarProps = {
   onSaveWhmap: () => void;
   onToggleCopilot: () => void;
   onToggleLogicViewer: () => void;
+  onToggleTools: () => void;
   onToggleViewportQuality: () => void;
   onUndo: () => void;
+  toolsPanelOpen: boolean;
   viewportQuality: ViewportQuality;
 };
 
@@ -57,7 +59,9 @@ export function EditorMenuBar({
   onSaveWhmap,
   onToggleCopilot,
   onToggleLogicViewer,
+  onToggleTools,
   onToggleViewportQuality,
+  toolsPanelOpen,
   viewportQuality,
   onUndo
 }: EditorMenuBarProps) {
@@ -150,6 +154,20 @@ export function EditorMenuBar({
                   <MenubarContent className="min-w-44 p-1.5">
                     <MenubarItem className="rounded-lg text-xs" onClick={onFocusSelection}>
                       Focus Selection
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+
+                <MenubarMenu>
+                  <MenubarTrigger>
+                    Tools
+                  </MenubarTrigger>
+                  <MenubarContent className="min-w-48 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs" onClick={onToggleTools}>
+                      {toolsPanelOpen ? "Hide" : "Show"} Tools Panel
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onCreateBrush}>
+                      Activate Brush Tool
                     </MenubarItem>
                   </MenubarContent>
                 </MenubarMenu>

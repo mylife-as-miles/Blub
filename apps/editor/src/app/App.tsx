@@ -1711,6 +1711,10 @@ export function App() {
     uiStore.logicViewerOpen = !uiStore.logicViewerOpen;
   };
 
+  const handleToggleToolsPanel = () => {
+    uiStore.toolsPanelOpen = !uiStore.toolsPanelOpen;
+  };
+
   useAppHotkeys({
     activeToolId,
     editor,
@@ -1764,6 +1768,7 @@ export function App() {
         logicViewerOpen={ui.logicViewerOpen}
         onToggleCopilot={handleToggleCopilot}
         onToggleLogicViewer={handleToggleLogicViewer}
+        onToggleTools={handleToggleToolsPanel}
         aiModelPlacementActive={Boolean(aiModelDraft)}
         aiModelPlacementArmed={aiModelPlacementArmed}
         aiModelPrompt={aiModelDraft?.prompt ?? ""}
@@ -1875,6 +1880,7 @@ export function App() {
         selectedAssetId={ui.selectedAssetId}
         selectedFaceIds={selectedMaterialFaceIds}
         selectedMaterialId={ui.selectedMaterialId}
+        toolsPanelOpen={ui.toolsPanelOpen}
         transformMode={transformMode}
         textures={Array.from(editor.scene.textures.values())}
         tools={defaultTools}

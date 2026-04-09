@@ -26,8 +26,7 @@ import { AiModelPromptBar } from "@/components/editor-shell/AiModelPromptBar";
 import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
 import { InspectorSidebar } from "@/components/editor-shell/InspectorSidebar";
 import { StatusBar } from "@/components/editor-shell/StatusBar";
-import { ToolIconSidebar } from "@/components/editor-shell/ToolIconSidebar";
-import { ToolPalette, ViewportToolbarControls } from "@/components/editor-shell/ToolPalette";
+import { ToolsPanel } from "@/components/editor-shell/ToolsPanel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ViewportCanvas } from "@/viewport/ViewportCanvas";
 import type { MeshEditMode } from "@/viewport/editing";
@@ -69,6 +68,7 @@ type EditorShellProps = {
   copilotPanelOpen: boolean;
   gameConnectionControl?: ReactNode;
   logicViewerOpen: boolean;
+  toolsPanelOpen: boolean;
   aiModelPlacementArmed: boolean;
   aiModelPrompt: string;
   aiModelPromptBusy: boolean;
@@ -157,6 +157,7 @@ type EditorShellProps = {
   onSetToolId: (toolId: ToolId) => void;
   onToggleCopilot: () => void;
   onToggleLogicViewer: () => void;
+  onToggleTools: () => void;
   onToggleViewportQuality: () => void;
   onSetViewMode: (viewMode: ViewModeId) => void;
   onSplitBrushAtCoordinate: (nodeId: string, axis: TransformAxis, coordinate: number) => void;
@@ -200,6 +201,7 @@ export function EditorShell({
   copilotPanelOpen,
   gameConnectionControl,
   logicViewerOpen,
+  toolsPanelOpen,
   aiModelPrompt,
   aiModelPromptBusy,
   aiModelPromptError,
@@ -287,6 +289,7 @@ export function EditorShell({
   onSetToolId,
   onToggleCopilot,
   onToggleLogicViewer,
+  onToggleTools,
   onToggleViewportQuality,
   onSetViewMode,
   onSplitBrushAtCoordinate,
@@ -378,24 +381,6 @@ export function EditorShell({
         key={viewportId}
         label={definition.label}
         renderMode={definition.renderMode}
-        toolbar={
-          isActiveViewport ? (
-            <ViewportToolbarControls
-              currentSnapSize={activeViewport.grid.snapSize}
-              gridSnapValues={gridSnapValues}
-              onPausePhysics={onPausePhysics}
-              onPlaceFloorPreset={onPlaceFloorPreset}
-              onPlayPhysics={onPlayPhysics}
-              onSetSnapEnabled={onSetSnapEnabled}
-              onSetSnapSize={onSetSnapSize}
-              onSetViewMode={onSetViewMode}
-              onStopPhysics={onStopPhysics}
-              physicsPlayback={physicsPlayback}
-              snapEnabled={activeViewport.grid.enabled}
-              viewMode={viewMode}
-            />
-          ) : null
-        }
         viewport={viewports[viewportId]}
       >
         <ViewportCanvas
@@ -481,14 +466,67 @@ export function EditorShell({
             onSaveWhmap={onSaveWhmap}
             onToggleCopilot={onToggleCopilot}
             onToggleLogicViewer={onToggleLogicViewer}
+            onToggleTools={onToggleTools}
             onToggleViewportQuality={onToggleViewportQuality}
             onUndo={onUndo}
+            toolsPanelOpen={toolsPanelOpen}
             viewportQuality={viewportQuality}
           />
         </div>
       </header>
 
       <main className="relative flex min-h-0 flex-1 gap-2 px-2 pb-2 pt-1.5 sm:gap-3 sm:px-3 sm:pb-3 sm:pt-2">
+        {toolsPanelOpen && (
+          <div className="w-64 shrink-0 sm:w-80 lg:w-[22rem]">
+            <ToolsPanel
+              activeBrushShape={activeBrushShape}
+              aiModelPlacementActive={aiModelPlacementActive || aiModelPlacementArmed}
+              activeToolId={activeToolId}
+              currentSnapSize={activeViewport.grid.snapSize}
+              gridSnapValues={gridSnapValues}
+              meshEditMode={meshEditMode}
+              onClose={onToggleTools}
+              onImportGlb={onImportGlb}
+              onLowerTop={() => onExtrudeSelection("y", -1)}
+              onMeshEditToolbarAction={onMeshEditToolbarAction}
+              onPausePhysics={onPausePhysics}
+              onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
+              onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
+              onPlaceBlockoutRoom={onPlaceBlockoutRoom}
+              onPlaceBlockoutStairs={onPlaceBlockoutStairs}
+              onPlaceEntity={onPlaceEntity}
+              onPlaceFloorPreset={onPlaceFloorPreset}
+              onPlaceLight={onPlaceLight}
+              onPlaceProp={onPlaceProp}
+              onPlayPhysics={onPlayPhysics}
+              onRaiseTop={() => onExtrudeSelection("y", 1)}
+              onSelectBrushShape={(shape) => {
+                onSetActiveBrushShape(shape);
+                onSetToolId("brush");
+              }}
+              onSetMeshEditMode={onSetMeshEditMode}
+              onSetSculptBrushRadius={onSetSculptBrushRadius}
+              onSetSculptBrushStrength={onSetSculptBrushStrength}
+              onSetSnapEnabled={onSetSnapEnabled}
+              onSetSnapSize={onSetSnapSize}
+              onSetToolId={onSetToolId}
+              onSetTransformMode={onSetTransformMode}
+              onSetViewMode={onSetViewMode}
+              onStartAiModelPlacement={onStartAiModelPlacement}
+              onStopPhysics={onStopPhysics}
+              physicsPlayback={physicsPlayback}
+              sculptBrushRadius={sculptBrushRadius}
+              sculptBrushStrength={sculptBrushStrength}
+              sculptMode={sculptMode}
+              selectedGeometry={selectedIsGeometry}
+              selectedMesh={selectedIsMesh}
+              snapEnabled={activeViewport.grid.enabled}
+              transformMode={transformMode}
+              viewMode={viewMode}
+            />
+          </div>
+        )}
+
         <div className="editor-stage relative min-w-0 flex-1 rounded-[32px]">
           <div className="absolute inset-0">
             <ViewportLayout renderViewportPane={renderViewportPane} viewMode={viewMode} />
@@ -514,54 +552,6 @@ export function EditorShell({
               </Suspense>
             </div>
           )}
-
-        <ToolPalette
-          activeBrushShape={activeBrushShape}
-          aiModelPlacementActive={aiModelPlacementActive || aiModelPlacementArmed}
-          activeToolId={activeToolId}
-          currentSnapSize={activeViewport.grid.snapSize}
-          gridSnapValues={gridSnapValues}
-          meshEditMode={meshEditMode}
-          onInvertSelectionNormals={onInvertSelectionNormals}
-          onLowerTop={() => onExtrudeSelection("y", -1)}
-          onPausePhysics={onPausePhysics}
-          onMeshEditToolbarAction={onMeshEditToolbarAction}
-          onImportGlb={onImportGlb}
-          onPlaceEntity={onPlaceEntity}
-          onPlaceFloorPreset={onPlaceFloorPreset}
-          onPlaceLight={onPlaceLight}
-          onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
-          onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
-          onPlaceBlockoutRoom={onPlaceBlockoutRoom}
-          onPlaceBlockoutStairs={onPlaceBlockoutStairs}
-          onPlaceProp={onPlaceProp}
-          onPlayPhysics={onPlayPhysics}
-          onRaiseTop={() => onExtrudeSelection("y", 1)}
-          onSetSculptBrushRadius={onSetSculptBrushRadius}
-          onSetSculptBrushStrength={onSetSculptBrushStrength}
-          onStartAiModelPlacement={onStartAiModelPlacement}
-          onSelectBrushShape={(shape) => {
-            onSetActiveBrushShape(shape);
-            onSetToolId("brush");
-          }}
-          onSetMeshEditMode={onSetMeshEditMode}
-          onSetSnapEnabled={onSetSnapEnabled}
-          onSetSnapSize={onSetSnapSize}
-          onStopPhysics={onStopPhysics}
-          onSetTransformMode={onSetTransformMode}
-          onSetViewMode={onSetViewMode}
-          physicsPlayback={physicsPlayback}
-          sculptMode={sculptMode}
-          sculptBrushRadius={sculptBrushRadius}
-          sculptBrushStrength={sculptBrushStrength}
-          selectedGeometry={selectedIsGeometry}
-          selectedMesh={selectedIsMesh}
-          snapEnabled={activeViewport.grid.enabled}
-          transformMode={transformMode}
-          viewMode={viewMode}
-        />
-
-        <ToolIconSidebar activeToolId={activeToolId} onSetToolId={onSetToolId} />
 
         <AiModelPromptBar
           active={aiModelPlacementActive}
@@ -750,14 +740,12 @@ function ViewportPaneFrame({
   children,
   label,
   renderMode,
-  toolbar,
   viewport
 }: {
   active: boolean;
   children: ReactNode;
   label: string;
   renderMode: "lit" | "wireframe";
-  toolbar?: ReactNode;
   viewport: ViewportState;
 }) {
   const target = viewport.camera.target;
@@ -791,11 +779,6 @@ function ViewportPaneFrame({
             ) : null}
           </div>
         </div>
-        {active && toolbar ? (
-          <div className="pointer-events-auto mt-2 flex max-w-full overflow-hidden">
-            {toolbar}
-          </div>
-        ) : null}
       </div>
       <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
         Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}
