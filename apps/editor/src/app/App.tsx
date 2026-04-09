@@ -168,6 +168,7 @@ export function App() {
   const latestDraftRef = useRef<ReturnType<typeof buildSceneDraftPayload> | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const glbImportInputRef = useRef<HTMLInputElement | null>(null);
+  const previewRestoreViewportIdRef = useRef<ViewportPaneId | null>(null);
   const renderSceneCacheRef = useRef(createDerivedRenderSceneCache());
   const ui = useSnapshot(uiStore);
   const toolSession = useMemo(() => createToolSession(activeToolId), [activeToolId]);
@@ -1425,18 +1426,24 @@ export function App() {
     enqueueWorkerJob("Scene settings", { task: "triangulation", worker: "geometryWorker" }, 300);
   };
 
-  const handlePlayPhysics = () => {
+  const beginPreviewSession = (mode: PreviewSessionMode, possessed: boolean) => {
+    if (physicsPlayback === "stopped") {
+      previewRestoreViewportIdRef.current = uiStore.activeViewportId;
+    }
+
     editor.clearSelection();
-    setPreviewSessionMode("play");
-    setPreviewPossessed(true);
+    uiStore.activeViewportId = "perspective";
+    setPreviewSessionMode(mode);
+    setPreviewPossessed(possessed);
     setPhysicsPlayback("running");
   };
 
+  const handlePlayPhysics = () => {
+    beginPreviewSession("play", true);
+  };
+
   const handleSimulatePhysics = () => {
-    editor.clearSelection();
-    setPreviewSessionMode("simulate");
-    setPreviewPossessed(false);
-    setPhysicsPlayback("running");
+    beginPreviewSession("simulate", false);
   };
 
   const handlePausePhysics = () => {
@@ -1472,6 +1479,11 @@ export function App() {
     setPreviewSessionMode(null);
     setPreviewPossessed(false);
     setPhysicsRevision((current) => current + 1);
+
+    if (previewRestoreViewportIdRef.current) {
+      uiStore.activeViewportId = previewRestoreViewportIdRef.current;
+      previewRestoreViewportIdRef.current = null;
+    }
   };
 
   const buildEditorSnapshot = () => ({

@@ -739,7 +739,7 @@ function ViewportLayout({
   const preset = getViewModePreset(viewMode);
 
   if (previewActive) {
-    return <div className="size-full">{renderViewportPane(activeViewportId)}</div>;
+    return <div className="size-full">{renderViewportPane("perspective")}</div>;
   }
 
   if (preset.layout === "single") {
