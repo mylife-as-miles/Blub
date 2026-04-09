@@ -56,28 +56,35 @@ function registerApi(
       return;
     }
 
-    if (pathname === VOICES_PATH && req.method === "GET") {
+    const isVoices = pathname === VOICES_PATH || pathname?.endsWith(VOICES_PATH);
+    const isTts = pathname === TTS_PATH || pathname?.endsWith(TTS_PATH);
+    const isSfx = pathname === SFX_PATH || pathname?.endsWith(SFX_PATH);
+    const isVoiceAdd = pathname === VOICE_ADD_PATH || pathname?.endsWith(VOICE_ADD_PATH);
+    const isVoiceDel = pathname?.includes(VOICE_DEL_PREFIX) && req.method === "DELETE";
+
+    if (isVoices && req.method === "GET") {
       await handleVoices(res);
       return;
     }
 
-    if (pathname === TTS_PATH && req.method === "POST") {
+    if (isTts && req.method === "POST") {
       await handleTts(req, res);
       return;
     }
 
-    if (pathname === SFX_PATH && req.method === "POST") {
+    if (isSfx && req.method === "POST") {
       await handleSfx(req, res);
       return;
     }
 
-    if (pathname === VOICE_ADD_PATH && req.method === "POST") {
+    if (isVoiceAdd && req.method === "POST") {
       await handleVoiceAdd(req, res);
       return;
     }
 
-    if (pathname?.startsWith(VOICE_DEL_PREFIX) && req.method === "DELETE") {
-      const voiceId = pathname.slice(VOICE_DEL_PREFIX.length);
+    if (isVoiceDel) {
+      const parts = pathname!.split(VOICE_DEL_PREFIX);
+      const voiceId = parts[parts.length - 1];
       await handleVoiceDelete(voiceId, res);
       return;
     }

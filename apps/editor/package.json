@@ -31,6 +31,7 @@
     "@blud/runtime-build": "*",
     "@blud/runtime-scripting": "*",
     "@blud/shared": "*",
+    "@blud/skatepark": "*",
     "@blud/three-runtime": "*",
     "@blud/tool-system": "*",
     "@blud/workers": "*",

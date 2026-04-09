@@ -1125,7 +1125,31 @@ function updateCaustics(t) {
 // Call updateCaustics(elapsedTime) in the animation loop only when underwater or water covers ground.
 \`\`\`
 
-#### 6 — Water GUI settings folder
+#### 8 — Digital Twin / IoT Dashboard Template
+Use this pattern when the user asks for a physical space monitoring platform or "Digital Twin". It combines Three.js spatial layouts with simulated sensor data and integrated thoughts.
+
+\`\`\`html
+<!-- High-Level Structure:
+1. Glassmorphism UI Overlay (Sidebar for metrics, footer for AI thoughts).
+2. Three.js Scene representing the 145sqm (or requested size) space.
+3. Points-based Heatmap (for temperature/air quality).
+4. window.elevenlabs integration for vocalized status reports. -->
+
+<script>
+// Key patterns for Digital Twin logic:
+function updateSensors(state) {
+  state.temp += (Math.random()-0.5)*0.1;
+  // Update UI and Heatmap...
+}
+
+async function reportStatus(text) {
+  displayMessage(text);
+  if (window.elevenlabs) await window.elevenlabs.speak(text);
+}
+</script>
+\`\`\`
+
+#### 9 — Water GUI settings folder
 \`\`\`js
 const waterFolder = gui.addFolder('Water')
 waterFolder.add({height:1.8}, 'height', 0, 5, 0.01).name('Wave height').onChange(v => waveHeight.value=v)

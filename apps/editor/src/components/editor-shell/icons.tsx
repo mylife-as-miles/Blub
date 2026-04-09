@@ -381,6 +381,46 @@ export function AmbientLightIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function SkateparkRampIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" {...props}>
+      <path d="M4 18h16M4 18c8 0 12-4 12-12" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function SkateparkRailIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" {...props}>
+      <path d="M4 16h16M6 16v-4M18 16v-4M4 12h16" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function SkateparkBowlIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" {...props}>
+      <path d="M4 10c0 6.6 3.6 10 8 10s8-3.4 8-10M4 10h16" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function SkateparkBoxIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" {...props}>
+      <path d="M4 18h16V10H4v8ZM4 10l4-4h8l4 4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function SkateparkStairIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" {...props}>
+      <path d="M4 18h4v-4h4v-4h4v-4h4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 export function toolIconFor(toolId: ToolId) {
   switch (toolId) {
     case "select":

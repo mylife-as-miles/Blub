@@ -98,6 +98,25 @@ import { useAppHotkeys } from "@/app/hooks/useAppHotkeys";
 import { useCopilot } from "@/app/hooks/useCopilot";
 import { GameConnectionControl } from "@/components/editor-shell/GameConnectionControl";
 import { useEditorSubscriptions } from "@/app/hooks/useEditorSubscriptions";
+import {
+  buildBank,
+  buildBowl,
+  buildFunBox,
+  buildHalfPipe,
+  buildHip,
+  buildHubbaLedge,
+  buildKicker,
+  buildLedge,
+  buildManualPad,
+  buildPyramid,
+  buildQuarterPipe,
+  buildRail,
+  buildSpine,
+  buildStairSet,
+  skateparkMaterials
+} from "@blud/skatepark";
+import type { SkateparkElementType } from "@blud/shared";
+
 import { useExportWorker } from "@/app/hooks/useExportWorker";
 import { clampSnapSize, resolveViewportSnapSize } from "@/viewport/utils/snap";
 import type { MeshEditToolbarActionRequest, PreviewSessionMode } from "@/viewport/types";
