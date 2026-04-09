@@ -1960,6 +1960,7 @@ export function App() {
         }
         logicViewerOpen={ui.logicViewerOpen}
         onToggleCopilot={handleToggleCopilot}
+        onPlaceSkateparkElement={handlePlaceSkateparkElement}
         onToggleLogicViewer={handleToggleLogicViewer}
         onToggleTools={handleToggleToolsPanel}
         aiModelPlacementActive={Boolean(aiModelDraft)}
