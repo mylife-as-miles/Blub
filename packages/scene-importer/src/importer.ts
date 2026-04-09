@@ -353,7 +353,14 @@ function analyzeScript(
       }
 
       if (calleeName.startsWith("document.") || calleeName.includes("document.body") || calleeName.endsWith(".appendChild")) {
-        analysis.diagnostics.push(createDiagnostic("dom-ownership", "warning", "DOM ownership code was omitted. Blob keeps renderer and shell ownership.", path.hub.file.opts.filename));
+        analysis.diagnostics.push(
+          createDiagnostic(
+            "dom-ownership",
+            "warning",
+            "DOM ownership code was omitted. Blob keeps renderer and shell ownership.",
+            resolveTraversalFilename(path.hub, entrypoint)
+          )
+        );
         analysis.needsCustomScript = true;
       }
 
@@ -380,14 +387,32 @@ function analyzeScript(
 
         if (!t.isStringLiteral(pathArgument)) {
           analysis.needsCustomScript = true;
-          analysis.diagnostics.push(createDiagnostic("dynamic-model-load", "warning", "Dynamic GLTFLoader paths require a manual follow-up after import.", path.hub.file.opts.filename));
+          analysis.diagnostics.push(
+            createDiagnostic(
+              "dynamic-model-load",
+              "warning",
+              "Dynamic GLTFLoader paths require a manual follow-up after import.",
+              resolveTraversalFilename(path.hub, entrypoint)
+            )
+          );
           return;
         }
 
-        const asset = createModelAsset(project, resolveRelativePath(path.hub.file.opts.filename ?? entrypoint, pathArgument.value), analysis.modelLoads.length + 1);
+        const asset = createModelAsset(
+          project,
+          resolveRelativePath(resolveTraversalFilename(path.hub, entrypoint), pathArgument.value),
+          analysis.modelLoads.length + 1
+        );
 
         if (!asset) {
-          analysis.diagnostics.push(createDiagnostic("model-asset-missing", "warning", `Model asset "${pathArgument.value}" was referenced but not found in the imported payload.`, path.hub.file.opts.filename));
+          analysis.diagnostics.push(
+            createDiagnostic(
+              "model-asset-missing",
+              "warning",
+              `Model asset "${pathArgument.value}" was referenced but not found in the imported payload.`,
+              resolveTraversalFilename(path.hub, entrypoint)
+            )
+          );
           return;
         }
 
@@ -403,7 +428,14 @@ function analyzeScript(
         analysis.physicsDetected = true;
 
         if (t.isIdentifier(path.node.callee.property, { name: "createVehicleController" })) {
-          analysis.diagnostics.push(createDiagnostic("advanced-physics", "warning", "Rapier vehicle logic was compiled into a generated custom_script hook.", path.hub.file.opts.filename));
+          analysis.diagnostics.push(
+            createDiagnostic(
+              "advanced-physics",
+              "warning",
+              "Rapier vehicle logic was compiled into a generated custom_script hook.",
+              resolveTraversalFilename(path.hub, entrypoint)
+            )
+          );
           analysis.needsCustomScript = true;
         }
       }
@@ -508,7 +540,14 @@ function analyzeScript(
         case "WebGLRenderer":
         case "WebGPURenderer":
           analysis.needsCustomScript = true;
-          analysis.diagnostics.push(createDiagnostic("renderer-ownership", "warning", `${constructorInfo.imported} ownership was stripped. Blob keeps viewport renderer ownership.`, path.hub.file.opts.filename));
+          analysis.diagnostics.push(
+            createDiagnostic(
+              "renderer-ownership",
+              "warning",
+              `${constructorInfo.imported} ownership was stripped. Blob keeps viewport renderer ownership.`,
+              resolveTraversalFilename(path.hub, entrypoint)
+            )
+          );
           return;
       }
 
@@ -1226,4 +1265,17 @@ function deriveLabelFromPath(path: string, fallback: string) {
 function slugify(value: string) {
   const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return normalized || "item";
+}
+
+function resolveTraversalFilename(hub: unknown, fallback: string) {
+  const typedHub = hub as {
+    file?: {
+      opts?: {
+        filename?: string;
+      };
+    };
+    getFilename?: () => string | undefined;
+  };
+
+  return typedHub.getFilename?.() || typedHub.file?.opts?.filename || fallback;
 }

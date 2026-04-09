@@ -33,6 +33,7 @@
       "@blud/geometry-kernel": ["packages/geometry-kernel/src/index.ts"],
       "@blud/gameplay-runtime": ["packages/gameplay-runtime/src/index.ts"],
       "@blud/render-pipeline": ["packages/render-pipeline/src/index.ts"],
+      "@blud/runtime-audio": ["packages/runtime-audio/src/index.ts"],
       "@blud/runtime-scripting": ["packages/runtime-scripting/src/index.ts"],
       "@blud/runtime-build": ["packages/runtime-build/src/index.ts"],
       "@blud/runtime-format": ["packages/runtime-format/src/index.ts"],

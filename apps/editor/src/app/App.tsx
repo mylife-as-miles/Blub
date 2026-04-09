@@ -1874,7 +1874,12 @@ export function App() {
   };
 
   const copilot = useCopilot(editor, {
-    requestScenePush: (options) => {
+    requestScenePush: (options: {
+      forceSwitch?: boolean;
+      gameId?: string;
+      projectName?: string;
+      projectSlug?: string;
+    }) => {
       void handlePushSceneToGame(options).catch(() => {});
     }
   });

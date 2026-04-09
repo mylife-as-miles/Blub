@@ -63,7 +63,7 @@ export function HtmlJsImportDialog({
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[11px] font-medium tracking-[0.18em] text-foreground/48 uppercase">Entrypoint</div>
-                  <div className="mt-1 text-sm text-foreground/82">{report?.entrypoint ?? entrypointSelection || "Select an entrypoint"}</div>
+                  <div className="mt-1 text-sm text-foreground/82">{report?.entrypoint ?? (entrypointSelection || "Select an entrypoint")}</div>
                 </div>
                 <StatusPill status={status} />
               </div>

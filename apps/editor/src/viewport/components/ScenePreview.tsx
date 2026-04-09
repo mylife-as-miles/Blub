@@ -1,7 +1,14 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { BallCollider, CapsuleCollider, ConeCollider, CuboidCollider, CylinderCollider, Physics, RigidBody, TrimeshCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
-import { createCustomScriptController, createMutableSceneHostState } from "@blud/runtime-scripting";
+import {
+  createCustomScriptController,
+  createMutableSceneHostState,
+  type CustomScriptEventFilter,
+  type CustomScriptEventInput,
+  type CustomScriptEventRecord,
+  type CustomScriptLogLevel
+} from "@blud/runtime-scripting";
 import {
   BackSide,
   Box3,
@@ -506,7 +513,7 @@ function PreviewCustomScriptRuntime({
   physicsPlayback: "paused" | "running" | "stopped";
   previewStepTick: number;
 }) {
-  const controllerRef = useRef<ReturnType<typeof createCustomScriptController>>();
+  const controllerRef = useRef<ReturnType<typeof createCustomScriptController> | null>(null);
   const previousStepTickRef = useRef(previewStepTick);
   const keyStateRef = useRef(new Set<string>());
 
@@ -527,18 +534,18 @@ function PreviewCustomScriptRuntime({
         applyObjectTransform(object, worldTransform);
       });
     };
-    const eventListeners = new Set<(event: { event: string; payload?: unknown; sourceId: string; targetId?: string }) => void>();
+    const eventListeners = new Set<(event: CustomScriptEventRecord) => void>();
     const controller = createCustomScriptController({
-      emitEvent: (event) => {
+      emitEvent: (event: CustomScriptEventInput & { sourceId: string }) => {
         eventListeners.forEach((listener) => listener(event));
       },
       entities,
-      getLocalTransform: (targetId) => sceneState.getLocalTransform(targetId),
-      getWorldTransform: (targetId) => sceneState.getWorldTransform(targetId),
+      getLocalTransform: (targetId: string) => sceneState.getLocalTransform(targetId),
+      getWorldTransform: (targetId: string) => sceneState.getWorldTransform(targetId),
       input: {
-        isKeyDown: (key) => keyStateRef.current.has(key)
+        isKeyDown: (key: string) => keyStateRef.current.has(key)
       },
-      log: (level, message, data) => {
+      log: (level: CustomScriptLogLevel, message: string, data?: unknown) => {
         const logger =
           level === "error"
             ? console.error
@@ -550,8 +557,8 @@ function PreviewCustomScriptRuntime({
         logger("[preview custom_script]", message, data);
       },
       nodes,
-      onEvent: (filter, listener) => {
-        const wrapped = (event: { event: string; payload?: unknown; sourceId: string; targetId?: string }) => {
+      onEvent: (filter: CustomScriptEventFilter, listener: (event: CustomScriptEventRecord) => void) => {
+        const wrapped = (event: CustomScriptEventRecord) => {
           if (!matchesPreviewEventFilter(filter, event)) {
             return;
           }
@@ -570,11 +577,11 @@ function PreviewCustomScriptRuntime({
             world: physics.world
           }
         : undefined,
-      setLocalTransform: (targetId, transform) => {
+      setLocalTransform: (targetId: string, transform: Transform) => {
         sceneState.setLocalTransform(targetId, transform);
         syncBoundObjects();
       },
-      setWorldTransform: (targetId, transform) => {
+      setWorldTransform: (targetId: string, transform: Transform) => {
         sceneState.setWorldTransform(targetId, transform);
         syncBoundObjects();
       }
@@ -587,7 +594,7 @@ function PreviewCustomScriptRuntime({
 
     return () => {
       controller.stop();
-      controllerRef.current = undefined;
+      controllerRef.current = null;
     };
   }, [entities, nodes, objectBindings, physics, physicsPlayback]);
 
@@ -644,8 +651,8 @@ function PreviewCustomScriptRuntime({
 }
 
 function matchesPreviewEventFilter(
-  filter: { event?: string | string[]; sourceId?: string; targetId?: string },
-  event: { event: string; sourceId: string; targetId?: string }
+  filter: CustomScriptEventFilter,
+  event: CustomScriptEventRecord
 ) {
   const eventMatches =
     !filter.event ||

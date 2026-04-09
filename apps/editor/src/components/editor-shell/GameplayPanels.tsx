@@ -1665,7 +1665,7 @@ function ValidationNote({ text }: { text: string }) {
 
 function CustomScriptReadonlyInspector({ hook }: { hook: SceneHook }) {
   const config = hook.config as CustomScriptHookConfig;
-  const capabilities = Array.isArray(config.capabilities) ? config.capabilities.filter((value): value is string => typeof value === "string") : [];
+  const capabilities = Array.isArray(config.capabilities) ? config.capabilities : [];
   const diagnostics = Array.isArray(config.diagnostics) ? config.diagnostics : [];
   const origin = (config.origin && isGameplayObject(config.origin) ? config.origin : {}) as Record<string, GameplayValue>;
   const originEntries = Object.entries(origin);

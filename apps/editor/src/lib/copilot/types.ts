@@ -71,11 +71,40 @@ export type CopilotSessionStatus =
   | "error"
   | "aborted";
 
+export type CopilotActivityKind =
+  | "session"
+  | "step"
+  | "tool_call"
+  | "tool_result"
+  | "assistant"
+  | "status"
+  | "error";
+
+export type CopilotActivityTone = "info" | "success" | "warning" | "error";
+
+export type CopilotActivityItem = {
+  id: string;
+  kind: CopilotActivityKind;
+  title: string;
+  detail?: string;
+  iteration?: number;
+  status?: CopilotSessionStatus;
+  tone?: CopilotActivityTone;
+  toolCall?: CopilotToolCall;
+  toolResult?: CopilotToolResult;
+  elapsedMs?: number;
+  timestamp: number;
+};
+
 export type CopilotSession = {
   messages: CopilotMessage[];
+  activity: CopilotActivityItem[];
   status: CopilotSessionStatus;
   error?: string;
   iterationCount: number;
+  providerId?: CopilotProviderId;
+  modelId?: string;
+  modeLabel?: string;
 };
 
 // ── Provider interfaces ───────────────────────────────────────
@@ -95,10 +124,13 @@ export type CopilotProvider = {
 export type SessionBasedCopilotProvider = {
   runSession(config: {
     messages: CopilotMessage[];
+    activity: CopilotActivityItem[];
     userPrompt: string;
     tools: CopilotToolDeclaration[];
     systemPrompt: string;
     providerConfig: CopilotProviderConfig;
+    providerId: CopilotProviderId;
+    modeLabel: string;
     threadId?: string;
     onThreadId?: (threadId: string | undefined) => void;
     executeTool: (call: CopilotToolCall) => CopilotToolResult;

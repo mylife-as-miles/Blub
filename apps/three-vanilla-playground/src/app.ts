@@ -127,7 +127,7 @@ class RuntimePlaygroundApp {
 
     // Wire AudioManager to gameplay audio events.
     const audioManager = createAudioManager({
-      clipResolver: async (clipId) => {
+      clipResolver: async (clipId: string) => {
         const url = await Promise.resolve(resolveAssetPath(clipId));
         const response = await fetch(url);
         return response.arrayBuffer();
@@ -168,7 +168,6 @@ class RuntimePlaygroundApp {
         }
       }
     });
-    gameplayRuntime.start();
     this.gameplayRuntime = gameplayRuntime;
 
     await this.sceneController.load({
@@ -180,6 +179,7 @@ class RuntimePlaygroundApp {
       scene: this.scene,
       sceneSettings
     });
+    gameplayRuntime.start();
 
     this.render();
   }

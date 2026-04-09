@@ -1,18 +1,30 @@
 import type {
+  CopilotActivityItem,
   CopilotImageAttachment,
   CopilotMessage,
   CopilotProvider,
   CopilotProviderConfig,
+  CopilotProviderId,
   CopilotSession,
   CopilotToolCall,
   CopilotToolDeclaration,
   CopilotToolResult
 } from "./types";
+import {
+  createActivityItem,
+  parseToolResult,
+  summarizeToolArgs,
+  summarizeToolResult,
+  truncateText
+} from "./activity";
 
 export type AgenticLoopConfig = {
   maxIterations: number;
   provider: CopilotProvider;
   providerConfig: CopilotProviderConfig;
+  providerId: CopilotProviderId;
+  modeLabel: string;
+  existingActivity?: CopilotActivityItem[];
   systemPrompt: string;
   tools: CopilotToolDeclaration[];
   executeTool: (call: CopilotToolCall) => CopilotToolResult;
@@ -36,7 +48,7 @@ export async function runAgenticLoop(
   console.log(`${TAG} User prompt:`, userPrompt);
   console.log(`${TAG} Model:`, config.providerConfig.model);
   console.log(`${TAG} Temperature:`, config.providerConfig.temperature);
-  console.log(`${TAG} Tools available:`, config.tools.map((t) => t.name));
+  console.log(`${TAG} Tools available:`, config.tools.map((tool) => tool.name));
   console.log(`${TAG} System prompt:\n`, config.systemPrompt);
   console.log(`${TAG} Existing messages:`, existingMessages.length);
   console.groupEnd();
@@ -51,34 +63,73 @@ export async function runAgenticLoop(
       timestamp: Date.now()
     }
   ];
+  const activity: CopilotActivityItem[] = [...(config.existingActivity ?? [])];
 
   const session: CopilotSession = {
     messages,
+    activity,
     status: "thinking",
-    iterationCount: 0
+    iterationCount: 0,
+    providerId: config.providerId,
+    modelId: config.providerConfig.model,
+    modeLabel: config.modeLabel
   };
 
-  config.onUpdate({ ...session, messages: [...messages] });
+  const emitUpdate = () =>
+    config.onUpdate({
+      ...session,
+      messages: [...messages],
+      activity: [...activity]
+    });
+
+  const pushActivity = (item: Omit<CopilotActivityItem, "id" | "timestamp">) => {
+    activity.push(createActivityItem(item));
+  };
+
+  pushActivity({
+    kind: "session",
+    title: "Session started",
+    detail: `${config.modeLabel} mode on ${config.providerId} (${config.providerConfig.model}) with ${config.tools.length} tools.`,
+    tone: "info"
+  });
+  emitUpdate();
 
   for (let iteration = 0; iteration < config.maxIterations; iteration++) {
+    const stepNumber = iteration + 1;
+
     if (signal?.aborted) {
-      console.log(`${TAG} Aborted at iteration ${iteration + 1}`);
+      console.log(`${TAG} Aborted at iteration ${stepNumber}`);
       session.status = "aborted";
-      config.onUpdate({ ...session, messages: [...messages] });
+      pushActivity({
+        kind: "status",
+        title: "Run stopped",
+        detail: `Stopped before step ${stepNumber} finished.`,
+        iteration: stepNumber,
+        status: "aborted",
+        tone: "warning"
+      });
+      emitUpdate();
       return session;
     }
 
     session.status = "thinking";
-    session.iterationCount = iteration + 1;
-    config.onUpdate({ ...session, messages: [...messages] });
+    session.iterationCount = stepNumber;
+    pushActivity({
+      kind: "step",
+      title: `Step ${stepNumber}`,
+      detail: "Planning the next scene action.",
+      iteration: stepNumber,
+      tone: "info"
+    });
+    emitUpdate();
 
-    console.group(`${TAG} Iteration ${iteration + 1}`);
+    console.group(`${TAG} Iteration ${stepNumber}`);
     console.log(`${TAG} Sending ${messages.length} messages to LLM...`);
 
     let response;
 
     try {
-      const t0 = performance.now();
+      const startedAt = performance.now();
       response = await config.provider.generateContent(
         messages,
         config.tools,
@@ -86,7 +137,7 @@ export async function runAgenticLoop(
         config.providerConfig,
         signal
       );
-      const elapsed = Math.round(performance.now() - t0);
+      const elapsed = Math.round(performance.now() - startedAt);
       console.log(`${TAG} LLM responded in ${elapsed}ms`);
     } catch (error) {
       console.error(`${TAG} LLM error:`, error);
@@ -94,14 +145,30 @@ export async function runAgenticLoop(
 
       if (error instanceof DOMException && error.name === "AbortError") {
         session.status = "aborted";
-        config.onUpdate({ ...session, messages: [...messages] });
+        pushActivity({
+          kind: "status",
+          title: "Run stopped",
+          detail: `Stopped during step ${stepNumber}.`,
+          iteration: stepNumber,
+          status: "aborted",
+          tone: "warning"
+        });
+        emitUpdate();
         return session;
       }
 
       const errorMessage = error instanceof Error ? error.message : "Unknown API error";
       session.status = "error";
       session.error = errorMessage;
-      config.onUpdate({ ...session, messages: [...messages] });
+      pushActivity({
+        kind: "error",
+        title: "Model request failed",
+        detail: errorMessage,
+        iteration: stepNumber,
+        status: "error",
+        tone: "error"
+      });
+      emitUpdate();
       return session;
     }
 
@@ -116,16 +183,25 @@ export async function runAgenticLoop(
         rawParts: response.rawParts,
         timestamp: Date.now()
       });
+
+      pushActivity({
+        kind: "assistant",
+        title: "Final response ready",
+        detail: response.text ? truncateText(response.text) : "Completed without additional text.",
+        iteration: stepNumber,
+        tone: "success"
+      });
+
       session.status = "idle";
       session.messages = messages;
-      config.onUpdate({ ...session, messages: [...messages] });
+      emitUpdate();
       return session;
     }
 
     console.log(`${TAG} Text:`, response.text || "(none)");
     console.log(`${TAG} Tool calls (${response.toolCalls.length}):`);
-    for (const tc of response.toolCalls) {
-      console.log(`  ${TAG} → ${tc.name}`, JSON.stringify(tc.args, null, 2));
+    for (const toolCall of response.toolCalls) {
+      console.log(`  ${TAG} -> ${toolCall.name}`, JSON.stringify(toolCall.args, null, 2));
     }
 
     messages.push({
@@ -137,8 +213,29 @@ export async function runAgenticLoop(
       timestamp: Date.now()
     });
 
+    if (response.text.trim()) {
+      pushActivity({
+        kind: "assistant",
+        title: "Assistant note",
+        detail: truncateText(response.text),
+        iteration: stepNumber,
+        tone: "info"
+      });
+    }
+
+    for (const toolCall of response.toolCalls) {
+      pushActivity({
+        kind: "tool_call",
+        title: `Calling ${toolCall.name}`,
+        detail: summarizeToolArgs(toolCall.args),
+        iteration: stepNumber,
+        toolCall,
+        tone: "info"
+      });
+    }
+
     session.status = "executing";
-    config.onUpdate({ ...session, messages: [...messages] });
+    emitUpdate();
 
     const toolResults: CopilotToolResult[] = [];
 
@@ -147,22 +244,40 @@ export async function runAgenticLoop(
         console.log(`${TAG} Aborted during tool execution`);
         console.groupEnd();
         session.status = "aborted";
-        config.onUpdate({ ...session, messages: [...messages] });
+        pushActivity({
+          kind: "status",
+          title: "Run stopped",
+          detail: `Stopped while ${toolCall.name} was executing.`,
+          iteration: stepNumber,
+          status: "aborted",
+          tone: "warning"
+        });
+        emitUpdate();
         return session;
       }
 
-      const t0 = performance.now();
+      const startedAt = performance.now();
       const result = config.executeTool(toolCall);
-      const elapsed = Math.round(performance.now() - t0);
+      const elapsed = Math.round(performance.now() - startedAt);
 
-      const parsed = JSON.parse(result.result);
+      const parsed = parseToolResult(result.result);
       if (parsed.success === false) {
-        console.warn(`  ${TAG} ✗ ${toolCall.name} FAILED (${elapsed}ms):`, parsed.error);
+        console.warn(`  ${TAG} FAIL ${toolCall.name} (${elapsed}ms):`, parsed.error);
       } else {
-        console.log(`  ${TAG} ✓ ${toolCall.name} (${elapsed}ms):`, result.result);
+        console.log(`  ${TAG} OK ${toolCall.name} (${elapsed}ms):`, result.result);
       }
 
       toolResults.push(result);
+      pushActivity({
+        kind: "tool_result",
+        title: parsed.success ? `${toolCall.name} completed` : `${toolCall.name} failed`,
+        detail: summarizeToolResult(result.result),
+        iteration: stepNumber,
+        toolResult: result,
+        elapsedMs: elapsed,
+        tone: parsed.success ? "success" : "error"
+      });
+      emitUpdate();
     }
 
     messages.push({
@@ -174,7 +289,7 @@ export async function runAgenticLoop(
     });
 
     console.groupEnd();
-    config.onUpdate({ ...session, messages: [...messages] });
+    emitUpdate();
   }
 
   console.warn(`${TAG} Hit max iterations (${config.maxIterations})`);
@@ -188,6 +303,13 @@ export async function runAgenticLoop(
 
   session.status = "idle";
   session.messages = messages;
-  config.onUpdate({ ...session, messages: [...messages] });
+  pushActivity({
+    kind: "status",
+    title: "Stopped at iteration limit",
+    detail: `Reached the ${config.maxIterations} step cap.`,
+    status: "idle",
+    tone: "warning"
+  });
+  emitUpdate();
   return session;
 }

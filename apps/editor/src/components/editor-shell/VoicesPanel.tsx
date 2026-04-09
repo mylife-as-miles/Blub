@@ -25,13 +25,15 @@ export function VoicesPanel() {
   const snap = useSnapshot(voicesStore);
 
   return (
-    <div className="space-y-4 px-1 pb-1">
-      <CloneVoiceCard />
+    <div className="flex min-h-full flex-col gap-4 px-1 pb-1">
+      <div className="sticky top-0 z-20 -mx-1 px-1 pb-1">
+        <CloneVoiceCard />
+      </div>
 
-      {snap.voices.length > 0 && (
-        <div className="space-y-2">
+      {snap.voices.length > 0 ? (
+        <div className="min-h-0 flex-1 space-y-2">
           <div className="px-1 text-[10px] font-medium tracking-[0.18em] text-foreground/42 uppercase">
-            Cloned Voices
+            Cloned Voices ({snap.voices.length})
           </div>
           <div className="space-y-2">
             {snap.voices.map((voice) => (
@@ -39,12 +41,12 @@ export function VoicesPanel() {
             ))}
           </div>
         </div>
-      )}
-
-      {snap.voices.length === 0 && (
-        <div className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-[11px] text-foreground/36">
-          <Mic className="mx-auto mb-2 size-6 opacity-30" />
-          No cloned voices yet. Upload a sample above to create one.
+      ) : (
+        <div className="flex flex-1 items-center">
+          <div className="w-full rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-[11px] text-foreground/36">
+            <Mic className="mx-auto mb-2 size-6 opacity-30" />
+            No cloned voices yet. Upload a sample above to create one.
+          </div>
         </div>
       )}
     </div>
@@ -88,19 +90,20 @@ function CloneVoiceCard() {
   const canClone = name.trim().length > 0 && file !== null && !cloning;
 
   return (
-    <div className={`${PANEL_SURFACE} space-y-3 px-3 py-3`}>
-      <div className="text-[10px] font-medium tracking-[0.18em] text-foreground/42 uppercase">
+    <div className={`${PANEL_SURFACE} relative space-y-3 overflow-hidden px-3 py-3 backdrop-blur-xl`}>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015)_26%,rgba(5,8,12,0.06))]" />
+      <div className="relative text-[10px] font-medium tracking-[0.18em] text-foreground/42 uppercase">
         Clone a Voice
       </div>
 
       <Input
-        className="h-8 rounded-xl border-white/10 bg-white/[0.04] text-xs"
+        className="relative h-8 rounded-xl border-white/10 bg-white/[0.04] text-xs"
         onChange={(e) => setName(e.target.value)}
         placeholder="Voice name (e.g. Guard NPC)"
         value={name}
       />
 
-      <div>
+      <div className="relative">
         <input
           accept="audio/*"
           className="hidden"
@@ -118,7 +121,7 @@ function CloneVoiceCard() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="relative flex items-center justify-between gap-2">
         <div className="text-[10px] text-foreground/36">
           15–120 sec of clean speech works best.
         </div>
@@ -133,8 +136,8 @@ function CloneVoiceCard() {
         </Button>
       </div>
 
-      {error && <div className="rounded-lg bg-rose-500/10 px-2 py-1.5 text-[10px] text-rose-300">{error}</div>}
-      {success && <div className="rounded-lg bg-emerald-500/10 px-2 py-1.5 text-[10px] text-emerald-300">Voice cloned! It's now available in the NPC voice picker.</div>}
+      {error && <div className="relative rounded-lg bg-rose-500/10 px-2 py-1.5 text-[10px] text-rose-300">{error}</div>}
+      {success && <div className="relative rounded-lg bg-emerald-500/10 px-2 py-1.5 text-[10px] text-emerald-300">Voice cloned! It's now available in the NPC voice picker.</div>}
     </div>
   );
 }
