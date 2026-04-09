@@ -1,5 +1,5 @@
 import type { GridSnapValue } from "@blud/render-pipeline";
-import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
+import type { BrushShape, EntityType, LightType, PrimitiveShape, SkateparkElementType } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import { AnimatePresence, motion } from "motion/react";
@@ -33,6 +33,7 @@ type ToolPaletteProps = {
   onPlaceBlockoutPlatform: () => void;
   onPlaceBlockoutRoom: () => void;
   onPlaceBlockoutStairs: () => void;
+  onPlaceSkateparkElement?: (type: SkateparkElementType) => void;
   onPlaceProp: (shape: PrimitiveShape) => void;
   onPlayPhysics: () => void;
   onSimulatePhysics?: () => void;
@@ -81,6 +82,7 @@ export function ToolPalette({
   onPlaceBlockoutPlatform,
   onPlaceBlockoutRoom,
   onPlaceBlockoutStairs,
+  onPlaceSkateparkElement,
   onPlaceProp,
   onPlayPhysics,
   onRaiseTop,
@@ -136,6 +138,7 @@ export function ToolPalette({
                     onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
                     onPlaceBlockoutRoom={onPlaceBlockoutRoom}
                     onPlaceBlockoutStairs={onPlaceBlockoutStairs}
+                    onPlaceSkateparkElement={onPlaceSkateparkElement}
                     onPlaceProp={onPlaceProp}
                     onStartAiModelPlacement={onStartAiModelPlacement}
                     onSelectBrushShape={onSelectBrushShape}

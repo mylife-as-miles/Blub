@@ -34,6 +34,7 @@ export function CreationToolBar({
   onPlaceBlockoutPlatform,
   onPlaceBlockoutRoom,
   onPlaceBlockoutStairs,
+  onPlaceSkateparkElement,
   onPlaceProp,
   onStartAiModelPlacement,
   onSelectBrushShape
@@ -49,6 +50,7 @@ export function CreationToolBar({
   onPlaceBlockoutPlatform: () => void;
   onPlaceBlockoutRoom: () => void;
   onPlaceBlockoutStairs: () => void;
+  onPlaceSkateparkElement?: (type: SkateparkElementType) => void;
   onPlaceProp: (shape: PrimitiveShape) => void;
   onStartAiModelPlacement: () => void;
   onSelectBrushShape: (shape: BrushShape) => void;
@@ -119,6 +121,23 @@ export function CreationToolBar({
         <CreationButton disabled={disabled} icon={CylinderPrimitiveIcon} label="Cylinder Prop" onClick={() => onPlaceProp("cylinder")} />
         <CreationButton disabled={disabled} icon={ConePrimitiveIcon} label="Cone Prop" onClick={() => onPlaceProp("cone")} />
         <CreationButton disabled={disabled} icon={SpherePrimitiveIcon} label="Sphere Prop" onClick={() => onPlaceProp("sphere")} />
+      </CreationGroup>
+
+      <CreationGroup label="Skatepark">
+        <CreationButton disabled={disabled} icon={RampBrushIcon} label="Quarter Pipe" onClick={() => onPlaceSkateparkElement?.("quarter-pipe")} />
+        <CreationButton disabled={disabled} icon={RampBrushIcon} label="Half Pipe" onClick={() => onPlaceSkateparkElement?.("half-pipe")} />
+        <CreationButton disabled={disabled} icon={CylinderPrimitiveIcon} label="Rail" onClick={() => onPlaceSkateparkElement?.("rail")} />
+        <CreationButton disabled={disabled} icon={BlockoutPlatformIcon} label="Fun Box" onClick={() => onPlaceSkateparkElement?.("fun-box")} />
+        <CreationButton disabled={disabled} icon={SpherePrimitiveIcon} label="Bowl" onClick={() => onPlaceSkateparkElement?.("bowl")} />
+        <CreationButton disabled={disabled} icon={CubePrimitiveIcon} label="Ledge" onClick={() => onPlaceSkateparkElement?.("ledge")} />
+        <CreationButton disabled={disabled} icon={RampBrushIcon} label="Bank" onClick={() => onPlaceSkateparkElement?.("bank")} />
+        <CreationButton disabled={disabled} icon={RampBrushIcon} label="Spine" onClick={() => onPlaceSkateparkElement?.("spine")} />
+        <CreationButton disabled={disabled} icon={RampBrushIcon} label="Pyramid" onClick={() => onPlaceSkateparkElement?.("pyramid")} />
+        <CreationButton disabled={disabled} icon={StairBlockoutIcon} label="Stair Set" onClick={() => onPlaceSkateparkElement?.("stair-set")} />
+        <CreationButton disabled={disabled} icon={RampBrushIcon} label="Kicker" onClick={() => onPlaceSkateparkElement?.("kicker")} />
+        <CreationButton disabled={disabled} icon={BlockoutPlatformIcon} label="Manual Pad" onClick={() => onPlaceSkateparkElement?.("manual-pad")} />
+        <CreationButton disabled={disabled} icon={PlanePrimitiveIcon} label="Hip" onClick={() => onPlaceSkateparkElement?.("hip")} />
+        <CreationButton disabled={disabled} icon={StairBlockoutIcon} label="Hubba Ledge" onClick={() => onPlaceSkateparkElement?.("hubba-ledge")} />
       </CreationGroup>
 
       <CreationGroup label="Models">
