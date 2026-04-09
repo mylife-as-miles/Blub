@@ -1,5 +1,22 @@
 import type { EditorCore } from "@blud/editor-core";
 import {
+  buildQuarterPipe,
+  buildHalfPipe,
+  buildBank,
+  buildSpine,
+  buildGapToRail,
+  buildFloor,
+  buildLedge,
+  buildRail,
+  buildStairSet,
+  buildHubba,
+  buildBowl,
+  buildTaco,
+  buildHandrail,
+  buildKicker,
+  SKATE_MATERIALS
+} from "@blud/skatepark";
+import {
   createAssignMaterialCommand,
   createAssignMaterialToBrushesCommand,
   createDeleteSelectionCommand,
@@ -45,10 +62,11 @@ import {
   mergeEditableMeshVertices,
   scaleEditableMeshVertices,
   translateEditableMeshVertices,
-  subdivideEditableMeshFace
+  subdivideEditableMeshFace,
+  createEditableMeshFromPolygons
 } from "@blud/geometry-kernel";
 import { isBrushNode, isMeshNode, makeTransform, resolveSceneGraph, vec3 } from "@blud/shared";
-import type { EditableMesh, GameplayObject, GameplayValue, Material, SceneHook, ScenePathDefinition, SceneSettings, Vec3 } from "@blud/shared";
+import type { EditableMesh, GameplayObject, GameplayValue, Material, SceneHook, ScenePathDefinition, SceneSettings, Vec3, SkateparkElementType } from "@blud/shared";
 import {
   createDefaultEntity,
   createDefaultLightData,
@@ -417,6 +435,56 @@ function executeToolInner(editor: EditorCore, name: string, args: Args, context:
 
       editor.execute(createPlaceEntityCommand(entity));
       return ok({ entityId: entity.id });
+    }
+
+    case "place_skatepark_element": {
+      const type = str(args, "type") as SkateparkElementType;
+      const width = num(args, "width", 4);
+      const height = num(args, "height", 2);
+      const length = num(args, "length", 4);
+      const materialId = str(args, "materialId") || "material:skate:concrete";
+
+      // Register material if needed
+      const existingMat = scene.materials.get(materialId);
+      if (!existingMat) {
+        const skateMat = Object.values(SKATE_MATERIALS).find(m => m.id === materialId);
+        if (skateMat) {
+          editor.execute(createUpsertMaterialCommand(scene, skateMat));
+        }
+      }
+
+      let polygons: Vec3[][] = [];
+      switch (type) {
+        case "quarter-pipe": polygons = buildQuarterPipe({ width, height, length }); break;
+        case "half-pipe": polygons = buildHalfPipe({ width, height, length }); break;
+        case "bank": polygons = buildBank({ width, height, length }); break;
+        case "spine": polygons = buildSpine({ width, height, length }); break;
+        case "gap-to-rail": polygons = buildGapToRail({ width, height, length }); break;
+        case "floor": polygons = buildFloor({ width, length }); break;
+        case "ledge": polygons = buildLedge({ width, height, length }); break;
+        case "rail": polygons = buildRail({ length }); break;
+        case "stair-set": polygons = buildStairSet({ width, height, length }); break;
+        case "hubba": polygons = buildHubba({ width, height, length }); break;
+        case "bowl": polygons = buildBowl({ width, height, length }); break;
+        case "taco": polygons = buildTaco({ width, height, length }); break;
+        case "handrail": polygons = buildHandrail({ length }); break;
+        case "kicker": polygons = buildKicker({ width, height, length }); break;
+      }
+
+      const meshData = createEditableMeshFromPolygons(polygons);
+      meshData.materialId = materialId;
+
+      const transform = makeTransform(vec3(num(args, "x"), num(args, "y"), num(args, "z")));
+      if (typeof args.rotationY === "number") {
+        transform.rotation.y = args.rotationY as number;
+      }
+
+      const { command, nodeId } = createPlaceMeshNodeCommand(scene, transform, {
+        data: meshData,
+        name: str(args, "name") || `Skate ${type}`
+      });
+      editor.execute(command);
+      return ok({ nodeId });
     }
 
     // ── Transform ─────────────────────────────────────────────

@@ -165,6 +165,34 @@ export const COPILOT_TOOL_DECLARATIONS: CopilotToolDeclaration[] = [
     }
   },
 
+  {
+    name: "place_skatepark_element",
+    description: "Places a procedural skatepark element (ramps, rails, bowls, etc.). Position is the center-bottom of the element.",
+    parameters: {
+      type: "object",
+      properties: {
+        x: { type: "number", description: "World X position" },
+        y: { type: "number", description: "World Y position (bottom)" },
+        z: { type: "number", description: "World Z position" },
+        type: {
+          type: "string",
+          enum: [
+            "quarter-pipe", "half-pipe", "bank", "spine", "gap-to-rail", "floor",
+            "ledge", "rail", "stair-set", "hubba", "bowl", "taco", "handrail", "kicker"
+          ],
+          description: "Type of skatepark element"
+        },
+        rotationY: { type: "number", description: "Rotation around Y axis in radians (default: 0)" },
+        width: { type: "number", description: "Standard width (default: 4)" },
+        height: { type: "number", description: "Standard height (default: 2)" },
+        length: { type: "number", description: "Standard length/depth (default: 4)" },
+        materialId: { type: "string", description: "Specific material ID (e.g. 'material:skate:concrete', 'material:skate:plywood', 'material:skate:metal')" },
+        name: { type: "string", description: "Display name" }
+      },
+      required: ["x", "y", "z", "type"]
+    }
+  },
+
   // ── Transform ───────────────────────────────────────────────
   {
     name: "translate_nodes",
