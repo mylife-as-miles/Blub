@@ -17,7 +17,6 @@ import {
   SpherePrimitiveIcon,
   SpotLightIcon
 } from "@/components/editor-shell/icons";
-import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -167,8 +166,8 @@ function CreationGroup({
 }) {
   return (
     <div className="flex flex-col items-start gap-1">
-      <div className="pl-2 text-[9px] font-medium tracking-[0.22em] text-foreground/40 uppercase">{label}</div>
-      <FloatingPanel className="glass-panel-subtle flex h-11 items-center gap-1.5 p-1.5">{children}</FloatingPanel>
+      <div className="pl-1.5 text-[9px] font-semibold tracking-[0.22em] text-[#f6d07d]/58 uppercase">{label}</div>
+      <div className="editor-toolbar-segment flex h-11 items-center gap-1.5 rounded-[14px] p-1.5">{children}</div>
     </div>
   );
 }
@@ -192,8 +191,8 @@ function CreationButton({
         render={
           <Button
             className={cn(
-              "size-8 rounded-[16px] text-foreground/58 hover:text-foreground disabled:pointer-events-none disabled:opacity-35",
-              active && "glass-button-active text-emerald-50"
+              "editor-toolbar-button size-8 rounded-[10px] text-foreground/58 hover:translate-y-0 active:scale-100 disabled:pointer-events-none disabled:opacity-35",
+              active && "editor-toolbar-button-active text-[#fff0cb]"
             )}
             disabled={disabled}
             onClick={onClick}

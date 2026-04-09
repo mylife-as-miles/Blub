@@ -17,7 +17,7 @@ export function JobStatus({ jobs }: JobStatusProps) {
         render={
           <button
             className={cn(
-              "glass-pill pointer-events-auto inline-flex h-9 items-center gap-2 rounded-full px-3 text-[10px] font-medium tracking-[0.12em] uppercase transition-[transform,background-color,color,border-color,box-shadow] duration-200 [transition-timing-function:var(--ease-out-strong)] hover:-translate-y-px",
+              "editor-toolbar-footer pointer-events-auto inline-flex h-9 items-center gap-2 rounded-[14px] px-3 text-[10px] font-medium tracking-[0.12em] uppercase transition-[background-color,color,border-color,box-shadow] duration-200 [transition-timing-function:var(--ease-out-strong)]",
               hasActiveJobs ? "text-foreground/78" : "text-foreground/48"
             )}
             type="button"
@@ -29,16 +29,16 @@ export function JobStatus({ jobs }: JobStatusProps) {
       />
       <PopoverContent
         align="end"
-        className="w-80 rounded-[24px] p-3"
+        className="editor-toolbar-shell w-80 rounded-[18px] p-3"
         side="top"
       >
         <div className="space-y-2">
-          <div className="px-1 text-[10px] font-medium tracking-[0.18em] text-foreground/42 uppercase">Jobs</div>
+          <div className="px-1 text-[10px] font-medium tracking-[0.18em] text-[#f6d07d]/58 uppercase">Jobs</div>
           {hasActiveJobs ? (
             <div className="space-y-1">
               {activeJobs.map((job) => (
                 <div
-                  className="glass-section flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] text-foreground/60"
+                  className="editor-toolbar-segment flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] text-foreground/60"
                   key={job.id}
                 >
                   <div className="min-w-0">
@@ -52,7 +52,7 @@ export function JobStatus({ jobs }: JobStatusProps) {
               ))}
             </div>
           ) : (
-            <div className="glass-section rounded-xl px-3 py-3 text-[11px] text-foreground/44">No active jobs.</div>
+            <div className="editor-toolbar-segment rounded-xl px-3 py-3 text-[11px] text-foreground/44">No active jobs.</div>
           )}
         </div>
       </PopoverContent>

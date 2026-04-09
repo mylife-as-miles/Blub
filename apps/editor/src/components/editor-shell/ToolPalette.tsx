@@ -100,8 +100,8 @@ export function ToolPalette({
 }: ToolPaletteProps) {
   return (
     <>
-      <div className="pointer-events-none absolute left-5 top-5 z-30 flex max-w-[calc(100%-5rem)] flex-col items-start gap-2">
-        <div className="flex max-w-full flex-wrap items-stretch gap-3">
+      <div className="pointer-events-none absolute left-[4.5rem] top-4 z-30 flex max-w-[calc(100%-6.5rem)] flex-col items-start gap-2">
+        <div className="editor-toolbar-shell flex max-w-full flex-wrap items-center gap-2 rounded-[18px] p-2">
           <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
           <SnapControl
             currentSnapSize={currentSnapSize}
@@ -117,28 +117,37 @@ export function ToolPalette({
         <AnimatePresence initial={false}>
           {activeToolId === "brush" ? (
             <motion.div
+              className="max-w-full"
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.97 }}
               initial={{ opacity: 0, y: -10, scale: 0.97 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <div className="max-w-[calc(100vw-8rem)] overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
-                <CreationToolBar
-                  activeBrushShape={activeBrushShape}
-                  aiModelPlacementActive={aiModelPlacementActive}
-                  activeToolId={activeToolId}
-                  disabled={physicsPlayback !== "stopped"}
-                  onImportGlb={onImportGlb}
-                  onPlaceEntity={onPlaceEntity}
-                  onPlaceLight={onPlaceLight}
-                  onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
-                  onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
-                  onPlaceBlockoutRoom={onPlaceBlockoutRoom}
-                  onPlaceBlockoutStairs={onPlaceBlockoutStairs}
-                  onPlaceProp={onPlaceProp}
-                  onStartAiModelPlacement={onStartAiModelPlacement}
-                  onSelectBrushShape={onSelectBrushShape}
-                />
+              <div className="editor-toolbar-shell flex max-w-full flex-col gap-2 rounded-[18px] p-2.5">
+                <div className="flex items-center gap-2 px-1">
+                  <span className="editor-toolbar-label">Brush Toolkit</span>
+                  <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[9px] font-semibold tracking-[0.18em] uppercase">
+                    Create
+                  </span>
+                </div>
+                <div className="max-w-[calc(100vw-9rem)] overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
+                  <CreationToolBar
+                    activeBrushShape={activeBrushShape}
+                    aiModelPlacementActive={aiModelPlacementActive}
+                    activeToolId={activeToolId}
+                    disabled={physicsPlayback !== "stopped"}
+                    onImportGlb={onImportGlb}
+                    onPlaceEntity={onPlaceEntity}
+                    onPlaceLight={onPlaceLight}
+                    onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
+                    onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
+                    onPlaceBlockoutRoom={onPlaceBlockoutRoom}
+                    onPlaceBlockoutStairs={onPlaceBlockoutStairs}
+                    onPlaceProp={onPlaceProp}
+                    onStartAiModelPlacement={onStartAiModelPlacement}
+                    onSelectBrushShape={onSelectBrushShape}
+                  />
+                </div>
               </div>
             </motion.div>
           ) : null}
@@ -147,37 +156,48 @@ export function ToolPalette({
         <AnimatePresence initial={false}>
           {activeToolId === "mesh-edit" ? (
             <motion.div
+              className="max-w-full"
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.97 }}
               initial={{ opacity: 0, y: -10, scale: 0.97 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <MeshEditToolBars
-                onArc={() => onMeshEditToolbarAction("arc")}
-                onBevel={() => onMeshEditToolbarAction("bevel")}
-                onCut={() => onMeshEditToolbarAction("cut")}
-                onDelete={() => onMeshEditToolbarAction("delete")}
-                onExtrude={() => onMeshEditToolbarAction("extrude")}
-                meshEditMode={meshEditMode}
-                onFillFace={() => onMeshEditToolbarAction("fill-face")}
-                onDeflate={() => onMeshEditToolbarAction("deflate")}
-                onInflate={() => onMeshEditToolbarAction("inflate")}
-                onInvertNormals={() => onMeshEditToolbarAction("invert-normals")}
-                onLowerTop={onLowerTop}
-                onMerge={() => onMeshEditToolbarAction("merge")}
-                onRaiseTop={onRaiseTop}
-                onSetSculptBrushRadius={onSetSculptBrushRadius}
-                onSetSculptBrushStrength={onSetSculptBrushStrength}
-                onSetMeshEditMode={onSetMeshEditMode}
-                onSubdivide={() => onMeshEditToolbarAction("subdivide")}
-                onSetTransformMode={onSetTransformMode}
-                sculptMode={sculptMode}
-                sculptBrushRadius={sculptBrushRadius}
-                sculptBrushStrength={sculptBrushStrength}
-                selectedGeometry={selectedGeometry}
-                selectedMesh={selectedMesh}
-                transformMode={transformMode}
-              />
+              <div className="editor-toolbar-shell flex max-w-full flex-col gap-2 rounded-[18px] p-2.5">
+                <div className="flex items-center gap-2 px-1">
+                  <span className="editor-toolbar-label">Mesh Toolkit</span>
+                  <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[9px] font-semibold tracking-[0.18em] uppercase">
+                    Edit
+                  </span>
+                </div>
+                <div className="max-w-[calc(100vw-9rem)] overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
+                  <MeshEditToolBars
+                    onArc={() => onMeshEditToolbarAction("arc")}
+                    onBevel={() => onMeshEditToolbarAction("bevel")}
+                    onCut={() => onMeshEditToolbarAction("cut")}
+                    onDelete={() => onMeshEditToolbarAction("delete")}
+                    onExtrude={() => onMeshEditToolbarAction("extrude")}
+                    meshEditMode={meshEditMode}
+                    onFillFace={() => onMeshEditToolbarAction("fill-face")}
+                    onDeflate={() => onMeshEditToolbarAction("deflate")}
+                    onInflate={() => onMeshEditToolbarAction("inflate")}
+                    onInvertNormals={() => onMeshEditToolbarAction("invert-normals")}
+                    onLowerTop={onLowerTop}
+                    onMerge={() => onMeshEditToolbarAction("merge")}
+                    onRaiseTop={onRaiseTop}
+                    onSetSculptBrushRadius={onSetSculptBrushRadius}
+                    onSetSculptBrushStrength={onSetSculptBrushStrength}
+                    onSetMeshEditMode={onSetMeshEditMode}
+                    onSubdivide={() => onMeshEditToolbarAction("subdivide")}
+                    onSetTransformMode={onSetTransformMode}
+                    sculptMode={sculptMode}
+                    sculptBrushRadius={sculptBrushRadius}
+                    sculptBrushStrength={sculptBrushStrength}
+                    selectedGeometry={selectedGeometry}
+                    selectedMesh={selectedMesh}
+                    transformMode={transformMode}
+                  />
+                </div>
+              </div>
             </motion.div>
           ) : null}
         </AnimatePresence>

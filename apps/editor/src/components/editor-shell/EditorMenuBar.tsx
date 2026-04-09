@@ -62,135 +62,155 @@ export function EditorMenuBar({
   onUndo
 }: EditorMenuBarProps) {
   return (
-    <div className="flex h-12 items-center justify-between gap-2 px-3 sm:h-14 sm:gap-4 sm:px-3.5">
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-        <div className="glass-pill flex items-center gap-2 rounded-[20px] px-2.5 py-1.5 sm:gap-3 sm:px-3.5 sm:py-2">
-          <span className="flex size-7 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+    <div className="flex min-h-[3.25rem] flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-3.5">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <div className="editor-toolbar-segment flex items-center gap-2 rounded-[16px] px-2.5 py-1.5 sm:gap-3 sm:px-3.5 sm:py-2">
+          <span className="flex size-7 items-center justify-center rounded-xl border border-[#f6d07d]/18 bg-[#f6d07d]/10 text-[#f6d07d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <BlobIcon className="size-3.5" />
           </span>
           <div className="hidden flex-col leading-none sm:flex">
             <span className="text-[11px] font-semibold tracking-[0.24em] text-foreground/96 uppercase">Blob</span>
-            <span className="mt-1 text-[9px] tracking-[0.2em] text-foreground/42 uppercase">World Editor</span>
+            <span className="mt-1 text-[9px] tracking-[0.2em] text-[#f6d07d]/58 uppercase">World Editor</span>
           </div>
           <span className="text-[11px] font-semibold tracking-[0.24em] text-foreground/96 uppercase sm:hidden">Blob</span>
         </div>
 
-        <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <Menubar className="h-10 rounded-[20px] bg-transparent p-0 text-[11px] shadow-none">
-          <MenubarMenu>
-            <MenubarTrigger className="h-8 rounded-[16px] px-2.5 text-[11px] sm:px-3">
-              File
-            </MenubarTrigger>
-            <MenubarContent className="min-w-44 p-1.5">
-              <MenubarItem className="rounded-lg text-xs" onClick={onNewFile}>
-                New File
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onCreateBrush}>
-                New Brush
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onSaveWhmap}>
-                Save `.whmap`
-                <MenubarShortcut>Cmd+S</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onLoadWhmap}>
-                Load `.whmap`
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onExportGltf}>
-                Export glTF
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onExportEngine}>
-                Export Runtime Bundle
-              </MenubarItem>
-            </MenubarContent>
-          </MenubarMenu>
+        <div className="editor-toolbar-shell min-w-0 flex-1 overflow-hidden rounded-[18px] px-2 py-1.5">
+          <div className="flex items-center gap-2">
+            <div className="hidden shrink-0 items-center gap-2 pl-1 lg:flex">
+              <span className="editor-toolbar-label">Command Bar</span>
+              <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[9px] font-semibold tracking-[0.18em] uppercase">
+                Editor
+              </span>
+            </div>
+            <div className="min-w-0 flex-1 overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <Menubar className="w-max min-w-full rounded-[14px] bg-transparent p-0 text-[11px] shadow-none">
+                <MenubarMenu>
+                  <MenubarTrigger className="sm:px-3">
+                    File
+                  </MenubarTrigger>
+                  <MenubarContent className="min-w-44 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs" onClick={onNewFile}>
+                      New File
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onCreateBrush}>
+                      New Brush
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onSaveWhmap}>
+                      Save `.whmap`
+                      <MenubarShortcut>Cmd+S</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onLoadWhmap}>
+                      Load `.whmap`
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onExportGltf}>
+                      Export glTF
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onExportEngine}>
+                      Export Runtime Bundle
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
 
-          <MenubarMenu>
-            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
-              Edit
-            </MenubarTrigger>
-            <MenubarContent className="min-w-44 p-1.5">
-              <MenubarItem className="rounded-lg text-xs" disabled={!canUndo} onClick={onUndo}>
-                Undo
-                <MenubarShortcut>Cmd+Z</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" disabled={!canRedo} onClick={onRedo}>
-                Redo
-                <MenubarShortcut>Cmd+Shift+Z</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onDuplicateSelection}>
-                Duplicate
-                <MenubarShortcut>Cmd+D</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onGroupSelection}>
-                Group Selection
-                <MenubarShortcut>Cmd+G</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onDeleteSelection}>
-                Delete
-                <MenubarShortcut>Del</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onClearSelection}>
-                Clear Selection
-              </MenubarItem>
-            </MenubarContent>
-          </MenubarMenu>
+                <MenubarMenu>
+                  <MenubarTrigger>
+                    Edit
+                  </MenubarTrigger>
+                  <MenubarContent className="min-w-44 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs" disabled={!canUndo} onClick={onUndo}>
+                      Undo
+                      <MenubarShortcut>Cmd+Z</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" disabled={!canRedo} onClick={onRedo}>
+                      Redo
+                      <MenubarShortcut>Cmd+Shift+Z</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onDuplicateSelection}>
+                      Duplicate
+                      <MenubarShortcut>Cmd+D</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onGroupSelection}>
+                      Group Selection
+                      <MenubarShortcut>Cmd+G</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onDeleteSelection}>
+                      Delete
+                      <MenubarShortcut>Del</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onClearSelection}>
+                      Clear Selection
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
 
-          <MenubarMenu>
-            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
-              Render
-            </MenubarTrigger>
-            <MenubarContent className="min-w-44 p-1.5">
-              <MenubarItem className="rounded-lg text-xs" onClick={onFocusSelection}>
-                Focus Selection
-              </MenubarItem>
-            </MenubarContent>
-          </MenubarMenu>
+                <MenubarMenu>
+                  <MenubarTrigger>
+                    Render
+                  </MenubarTrigger>
+                  <MenubarContent className="min-w-44 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs" onClick={onFocusSelection}>
+                      Focus Selection
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
 
-          <MenubarMenu>
-            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
-              View
-            </MenubarTrigger>
-            <MenubarContent className="min-w-48 p-1.5">
-              <MenubarItem className="rounded-lg text-xs" onClick={onToggleLogicViewer}>
-                {logicViewerOpen ? "Hide" : "Show"} Logic Graph
-                <MenubarShortcut>Cmd+Shift+L</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs" onClick={onToggleCopilot}>
-                {copilotOpen ? "Hide" : "Show"} AI Vibe
-                <MenubarShortcut>Cmd+L</MenubarShortcut>
-              </MenubarItem>
-            </MenubarContent>
-          </MenubarMenu>
+                <MenubarMenu>
+                  <MenubarTrigger>
+                    View
+                  </MenubarTrigger>
+                  <MenubarContent className="min-w-48 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs" onClick={onToggleLogicViewer}>
+                      {logicViewerOpen ? "Hide" : "Show"} Logic Graph
+                      <MenubarShortcut>Cmd+Shift+L</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onToggleCopilot}>
+                      {copilotOpen ? "Hide" : "Show"} AI Vibe
+                      <MenubarShortcut>Cmd+L</MenubarShortcut>
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
 
-          <MenubarMenu>
-            <MenubarTrigger className="h-8 rounded-[16px] px-3 text-[11px]">
-              Help
-            </MenubarTrigger>
-            <MenubarContent className="min-w-52 p-1.5">
-              <MenubarItem className="rounded-lg text-xs">
-                Click to select
-                <MenubarShortcut>Mouse 1</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs">
-                Focus object
-                <MenubarShortcut>Double click</MenubarShortcut>
-              </MenubarItem>
-              <MenubarItem className="rounded-lg text-xs">
-                Marquee select
-                <MenubarShortcut>Shift drag</MenubarShortcut>
-              </MenubarItem>
-            </MenubarContent>
-          </MenubarMenu>
-        </Menubar>
+                <MenubarMenu>
+                  <MenubarTrigger>
+                    Help
+                  </MenubarTrigger>
+                  <MenubarContent className="min-w-52 p-1.5">
+                    <MenubarItem className="rounded-lg text-xs">
+                      Click to select
+                      <MenubarShortcut>Mouse 1</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs">
+                      Focus object
+                      <MenubarShortcut>Double click</MenubarShortcut>
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs">
+                      Marquee select
+                      <MenubarShortcut>Shift drag</MenubarShortcut>
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+              </Menubar>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        {gameConnectionControl}
-        <div className="glass-pill flex items-center gap-1.5 rounded-[20px] px-1.5 py-1.5">
+        {gameConnectionControl ? (
+          <div className="editor-toolbar-segment flex items-center gap-1 rounded-[14px] px-1.5 py-1">
+            <span className="hidden pl-1 text-[9px] font-semibold tracking-[0.16em] text-white/38 uppercase xl:block">
+              Live Sync
+            </span>
+            {gameConnectionControl}
+          </div>
+        ) : null}
+        <div className="editor-toolbar-segment flex items-center gap-1 rounded-[14px] px-1.5 py-1">
+          <span className="hidden pl-1 text-[9px] font-semibold tracking-[0.16em] text-white/38 uppercase lg:block">
+            Viewport
+          </span>
           <Button
             aria-label={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
-            className="hidden min-w-[4.75rem] justify-center gap-1.5 px-3 text-[11px] text-foreground/72 hover:text-foreground sm:flex"
+            className="editor-toolbar-button hidden min-w-[5.25rem] justify-center gap-1.5 rounded-[10px] px-3 text-[11px] hover:translate-y-0 active:scale-100 sm:flex"
             onClick={onToggleViewportQuality}
             size="sm"
             title={`Canvas DPR ${viewportQuality.toFixed(2)}x`}
@@ -199,9 +219,10 @@ export function EditorMenuBar({
             <Gauge className="size-3.5" />
             {viewportQuality.toFixed(2)}
           </Button>
+          <div className="editor-toolbar-divider hidden sm:block" />
           <Button
             aria-label="Logic Graph"
-            className={logicViewerOpen ? "glass-button-active size-8 rounded-[16px] text-emerald-50" : "size-8 rounded-[16px] text-foreground/65 hover:text-foreground"}
+            className={logicViewerOpen ? "editor-toolbar-button editor-toolbar-button-active size-8 rounded-[10px] hover:translate-y-0 active:scale-100" : "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100"}
             onClick={onToggleLogicViewer}
             title="Logic Graph (Cmd+Shift+L)"
             size="icon-sm"
@@ -211,7 +232,7 @@ export function EditorMenuBar({
           </Button>
           <Button
             aria-label="AI Vibe"
-            className={copilotOpen ? "glass-button-active size-8 rounded-[16px] text-emerald-50" : "size-8 rounded-[16px] text-foreground/65 hover:text-foreground"}
+            className={copilotOpen ? "editor-toolbar-button editor-toolbar-button-active size-8 rounded-[10px] hover:translate-y-0 active:scale-100" : "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100"}
             onClick={onToggleCopilot}
             title="AI Vibe (Cmd+L)"
             size="icon-sm"

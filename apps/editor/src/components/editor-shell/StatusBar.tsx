@@ -45,14 +45,16 @@ export function StatusBar({
 
   return (
     <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex items-end justify-between gap-2 sm:inset-x-4 sm:bottom-4 sm:gap-3">
-      <div className="glass-panel glass-panel-subtle pointer-events-auto flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto rounded-[24px] px-2.5 py-2 text-[10px] tracking-[0.08em] text-foreground/58 sm:gap-2 sm:px-3 sm:py-2.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="editor-toolbar-footer pointer-events-auto flex min-w-0 flex-1 items-center gap-2 overflow-x-auto rounded-[18px] px-2.5 py-2 text-[10px] tracking-[0.08em] text-foreground/58 sm:px-3 sm:py-2.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <StatusMetric label="Tool" value={activeToolLabel} />
         {activeToolLabel === "Mesh Edit" ? <StatusMetric label="Mode" value={meshEditMode} /> : null}
         <StatusMetric className="hidden md:flex" label="View" value={viewModeLabel} />
         <StatusMetric className="hidden lg:flex" label="Viewport" value={activeViewportId} />
         <StatusMetric label="Snap" value={snapText} />
         <StatusMetric className="hidden md:flex" label="Grid" value={`${gridSnapValues.length} presets`} />
+        <div className="editor-toolbar-divider hidden h-5 sm:block" />
         <div className="hidden min-w-0 flex-1 truncate text-foreground/44 sm:block">{focusText}</div>
+        <div className="editor-toolbar-divider hidden h-5 xl:block" />
         <div className="hidden max-w-[24rem] truncate text-foreground/36 xl:block">{interactionHint}</div>
       </div>
       <JobStatus jobs={jobs} />
@@ -70,9 +72,9 @@ function StatusMetric({
   value: string;
 }) {
   return (
-    <div className={`glass-pill flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5${className ? ` ${className}` : ""}`}>
-      <span className="text-foreground/38 uppercase">{label}</span>
-      <span className="text-foreground/72 uppercase">{value}</span>
+    <div className={`editor-toolbar-segment flex shrink-0 items-center gap-1.5 rounded-[10px] px-2.5 py-1.5${className ? ` ${className}` : ""}`}>
+      <span className="text-[#f6d07d]/46 uppercase">{label}</span>
+      <span className="text-foreground/76 uppercase">{value}</span>
     </div>
   );
 }

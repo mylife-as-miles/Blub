@@ -62,12 +62,12 @@ export function GameConnectionControl({
         render={
           <Button
             aria-label="Game connection"
-            className="flex flex-row gap-1 px-2 text-[11px] text-foreground/65 hover:text-foreground"
-            size="icon-xs"
+            className="editor-toolbar-button flex flex-row gap-1 rounded-[10px] px-2 text-[11px] hover:translate-y-0 active:scale-100"
+            size="sm"
             title="Connected game"
             variant="ghost"
           >
-            <Gamepad2 className={`size-3.5 ${games.length > 0 ? "text-emerald-400" : "text-foreground/55"}`} />
+            <Gamepad2 className={`size-3.5 ${games.length > 0 ? "text-[#f6d07d]" : "text-foreground/55"}`} />
             <span className="max-w-28 truncate">{connectionLabel}</span>
           </Button>
         }
@@ -75,7 +75,7 @@ export function GameConnectionControl({
 
       <PopoverContent
         align="end"
-        className="w-96 gap-3 rounded-2xl border border-white/8 bg-[#09110f]/96 p-3 shadow-[0_24px_60px_rgba(1,6,5,0.5)] backdrop-blur-xl"
+        className="editor-toolbar-shell w-96 gap-3 rounded-[18px] p-3"
       >
         <PopoverHeader>
           <PopoverTitle className="text-sm text-foreground">Editor Sync</PopoverTitle>
@@ -107,7 +107,7 @@ export function GameConnectionControl({
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/45">Connected Games</span>
-            <Button onClick={onRefresh} size="icon-xs" variant="ghost">
+            <Button className="editor-toolbar-button rounded-[10px] hover:translate-y-0 active:scale-100" onClick={onRefresh} size="icon-xs" variant="ghost">
               <RefreshCw className={`size-3 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
           </div>
@@ -120,7 +120,7 @@ export function GameConnectionControl({
             ) : (
               games.map((game) => (
                 <button
-                  className={`rounded-xl border px-3 py-2 text-left transition ${game.id === selectedGameId ? "border-emerald-400/35 bg-emerald-500/10 text-foreground" : "border-white/8 bg-white/4 text-foreground/70 hover:bg-white/7"}`}
+                  className={`rounded-xl border px-3 py-2 text-left transition ${game.id === selectedGameId ? "border-[#f6d07d]/30 bg-[#f6d07d]/10 text-foreground" : "border-white/8 bg-white/4 text-foreground/70 hover:bg-white/7"}`}
                   key={game.id}
                   onClick={() => onSelectGame(game.id)}
                   type="button"
@@ -143,7 +143,7 @@ export function GameConnectionControl({
         />
 
         {lastPush ? (
-          <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/8 px-3 py-2 text-xs text-emerald-100/85">
+          <div className="rounded-xl border border-[#f6d07d]/18 bg-[#f6d07d]/8 px-3 py-2 text-xs text-[#fff0cb]/85">
             Pushed `{lastPush.projectSlug}` to `{lastPush.scenePath}` in {lastPush.game.name}.
           </div>
         ) : null}
@@ -166,7 +166,7 @@ function ForceSwitchRow(props: {
   const [forceSwitch, setForceSwitch] = React.useState(true);
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/4 px-3 py-2.5">
+    <div className="editor-toolbar-segment flex items-center justify-between gap-3 rounded-xl px-3 py-2.5">
       <div className="min-w-0">
         <div className="text-sm text-foreground">Force Scene Switch</div>
         <div className="text-xs text-foreground/50">Reload the running game into this scene after the files land.</div>
@@ -174,7 +174,7 @@ function ForceSwitchRow(props: {
 
       <div className="flex items-center gap-2">
         <Switch checked={forceSwitch} onCheckedChange={setForceSwitch} size="sm" />
-        <Button disabled={props.pushDisabled} onClick={() => props.onPushScene(forceSwitch)} size="sm">
+        <Button className="hover:translate-y-0 active:scale-100" disabled={props.pushDisabled} onClick={() => props.onPushScene(forceSwitch)} size="sm">
           {props.isPushing ? <LoaderCircle className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
           Push
         </Button>

@@ -437,7 +437,7 @@ export function EditorShell({
   return (
     <div className="editor-shell flex flex-col text-foreground" style={{ height: "100dvh" }}>
       <header className="relative z-20 shrink-0 px-2 pt-2 sm:px-3 sm:pt-3">
-        <div className="glass-panel glass-panel-strong rounded-[20px] sm:rounded-[28px]">
+        <div className="editor-toolbar-shell rounded-[20px] sm:rounded-[22px]">
           <EditorMenuBar
             canRedo={canRedo}
             canUndo={canUndo}
@@ -749,9 +749,9 @@ function ViewportPaneFrame({
       )}
     >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0)_12%),radial-gradient(circle_at_top,rgba(148,163,184,0.16),transparent_48%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[linear-gradient(180deg,rgba(21,25,32,0.94),rgba(12,15,20,0.84))] px-4 py-2.5 backdrop-blur-sm">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[linear-gradient(180deg,rgba(33,38,47,0.96),rgba(16,19,26,0.9))] px-4 py-2.5 backdrop-blur-sm">
         <div className="flex items-center gap-2">
-          <span className="rounded-md border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/82 uppercase">
+          <span className="editor-toolbar-segment rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/82 uppercase">
             {label}
           </span>
           <span className="text-[10px] font-medium tracking-[0.18em] text-white/42 uppercase">
@@ -759,17 +759,17 @@ function ViewportPaneFrame({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-md border border-white/10 bg-white/6 px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/62 uppercase">
+          <span className="editor-toolbar-segment rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/62 uppercase">
             {renderMode === "lit" ? "Lit" : "Wireframe"}
           </span>
           {active ? (
-            <span className="rounded-md border border-[#f6d07d]/30 bg-[#f6d07d]/12 px-2 py-1 text-[10px] font-semibold tracking-[0.18em] text-[#f9dfab] uppercase">
+            <span className="editor-toolbar-readout rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase">
               Active
             </span>
           ) : null}
         </div>
       </div>
-      <div className="pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
+      <div className="editor-toolbar-segment pointer-events-none absolute bottom-4 right-4 z-20 rounded-xl px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/58 uppercase backdrop-blur-sm">
         Target {target.x.toFixed(1)} {target.y.toFixed(1)} {target.z.toFixed(1)}
       </div>
       {children}

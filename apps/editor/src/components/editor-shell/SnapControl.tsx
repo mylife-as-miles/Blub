@@ -1,5 +1,4 @@
 import type { GridSnapValue } from "@blud/render-pipeline";
-import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { Grid3X3 } from "@/components/editor-shell/icons";
 import { Button } from "@/components/ui/button";
 import { DragInput } from "@/components/ui/drag-input";
@@ -22,16 +21,20 @@ export function SnapControl({
   snapEnabled: boolean;
 }) {
   return (
-    <FloatingPanel className="glass-panel-subtle flex h-12 items-center gap-2.5 px-3.5 text-[11px] text-foreground/72">
-      <Grid3X3 className="size-3.5 text-emerald-300" />
+    <div className="editor-toolbar-segment flex h-11 items-center gap-2 rounded-[14px] px-2.5 text-[11px] text-foreground/72">
+      <Grid3X3 className="size-3.5 text-[#f6d07d]" />
+      <div className="hidden flex-col leading-none xl:flex">
+        <span className="editor-toolbar-label">Grid</span>
+        <span className="mt-1 text-[10px] font-medium text-foreground/54 uppercase">Snap</span>
+      </div>
       <Tooltip>
         <TooltipTrigger
           render={
             <Button
               aria-pressed={snapEnabled}
               className={cn(
-                "h-8 min-w-12 rounded-[16px] px-2.5 text-[10px] font-semibold tracking-[0.16em] uppercase",
-                snapEnabled ? "glass-button-active text-emerald-50" : "text-foreground/48"
+                "editor-toolbar-button h-8 min-w-12 rounded-[10px] px-2.5 text-[10px] font-semibold tracking-[0.16em] uppercase hover:translate-y-0 active:scale-100",
+                snapEnabled ? "editor-toolbar-button-active text-[#fff0cb]" : "text-foreground/48"
               )}
               onClick={() => onSetSnapEnabled(!snapEnabled)}
               size="sm"
@@ -45,24 +48,24 @@ export function SnapControl({
           <TooltipLabel label="Toggle snapping" />
         </TooltipContent>
       </Tooltip>
-      <div className="h-5 w-px bg-white/10" />
+      <div className="editor-toolbar-divider h-5" />
       <Popover>
         <PopoverTrigger
           render={
-            <Button className="h-8 rounded-[16px] px-3 text-[11px] font-medium text-foreground/82" size="sm" variant="ghost">
+            <Button className="editor-toolbar-button h-8 rounded-[10px] px-3 text-[11px] font-semibold hover:translate-y-0 active:scale-100" size="sm" variant="ghost">
               {formatSnapValue(currentSnapSize)}
             </Button>
           }
         />
-        <PopoverContent align="start" className="w-60 rounded-[24px] p-3">
+        <PopoverContent align="start" className="w-60 rounded-[18px] p-3">
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-medium tracking-[0.18em] text-foreground/45 uppercase">Grid Snap</span>
+              <span className="text-[10px] font-medium tracking-[0.18em] text-[#f6d07d]/62 uppercase">Grid Snap</span>
               <Button
                 aria-pressed={snapEnabled}
                 className={cn(
-                  "h-6 min-w-10 rounded-lg px-2 text-[10px] font-semibold tracking-[0.14em] uppercase",
-                  snapEnabled ? "glass-button-active text-emerald-50" : "text-foreground/48"
+                  "editor-toolbar-button h-6 min-w-10 rounded-lg px-2 text-[10px] font-semibold tracking-[0.14em] uppercase hover:translate-y-0 active:scale-100",
+                  snapEnabled ? "editor-toolbar-button-active text-[#fff0cb]" : "text-foreground/48"
                 )}
                 onClick={() => onSetSnapEnabled(!snapEnabled)}
                 size="xs"
@@ -84,8 +87,8 @@ export function SnapControl({
               {gridSnapValues.map((snapValue) => (
                 <Button
                   className={cn(
-                    "h-6 rounded-lg px-0 text-[10px] font-medium",
-                    snapValue === currentSnapSize && "glass-button-active text-emerald-50"
+                    "editor-toolbar-button h-6 rounded-lg px-0 text-[10px] font-medium hover:translate-y-0 active:scale-100",
+                    snapValue === currentSnapSize && "editor-toolbar-button-active text-[#fff0cb]"
                   )}
                   key={snapValue}
                   onClick={() => onSetSnapSize(snapValue)}
@@ -99,7 +102,7 @@ export function SnapControl({
           </div>
         </PopoverContent>
       </Popover>
-    </FloatingPanel>
+    </div>
   );
 }
 

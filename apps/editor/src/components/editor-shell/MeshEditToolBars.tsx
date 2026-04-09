@@ -1,5 +1,4 @@
 import type { MeshEditMode } from "@/viewport/editing";
-import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import {
   ArcEdgeIcon,
   BevelIcon,
@@ -81,26 +80,26 @@ export function MeshEditToolBars({
     meshEditMode === "face" ? "Merge faces" : meshEditMode === "edge" ? "Merge edges" : "Merge vertices";
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex items-stretch gap-2">
-        <FloatingPanel className="glass-panel-subtle flex h-11 items-center gap-1.5 p-1.5">
+    <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-wrap items-stretch gap-2">
+        <MeshToolbarSection label="Selection">
           <MeshBarButton active={meshEditMode === "vertex"} icon={VertexModeIcon} onClick={() => onSetMeshEditMode("vertex")} shortcut="V" tooltip="Vertex mode" />
           <MeshBarButton active={meshEditMode === "edge"} icon={EdgeModeIcon} onClick={() => onSetMeshEditMode("edge")} shortcut="E" tooltip="Edge mode" />
           <MeshBarButton active={meshEditMode === "face"} icon={FaceModeIcon} onClick={() => onSetMeshEditMode("face")} shortcut="F" tooltip="Face mode" />
-        </FloatingPanel>
-        <FloatingPanel className="glass-panel-subtle flex h-11 items-center gap-1.5 p-1.5">
+        </MeshToolbarSection>
+        <MeshToolbarSection label="Transform">
           <MeshBarButton active={transformMode === "translate"} disabled={!selectedGeometry} icon={TranslateModeIcon} onClick={() => onSetTransformMode("translate")} shortcut="G" tooltip="Translate" />
           <MeshBarButton active={transformMode === "rotate"} disabled={!selectedGeometry} icon={RotateModeIcon} onClick={() => onSetTransformMode("rotate")} shortcut="R" tooltip="Rotate" />
           <MeshBarButton active={transformMode === "scale"} disabled={!selectedGeometry} icon={ScaleModeIcon} onClick={() => onSetTransformMode("scale")} shortcut="S" tooltip="Scale" />
-          <div className="mx-0.5 h-5 w-px bg-white/10" />
+          <div className="editor-toolbar-divider mx-0.5 h-5" />
           <MeshBarButton disabled={!selectedMesh} icon={InflateIcon} onClick={onInflate} tooltip="Inflate" />
           <MeshBarButton disabled={!selectedMesh} icon={DeflateIcon} onClick={onDeflate} tooltip="Deflate" />
           <MeshBarButton disabled={!selectedMesh} icon={RaiseTopIcon} onClick={onRaiseTop} tooltip="Raise top" />
           <MeshBarButton disabled={!selectedMesh} icon={LowerTopIcon} onClick={onLowerTop} tooltip="Lower top" />
           <MeshBarButton disabled={!selectedGeometry || meshEditMode !== "edge"} icon={ArcEdgeIcon} onClick={onArc} shortcut="A" tooltip="Arc" />
           <MeshBarButton disabled={!selectedGeometry || meshEditMode !== "edge"} icon={BevelIcon} onClick={onBevel} shortcut="B" tooltip="Bevel" />
-        </FloatingPanel>
-        <FloatingPanel className="glass-panel-subtle flex h-11 items-center gap-1.5 p-1.5">
+        </MeshToolbarSection>
+        <MeshToolbarSection label="Topology">
           <MeshBarButton disabled={!selectedGeometry || meshEditMode === "vertex"} icon={ExtrudeIcon} onClick={onExtrude} shortcut="X" tooltip="Extrude" />
           <MeshBarButton disabled={!selectedGeometry || meshEditMode === "vertex"} icon={CutMeshIcon} onClick={onCut} shortcut={meshEditMode === "face" ? "Shift+K" : "K"} tooltip={meshEditMode === "face" ? "Face cut" : "Edge cut"} />
           <MeshBarButton disabled={!selectedGeometry} icon={MergeFacesIcon} onClick={onMerge} shortcut="M" tooltip={mergeTooltip} />
@@ -108,10 +107,10 @@ export function MeshEditToolBars({
           <MeshBarButton disabled={!selectedGeometry || meshEditMode !== "face"} icon={SubdivideIcon} onClick={onSubdivide} shortcut="D" tooltip="Subdivide face" />
           <MeshBarButton disabled={!selectedGeometry || meshEditMode !== "face"} icon={DeleteFacesIcon} onClick={onDelete} shortcut="Del" tooltip="Delete faces" />
           <MeshBarButton disabled={!selectedGeometry} icon={FlipNormalsIcon} onClick={onInvertNormals} shortcut="N" tooltip="Invert normals" />
-        </FloatingPanel>
+        </MeshToolbarSection>
       </div>
       {sculptMode ? (
-        <FloatingPanel className="glass-panel-subtle flex min-w-[320px] items-center gap-3 p-2.5">
+        <MeshToolbarSection label="Sculpt">
           <DragInput
             className="w-[150px]"
             compact
@@ -134,8 +133,25 @@ export function MeshEditToolBars({
             step={0.005}
             value={sculptBrushStrength}
           />
-        </FloatingPanel>
+        </MeshToolbarSection>
       ) : null}
+    </div>
+  );
+}
+
+function MeshToolbarSection({
+  children,
+  label
+}: {
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <div className="pl-1.5 text-[9px] font-semibold tracking-[0.22em] text-[#f6d07d]/58 uppercase">{label}</div>
+      <div className="editor-toolbar-segment flex min-h-11 items-center gap-1.5 rounded-[14px] p-1.5">
+        {children}
+      </div>
     </div>
   );
 }
@@ -161,8 +177,8 @@ function MeshBarButton({
         render={
           <Button
             className={cn(
-              "size-8 rounded-[16px] text-foreground/58 hover:text-foreground",
-              active && "glass-button-active text-emerald-50"
+              "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100",
+              active && "editor-toolbar-button-active text-[#fff0cb]"
             )}
             disabled={disabled}
             onClick={onClick}

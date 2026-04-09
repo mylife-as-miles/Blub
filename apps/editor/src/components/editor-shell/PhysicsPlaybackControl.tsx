@@ -1,5 +1,4 @@
 import { Pause, Play, Square } from "lucide-react";
-import { FloatingPanel } from "@/components/editor-shell/FloatingPanel";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -16,11 +15,15 @@ export function PhysicsPlaybackControl({
   onStop: () => void;
 }) {
   return (
-    <FloatingPanel className="glass-panel-subtle flex h-12 items-center gap-1.5 px-2">
+    <div className="editor-toolbar-segment flex h-11 items-center gap-2 rounded-[14px] px-2">
+      <div className="hidden flex-col leading-none xl:flex">
+        <span className="editor-toolbar-label">Sim</span>
+        <span className="mt-1 text-[10px] font-medium text-foreground/54 uppercase">Physics</span>
+      </div>
       <PlaybackButton active={mode === "running"} icon={Play} label="Run Physics" onClick={onPlay} />
       <PlaybackButton active={mode === "paused"} icon={Pause} label="Pause Physics" onClick={onPause} />
       <PlaybackButton active={mode === "stopped"} icon={Square} label="Stop Physics" onClick={onStop} />
-    </FloatingPanel>
+    </div>
   );
 }
 
@@ -42,8 +45,8 @@ function PlaybackButton({
           <Button
             aria-label={label}
             className={cn(
-              "size-8 rounded-[16px] text-foreground/58 hover:text-foreground",
-              active && "glass-button-active text-emerald-50"
+              "editor-toolbar-button size-8 rounded-[10px] hover:translate-y-0 active:scale-100",
+              active && "editor-toolbar-button-active text-[#fff0cb]"
             )}
             onClick={onClick}
             size="icon-sm"

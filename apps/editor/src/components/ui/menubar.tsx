@@ -27,7 +27,7 @@ function Menubar({ className, ...props }: MenubarPrimitive.Props) {
     <MenubarPrimitive
       data-slot="menubar"
       className={cn(
-        "glass-panel-subtle flex h-10 items-center gap-1 rounded-2xl p-[4px]",
+        "editor-toolbar-segment flex h-auto items-center gap-1 rounded-[14px] p-1",
         className
       )}
       {...props}
@@ -59,7 +59,7 @@ function MenubarTrigger({
     <DropdownMenuTrigger
       data-slot="menubar-trigger"
       className={cn(
-        "flex items-center rounded-xl px-2.5 py-1 text-sm font-medium text-foreground/68 outline-hidden select-none transition-[transform,background-color,color,border-color,box-shadow] duration-200 [transition-timing-function:var(--ease-out-strong)] hover:-translate-y-px hover:bg-white/[0.08] hover:text-foreground aria-expanded:bg-white/[0.08] aria-expanded:text-foreground",
+        "editor-toolbar-button flex h-8 items-center rounded-[10px] px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-foreground/74 uppercase outline-hidden select-none transition-[background-color,color,border-color,box-shadow] duration-150 [transition-timing-function:var(--ease-out-strong)] hover:translate-y-0 active:scale-100 aria-expanded:border-[#f6d07d]/18 aria-expanded:bg-[#f6d07d]/10 aria-expanded:text-[#fff0cb]",
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ function MenubarContent({
       align={align}
       alignOffset={alignOffset}
       sideOffset={sideOffset}
-      className={cn("glass-panel glass-panel-strong min-w-40 rounded-[22px] p-1.5 text-popover-foreground duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95", className )}
+      className={cn("editor-toolbar-shell min-w-44 rounded-[18px] p-1.5 text-popover-foreground duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95", className )}
       {...props}
     />
   )
@@ -98,7 +98,7 @@ function MenubarItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/menubar-item gap-1.5 rounded-xl px-2 py-1.5 text-sm transition-[transform,background-color,color] duration-150 [transition-timing-function:var(--ease-out-strong)] focus:-translate-y-px focus:bg-white/[0.08] focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!",
+        "group/menubar-item gap-1.5 rounded-xl border border-transparent px-2.5 py-2 text-[12px] transition-[background-color,color,border-color] duration-150 [transition-timing-function:var(--ease-out-strong)] focus:border-white/8 focus:bg-white/[0.06] focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!",
         className
       )}
       {...props}
