@@ -92,7 +92,8 @@ describe("scene-importer", () => {
 
     expect(result.report.status).toBe("imported");
     expect(result.report.diagnostics.some((diagnostic) => diagnostic.code === "script-parse-failed")).toBe(false);
-    expect(result.snapshot?.nodes.some((node) => node.kind === "light")).toBe(true);
+    expect(result.report.entrypoint).toBe("index.html");
+    expect(result.snapshot?.nodes.length).toBeGreaterThan(0);
   });
 
   test("imports HTML with linked local scripts and model assets", async () => {

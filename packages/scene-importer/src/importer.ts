@@ -20,10 +20,9 @@ import traverseModule from "@babel/traverse";
 import * as t from "@babel/types";
 import type { HtmlJsImportInput, HtmlJsImportResult, ImportDiagnostic, ImportReport } from "./types";
 
-const traverse =
-  typeof traverseModule === "function"
-    ? traverseModule
-    : (traverseModule as unknown as { default: typeof traverseModule }).default;
+type BabelTraverse = typeof import("@babel/traverse").default;
+
+const traverse = resolveTraverse(traverseModule);
 
 type ProjectFile = {
   bytes: Uint8Array;
@@ -1341,4 +1340,28 @@ function resolveTraversalFilename(hub: unknown, fallback: string) {
   };
 
   return typedHub.getFilename?.() || typedHub.file?.opts?.filename || fallback;
+}
+
+function resolveTraverse(moduleValue: unknown): BabelTraverse {
+  if (typeof moduleValue === "function") {
+    return moduleValue as unknown as BabelTraverse;
+  }
+
+  if (moduleValue && typeof moduleValue === "object") {
+    const defaultExport = (moduleValue as { default?: unknown }).default;
+
+    if (typeof defaultExport === "function") {
+      return defaultExport as unknown as BabelTraverse;
+    }
+
+    if (defaultExport && typeof defaultExport === "object") {
+      const nestedDefaultExport = (defaultExport as { default?: unknown }).default;
+
+      if (typeof nestedDefaultExport === "function") {
+        return nestedDefaultExport as unknown as BabelTraverse;
+      }
+    }
+  }
+
+  throw new Error("Failed to resolve @babel/traverse runtime export.");
 }
