@@ -273,6 +273,9 @@ export function ViewportCanvas({
   onViewportChange,
   physicsPlayback,
   physicsRevision,
+  previewPossessed,
+  previewSessionMode,
+  previewStepTick,
   renderMode,
   renderScene,
   sceneSettings,
@@ -317,7 +320,9 @@ export function ViewportCanvas({
   const [selectedPathPointIndex, setSelectedPathPointIndex] = useState<number | null>(null);
   const [sculptState, setSculptState] = useState<SculptBrushState | null>(null);
   const snapSize = resolveViewportSnapSize(viewport);
-  const editorInteractionEnabled = physicsPlayback === "stopped";
+  const previewActive = physicsPlayback !== "stopped";
+  const editorInteractionEnabled = physicsPlayback === "stopped" || (physicsPlayback === "paused" && !previewPossessed);
+  const [previewMouseCaptured, setPreviewMouseCaptured] = useState(false);
   const [meshEditSelectionIds, setMeshEditSelectionIds] = useState<string[]>([]);
   const [transformDragging, setTransformDragging] = useState(false);
   const [marquee, setMarquee] = useState<MarqueeState | null>(null);
@@ -340,6 +345,12 @@ export function ViewportCanvas({
   pathPreviewPathsRef.current = pathPreviewPaths;
   sculptStateRef.current = sculptState;
   previewBrushDataRef.current = onPreviewBrushData;
+
+  useEffect(() => {
+    if (!previewActive || !previewPossessed) {
+      setPreviewMouseCaptured(false);
+    }
+  }, [previewActive, previewPossessed]);
 
   const handleTransformDragStateChange = (dragging: boolean) => {
     transformDraggingRef.current = dragging;
@@ -3040,6 +3051,17 @@ export function ViewportCanvas({
   };
 
   const marqueeRect = marquee ? createScreenRect(marquee.origin, marquee.current) : undefined;
+  const cameraControlsEnabled =
+    isActiveViewport &&
+    !marquee &&
+    !transformDragging &&
+    !brushCreateState &&
+    !bevelState &&
+    !extrudeState &&
+    !sculptState?.dragging &&
+    !faceCutState &&
+    !faceSubdivisionState &&
+    (physicsPlayback === "stopped" || !previewPossessed);
   const canvasCamera =
     viewport.projection === "orthographic"
       ? {
@@ -3125,18 +3147,7 @@ export function ViewportCanvas({
           />
         ) : null}
         <EditorCameraRig
-          controlsEnabled={
-            isActiveViewport &&
-            editorInteractionEnabled &&
-            !marquee &&
-            !transformDragging &&
-            !brushCreateState &&
-            !bevelState &&
-            !extrudeState &&
-            !sculptState?.dragging &&
-            !faceCutState &&
-            !faceSubdivisionState
-          }
+          controlsEnabled={cameraControlsEnabled}
           onViewportChange={onViewportChange}
           viewportId={viewportId}
           viewport={viewport}
@@ -3166,9 +3177,13 @@ export function ViewportCanvas({
           pathDefinitions={pathDefinitions}
           physicsPlayback={physicsPlayback}
           physicsRevision={physicsRevision}
+          previewPossessed={previewPossessed}
+          previewSessionMode={previewSessionMode}
+          previewStepTick={previewStepTick}
           renderMode={renderMode}
           renderScene={renderScene}
           sceneSettings={sceneSettings}
+          onPreviewCursorCapturedChange={setPreviewMouseCaptured}
           selectedHookNodes={selectedNodes}
           selectedPathId={selectedScenePathId}
           selectedNodeIds={selectedNodeIds}
@@ -3307,7 +3322,14 @@ export function ViewportCanvas({
         ) : null}
       </Canvas>
 
-      <ViewportHud isActiveViewport={isActiveViewport} viewport={viewport} />
+      <ViewportHud
+        isActiveViewport={isActiveViewport}
+        physicsPlayback={physicsPlayback}
+        previewMouseCaptured={previewMouseCaptured}
+        previewPossessed={previewPossessed}
+        previewSessionMode={previewSessionMode}
+        viewport={viewport}
+      />
 
       {editorInteractionEnabled && (arcState || bevelState || extrudeState || sculptState || faceCutState || faceSubdivisionState) ? (
         <div className="pointer-events-none absolute inset-0 z-20 cursor-crosshair" />

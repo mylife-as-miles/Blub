@@ -34,6 +34,8 @@ export type MeshEditToolbarActionRequest = {
   kind: MeshEditToolbarAction;
 };
 
+export type PreviewSessionMode = "play" | "simulate";
+
 export type ViewportCanvasProps = {
   activeBrushShape: BrushShape;
   aiModelPlacementArmed: boolean;
@@ -72,6 +74,9 @@ export type ViewportCanvasProps = {
   onViewportChange: (viewportId: ViewportPaneId, viewport: ViewportState) => void;
   physicsPlayback: "paused" | "running" | "stopped";
   physicsRevision: number;
+  previewPossessed: boolean;
+  previewSessionMode: PreviewSessionMode | null;
+  previewStepTick: number;
   renderScene: DerivedRenderScene;
   renderMode: ViewportRenderMode;
   sceneSettings: SceneSettings;

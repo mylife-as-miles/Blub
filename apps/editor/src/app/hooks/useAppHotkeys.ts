@@ -14,10 +14,15 @@ type UseAppHotkeysOptions = {
   handleGroupSelection: () => void;
   handleInvertSelectionNormals: () => void;
   handleRedo: () => void;
+  handleStartPlayPreview: () => void;
+  handleStartSimulatePreview: () => void;
+  handleStopPreview: () => void;
   handleToggleCopilot: () => void;
   handleToggleLogicViewer: () => void;
+  handleTogglePreviewPossession: () => void;
   handleTranslateSelection: (axis: TransformAxis, direction: -1 | 1) => void;
   handleUndo: () => void;
+  previewActive?: boolean;
   setActiveToolId: (toolId: ToolId) => void;
   setMeshEditMode: (mode: MeshEditMode) => void;
   setTransformMode: (mode: "rotate" | "scale" | "translate") => void;
@@ -35,10 +40,15 @@ export function useAppHotkeys({
   handleGroupSelection,
   handleInvertSelectionNormals,
   handleRedo,
+  handleStartPlayPreview,
+  handleStartSimulatePreview,
+  handleStopPreview,
   handleToggleCopilot,
   handleToggleLogicViewer,
+  handleTogglePreviewPossession,
   handleTranslateSelection,
   handleUndo,
+  previewActive = false,
   setActiveToolId,
   setMeshEditMode,
   setTransformMode,
@@ -60,7 +70,7 @@ export function useAppHotkeys({
   };
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled && !previewActive) {
       return;
     }
 
@@ -77,6 +87,34 @@ export function useAppHotkeys({
       }
 
       if (typeof document !== "undefined" && document.body.dataset.viewportNavigation === "fly") {
+        return;
+      }
+
+      if (event.altKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        handleStartPlayPreview();
+        return;
+      }
+
+      if (event.altKey && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        handleStartSimulatePreview();
+        return;
+      }
+
+      if (previewActive && event.key === "Escape") {
+        event.preventDefault();
+        handleStopPreview();
+        return;
+      }
+
+      if (previewActive && event.key === "F8") {
+        event.preventDefault();
+        handleTogglePreviewPossession();
+        return;
+      }
+
+      if (!enabled) {
         return;
       }
 
@@ -296,10 +334,15 @@ export function useAppHotkeys({
     handleGroupSelection,
     handleInvertSelectionNormals,
     handleRedo,
+    handleStartPlayPreview,
+    handleStartSimulatePreview,
+    handleStopPreview,
     handleToggleCopilot,
     handleToggleLogicViewer,
+    handleTogglePreviewPossession,
     handleTranslateSelection,
     handleUndo,
+    previewActive,
     setActiveToolId,
     setMeshEditMode,
     setTransformMode,

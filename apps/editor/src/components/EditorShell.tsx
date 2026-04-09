@@ -30,7 +30,7 @@ import { ToolsPanel } from "@/components/editor-shell/ToolsPanel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ViewportCanvas } from "@/viewport/ViewportCanvas";
 import type { MeshEditMode } from "@/viewport/editing";
-import type { MeshEditToolbarActionRequest } from "@/viewport/types";
+import type { MeshEditToolbarActionRequest, PreviewSessionMode } from "@/viewport/types";
 import type { RightPanelId, ViewportQuality } from "@/state/ui-store";
 import {
   getViewModePreset,
@@ -111,6 +111,7 @@ type EditorShellProps = {
   onNewFile: () => void;
   onInvertSelectionNormals: () => void;
   onPausePhysics: () => void;
+  onResumePhysics: () => void;
   onMeshEditToolbarAction: (action: MeshEditToolbarActionRequest["kind"]) => void;
   onPlaceEntity: (type: EntityType) => void;
   onPlaceFloorPreset: (presetId: FloorPresetId) => void;
@@ -129,6 +130,8 @@ type EditorShellProps = {
   onPlacePrimitiveNode: (data: PrimitiveNodeData, transform: Transform, name: string) => void;
   onPlaceProp: (shape: PrimitiveShape) => void;
   onPlayPhysics: () => void;
+  onSimulatePhysics: () => void;
+  onStepPhysics: () => void;
   onPreviewBrushData: (nodeId: string, brush: Brush) => void;
   onPreviewEntityTransform: (entityId: string, transform: Transform) => void;
   onPreviewMeshData: (nodeId: string, mesh: EditableMesh) => void;
@@ -153,6 +156,7 @@ type EditorShellProps = {
   onSetSnapEnabled: (enabled: boolean) => void;
   onSetSnapSize: (snapSize: GridSnapValue) => void;
   onStopPhysics: () => void;
+  onTogglePreviewPossession: () => void;
   onSetTransformMode: (mode: "rotate" | "scale" | "translate") => void;
   onSetToolId: (toolId: ToolId) => void;
   onToggleCopilot: () => void;
@@ -179,6 +183,9 @@ type EditorShellProps = {
   onUpdateNodeTransform: (nodeId: string, transform: Transform, beforeTransform?: Transform) => void;
   physicsPlayback: "paused" | "running" | "stopped";
   physicsRevision: number;
+  previewPossessed: boolean;
+  previewSessionMode: PreviewSessionMode | null;
+  previewStepTick: number;
   renderScene: DerivedRenderScene;
   sceneSettings: SceneSettings;
   selectedScenePathId?: string;
@@ -243,6 +250,7 @@ export function EditorShell({
   onNewFile,
   onInvertSelectionNormals,
   onPausePhysics,
+  onResumePhysics,
   onMeshEditToolbarAction,
   onPlaceEntity,
   onPlaceFloorPreset,
@@ -261,6 +269,8 @@ export function EditorShell({
   onPlacePrimitiveNode,
   onPlaceProp,
   onPlayPhysics,
+  onSimulatePhysics,
+  onStepPhysics,
   onPreviewBrushData,
   onPreviewEntityTransform,
   onPreviewMeshData,
@@ -285,6 +295,7 @@ export function EditorShell({
   onSetSnapEnabled,
   onSetSnapSize,
   onStopPhysics,
+  onTogglePreviewPossession,
   onSetTransformMode,
   onSetToolId,
   onToggleCopilot,
@@ -311,6 +322,9 @@ export function EditorShell({
   onUpdateNodeTransform,
   physicsPlayback,
   physicsRevision,
+  previewPossessed,
+  previewSessionMode,
+  previewStepTick,
   renderScene,
   sceneSettings,
   selectedScenePathId,
@@ -352,7 +366,7 @@ export function EditorShell({
     }
   }, [copilot.latestGame, handleExitGameView]);
 
-  const selectionEnabled = physicsPlayback === "stopped";
+  const selectionEnabled = physicsPlayback === "stopped" || (physicsPlayback === "paused" && !previewPossessed);
   const nodes = Array.from(editor.scene.nodes.values());
   const entities = Array.from(editor.scene.entities.values());
   const materials = Array.from(editor.scene.materials.values());
@@ -419,6 +433,9 @@ export function EditorShell({
           onViewportChange={onUpdateViewport}
           physicsPlayback={physicsPlayback}
           physicsRevision={physicsRevision}
+          previewPossessed={previewPossessed}
+          previewSessionMode={previewSessionMode}
+          previewStepTick={previewStepTick}
           renderMode={definition.renderMode}
           renderScene={renderScene}
           sceneSettings={sceneSettings}
@@ -489,6 +506,7 @@ export function EditorShell({
               onLowerTop={() => onExtrudeSelection("y", -1)}
               onMeshEditToolbarAction={onMeshEditToolbarAction}
               onPausePhysics={onPausePhysics}
+              onResumePhysics={onResumePhysics}
               onPlaceBlockoutOpenRoom={onPlaceBlockoutOpenRoom}
               onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
               onPlaceBlockoutRoom={onPlaceBlockoutRoom}
@@ -498,7 +516,9 @@ export function EditorShell({
               onPlaceLight={onPlaceLight}
               onPlaceProp={onPlaceProp}
               onPlayPhysics={onPlayPhysics}
+              onSimulatePhysics={onSimulatePhysics}
               onRaiseTop={() => onExtrudeSelection("y", 1)}
+              onStepPhysics={onStepPhysics}
               onSelectBrushShape={(shape) => {
                 onSetActiveBrushShape(shape);
                 onSetToolId("brush");
@@ -514,7 +534,10 @@ export function EditorShell({
               onSetViewMode={onSetViewMode}
               onStartAiModelPlacement={onStartAiModelPlacement}
               onStopPhysics={onStopPhysics}
+              onTogglePreviewPossession={onTogglePreviewPossession}
               physicsPlayback={physicsPlayback}
+              previewPossessed={previewPossessed}
+              previewSessionMode={previewSessionMode}
               sculptBrushRadius={sculptBrushRadius}
               sculptBrushStrength={sculptBrushStrength}
               selectionEnabled={selectionEnabled}
@@ -629,6 +652,9 @@ export function EditorShell({
           gridSnapValues={gridSnapValues}
           jobs={jobs}
           meshEditMode={meshEditMode}
+          physicsPlayback={physicsPlayback}
+          previewPossessed={previewPossessed}
+          previewSessionMode={previewSessionMode}
           selectedNode={selectedNode}
           viewModeLabel={getViewModePreset(viewMode).shortLabel}
           viewport={activeViewport}

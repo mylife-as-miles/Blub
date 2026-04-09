@@ -16,7 +16,7 @@ import type { FloorPresetId } from "@/lib/floor-presets";
 import { cn } from "@/lib/utils";
 import type { RightPanelId } from "@/state/ui-store";
 import type { MeshEditMode } from "@/viewport/editing";
-import type { MeshEditToolbarActionRequest } from "@/viewport/types";
+import type { MeshEditToolbarActionRequest, PreviewSessionMode } from "@/viewport/types";
 import type { ViewModeId } from "@/viewport/viewports";
 
 const rightPanelOptions: Array<{
@@ -47,6 +47,7 @@ type ToolsPanelProps = {
   onMeshEditToolbarAction: (action: MeshEditToolbarActionRequest["kind"]) => void;
   onLowerTop: () => void;
   onPausePhysics: () => void;
+  onResumePhysics: () => void;
   onImportGlb: () => void;
   onPlaceEntity: (type: EntityType) => void;
   onPlaceFloorPreset: (presetId: FloorPresetId) => void;
@@ -57,7 +58,9 @@ type ToolsPanelProps = {
   onPlaceBlockoutStairs: () => void;
   onPlaceProp: (shape: PrimitiveShape) => void;
   onPlayPhysics: () => void;
+  onSimulatePhysics: () => void;
   onRaiseTop: () => void;
+  onStepPhysics: () => void;
   onSetSculptBrushRadius: (value: number) => void;
   onSetSculptBrushStrength: (value: number) => void;
   onSetRightPanel: (panel: RightPanelId | null) => void;
@@ -67,10 +70,13 @@ type ToolsPanelProps = {
   onSetSnapEnabled: (enabled: boolean) => void;
   onSetSnapSize: (snapSize: GridSnapValue) => void;
   onStopPhysics: () => void;
+  onTogglePreviewPossession: () => void;
   onSetToolId: (toolId: ToolId) => void;
   onSetTransformMode: (mode: "rotate" | "scale" | "translate") => void;
   onSetViewMode: (viewMode: ViewModeId) => void;
   physicsPlayback: "paused" | "running" | "stopped";
+  previewPossessed: boolean;
+  previewSessionMode: PreviewSessionMode | null;
   sculptMode?: "deflate" | "inflate" | null;
   sculptBrushRadius: number;
   sculptBrushStrength: number;
@@ -94,6 +100,7 @@ export function ToolsPanel({
   onMeshEditToolbarAction,
   onLowerTop,
   onPausePhysics,
+  onResumePhysics,
   onImportGlb,
   onPlaceEntity,
   onPlaceFloorPreset,
@@ -104,7 +111,9 @@ export function ToolsPanel({
   onPlaceBlockoutStairs,
   onPlaceProp,
   onPlayPhysics,
+  onSimulatePhysics,
   onRaiseTop,
+  onStepPhysics,
   onSetSculptBrushRadius,
   onSetSculptBrushStrength,
   onSetRightPanel,
@@ -114,10 +123,13 @@ export function ToolsPanel({
   onSetSnapEnabled,
   onSetSnapSize,
   onStopPhysics,
+  onTogglePreviewPossession,
   onSetToolId,
   onSetTransformMode,
   onSetViewMode,
   physicsPlayback,
+  previewPossessed,
+  previewSessionMode,
   sculptMode,
   sculptBrushRadius,
   sculptBrushStrength,
@@ -217,7 +229,18 @@ export function ToolsPanel({
                 onSetSnapSize={onSetSnapSize}
                 snapEnabled={snapEnabled}
               />
-              <PhysicsPlaybackControl mode={physicsPlayback} onPause={onPausePhysics} onPlay={onPlayPhysics} onStop={onStopPhysics} />
+              <PhysicsPlaybackControl
+                mode={physicsPlayback}
+                onPause={onPausePhysics}
+                onPlay={onPlayPhysics}
+                onResume={onResumePhysics}
+                onSimulate={onSimulatePhysics}
+                onStep={onStepPhysics}
+                onStop={onStopPhysics}
+                onTogglePossession={onTogglePreviewPossession}
+                previewPossessed={previewPossessed}
+                previewSessionMode={previewSessionMode}
+              />
               <FloorPresetsPanel disabled={physicsPlayback !== "stopped"} onPlaceFloorPreset={onPlaceFloorPreset} />
             </div>
           </PanelSection>

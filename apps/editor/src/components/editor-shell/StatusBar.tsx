@@ -3,6 +3,7 @@ import type { BrushShape, GeometryNode } from "@blud/shared";
 import type { WorkerJob } from "@blud/workers";
 import { JobStatus } from "@/components/editor-shell/JobStatus";
 import type { MeshEditMode } from "@/viewport/editing";
+import type { PreviewSessionMode } from "@/viewport/types";
 import type { ViewportPaneId } from "@/viewport/viewports";
 
 type StatusBarProps = {
@@ -12,6 +13,9 @@ type StatusBarProps = {
   gridSnapValues: readonly GridSnapValue[];
   jobs: WorkerJob[];
   meshEditMode: MeshEditMode;
+  physicsPlayback: "paused" | "running" | "stopped";
+  previewPossessed: boolean;
+  previewSessionMode: PreviewSessionMode | null;
   selectedNode?: GeometryNode;
   viewModeLabel: string;
   viewport: ViewportState;
@@ -24,6 +28,9 @@ export function StatusBar({
   gridSnapValues,
   jobs,
   meshEditMode,
+  physicsPlayback,
+  previewPossessed,
+  previewSessionMode,
   selectedNode,
   viewModeLabel,
   viewport
@@ -32,8 +39,18 @@ export function StatusBar({
   const focusText = selectedNode
     ? `focus ${selectedNode.name} @ ${selectedNode.transform.position.x}, ${selectedNode.transform.position.y}, ${selectedNode.transform.position.z}`
     : "focus none";
+  const previewActive = physicsPlayback !== "stopped";
+  const previewText = previewActive
+    ? previewPossessed
+      ? `play ${physicsPlayback}`
+      : `${previewSessionMode ?? "simulate"} ${physicsPlayback}`
+    : "editor";
   const interactionHint =
-    activeToolLabel === "Brush"
+    previewActive && previewPossessed
+      ? "click viewport capture / Shift+F1 release / WASD move / Mouse look / Space jump / F8 eject"
+      : previewActive
+        ? "free camera / Alt+S simulate / Alt+P possess / F8 toggle possess / Esc stop"
+      : activeToolLabel === "Brush"
       ? resolveBrushInteractionHint(activeBrushShape)
       : activeToolLabel === "Mesh Edit" && meshEditMode === "vertex"
         ? "click select / Shift-drag marquee / G move / R rotate / S scale / M merge / Shift+F fill"
@@ -47,6 +64,7 @@ export function StatusBar({
     <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex items-end justify-between gap-2 sm:inset-x-4 sm:bottom-4 sm:gap-3">
       <div className="editor-toolbar-footer pointer-events-auto flex min-w-0 flex-1 items-center gap-2 overflow-x-auto rounded-[18px] px-2.5 py-2 text-[10px] tracking-[0.08em] text-foreground/58 sm:px-3 sm:py-2.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <StatusMetric label="Tool" value={activeToolLabel} />
+        <StatusMetric label="Mode" value={previewText} />
         {activeToolLabel === "Mesh Edit" ? <StatusMetric label="Mode" value={meshEditMode} /> : null}
         <StatusMetric className="hidden md:flex" label="View" value={viewModeLabel} />
         <StatusMetric className="hidden lg:flex" label="Viewport" value={activeViewportId} />

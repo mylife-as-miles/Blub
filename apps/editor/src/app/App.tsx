@@ -97,7 +97,7 @@ import { GameConnectionControl } from "@/components/editor-shell/GameConnectionC
 import { useEditorSubscriptions } from "@/app/hooks/useEditorSubscriptions";
 import { useExportWorker } from "@/app/hooks/useExportWorker";
 import { clampSnapSize, resolveViewportSnapSize } from "@/viewport/utils/snap";
-import type { MeshEditToolbarActionRequest } from "@/viewport/types";
+import type { MeshEditToolbarActionRequest, PreviewSessionMode } from "@/viewport/types";
 import {
   createDefaultEntity,
   createDefaultLightData,
@@ -145,6 +145,9 @@ export function App() {
   const [meshEditMode, setMeshEditMode] = useState<MeshEditMode>("vertex");
   const [meshEditToolbarAction, setMeshEditToolbarAction] = useState<MeshEditToolbarActionRequest>();
   const [physicsPlayback, setPhysicsPlayback] = useState<"paused" | "running" | "stopped">("stopped");
+  const [previewSessionMode, setPreviewSessionMode] = useState<PreviewSessionMode | null>(null);
+  const [previewPossessed, setPreviewPossessed] = useState(false);
+  const [previewStepTick, setPreviewStepTick] = useState(0);
   const [physicsRevision, setPhysicsRevision] = useState(0);
   const [selectedMaterialFaceIds, setSelectedMaterialFaceIds] = useState<string[]>([]);
   const [transformMode, setTransformMode] = useState<"rotate" | "scale" | "translate">("translate");
@@ -1424,6 +1427,15 @@ export function App() {
 
   const handlePlayPhysics = () => {
     editor.clearSelection();
+    setPreviewSessionMode("play");
+    setPreviewPossessed(true);
+    setPhysicsPlayback("running");
+  };
+
+  const handleSimulatePhysics = () => {
+    editor.clearSelection();
+    setPreviewSessionMode("simulate");
+    setPreviewPossessed(false);
     setPhysicsPlayback("running");
   };
 
@@ -1431,8 +1443,34 @@ export function App() {
     setPhysicsPlayback((current) => (current === "stopped" ? "stopped" : "paused"));
   };
 
+  const handleResumePhysics = () => {
+    setPhysicsPlayback((current) => (current === "stopped" ? "stopped" : "running"));
+  };
+
+  const handleStepPhysics = () => {
+    if (physicsPlayback !== "paused") {
+      return;
+    }
+
+    setPreviewStepTick((current) => current + 1);
+  };
+
+  const handleTogglePreviewPossession = () => {
+    if (physicsPlayback === "stopped") {
+      return;
+    }
+
+    setPreviewPossessed((current) => {
+      const next = !current;
+      setPreviewSessionMode(next ? "play" : "simulate");
+      return next;
+    });
+  };
+
   const handleStopPhysics = () => {
     setPhysicsPlayback("stopped");
+    setPreviewSessionMode(null);
+    setPreviewPossessed(false);
     setPhysicsRevision((current) => current + 1);
   };
 
@@ -1718,7 +1756,7 @@ export function App() {
   useAppHotkeys({
     activeToolId,
     editor,
-    enabled: physicsPlayback === "stopped",
+    enabled: physicsPlayback === "stopped" || (physicsPlayback === "paused" && !previewPossessed),
     handleDeleteSelection,
     handleDuplicateSelection,
     handleFocusSelection,
@@ -1726,10 +1764,15 @@ export function App() {
     handleGroupSelection,
     handleInvertSelectionNormals,
     handleRedo,
+    handleStartPlayPreview: handlePlayPhysics,
+    handleStartSimulatePreview: handleSimulatePhysics,
+    handleStopPreview: handleStopPhysics,
     handleToggleCopilot,
     handleToggleLogicViewer,
+    handleTogglePreviewPossession,
     handleTranslateSelection,
     handleUndo,
+    previewActive: physicsPlayback !== "stopped",
     setActiveToolId: handleSetToolId,
     setMeshEditMode,
     setTransformMode,
@@ -1805,6 +1848,7 @@ export function App() {
         onLoadWhmap={handleLoadWhmap}
         onNewFile={handleNewFile}
         onPausePhysics={handlePausePhysics}
+        onResumePhysics={handleResumePhysics}
         onMeshEditToolbarAction={handleMeshEditToolbarAction}
         onMirrorSelection={handleMirrorSelection}
         onCancelAiModelPlacement={handleCancelAiModelPlacement}
@@ -1822,6 +1866,9 @@ export function App() {
         onPlacePrimitiveNode={handlePlacePrimitiveNode}
         onPlaceProp={handlePlaceProp}
         onPlayPhysics={handlePlayPhysics}
+        onSimulatePhysics={handleSimulatePhysics}
+        onStepPhysics={handleStepPhysics}
+        onTogglePreviewPossession={handleTogglePreviewPossession}
         onPreviewBrushData={handlePreviewBrushData}
         onPreviewEntityTransform={handlePreviewEntityTransform}
         onPreviewMeshData={handlePreviewMeshData}
@@ -1874,6 +1921,9 @@ export function App() {
         sculptBrushStrength={sculptBrushStrength}
         physicsPlayback={physicsPlayback}
         physicsRevision={physicsRevision}
+        previewPossessed={previewPossessed}
+        previewSessionMode={previewSessionMode}
+        previewStepTick={previewStepTick}
         renderScene={renderScene}
         sceneSettings={editor.scene.settings}
         selectedScenePathId={selectedScenePathId}
