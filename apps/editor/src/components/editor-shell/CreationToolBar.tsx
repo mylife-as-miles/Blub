@@ -1,4 +1,4 @@
-import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
+import type { BrushShape, EntityType, LightType, PrimitiveShape, SkateparkElementType } from "@blud/shared";
 import type { ComponentType, ReactNode } from "react";
 import { PackagePlus, Sparkles } from "lucide-react";
 import {
