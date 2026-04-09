@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditorCore } from "@blud/editor-core";
 import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
-import { runAgenticLoop } from "@/lib/copilot/agentic-loop";
-import { createCopilotProvider } from "@/lib/copilot/provider";
-import { buildSystemPrompt } from "@/lib/copilot/system-prompt";
 import { loadCopilotSettings, isCopilotConfigured } from "@/lib/copilot/settings";
-import { COPILOT_TOOL_DECLARATIONS, GAME_TOOL_DECLARATIONS, isGameGenerationPrompt } from "@/lib/copilot/tool-declarations";
-import { executeTool, type CopilotToolExecutionContext } from "@/lib/copilot/tool-executor";
+import type { CopilotToolExecutionContext } from "@/lib/copilot/tool-executor";
 
 export type GeneratedGame = { title: string; html: string };
 
@@ -15,6 +11,40 @@ const EMPTY_SESSION: CopilotSession = {
   status: "idle",
   iterationCount: 0
 };
+
+type CopilotRuntime = {
+  runAgenticLoop: typeof import("@/lib/copilot/agentic-loop").runAgenticLoop;
+  createCopilotProvider: typeof import("@/lib/copilot/provider").createCopilotProvider;
+  buildSystemPrompt: typeof import("@/lib/copilot/system-prompt").buildSystemPrompt;
+  COPILOT_TOOL_DECLARATIONS: typeof import("@/lib/copilot/tool-declarations").COPILOT_TOOL_DECLARATIONS;
+  GAME_TOOL_DECLARATIONS: typeof import("@/lib/copilot/tool-declarations").GAME_TOOL_DECLARATIONS;
+  isGameGenerationPrompt: typeof import("@/lib/copilot/tool-declarations").isGameGenerationPrompt;
+  executeTool: typeof import("@/lib/copilot/tool-executor").executeTool;
+};
+
+let copilotRuntimePromise: Promise<CopilotRuntime> | null = null;
+
+function loadCopilotRuntime(): Promise<CopilotRuntime> {
+  if (!copilotRuntimePromise) {
+    copilotRuntimePromise = Promise.all([
+      import("@/lib/copilot/agentic-loop"),
+      import("@/lib/copilot/provider"),
+      import("@/lib/copilot/system-prompt"),
+      import("@/lib/copilot/tool-declarations"),
+      import("@/lib/copilot/tool-executor")
+    ]).then(([agenticLoop, provider, systemPrompt, toolDeclarations, toolExecutor]) => ({
+      runAgenticLoop: agenticLoop.runAgenticLoop,
+      createCopilotProvider: provider.createCopilotProvider,
+      buildSystemPrompt: systemPrompt.buildSystemPrompt,
+      COPILOT_TOOL_DECLARATIONS: toolDeclarations.COPILOT_TOOL_DECLARATIONS,
+      GAME_TOOL_DECLARATIONS: toolDeclarations.GAME_TOOL_DECLARATIONS,
+      isGameGenerationPrompt: toolDeclarations.isGameGenerationPrompt,
+      executeTool: toolExecutor.executeTool
+    }));
+  }
+
+  return copilotRuntimePromise;
+}
 
 function extractHtmlFromMessages(messages: CopilotSession["messages"]): string | null {
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -81,6 +111,16 @@ export function useCopilot(editor: EditorCore, toolContext: CopilotToolExecution
 
       const controller = new AbortController();
       abortRef.current = controller;
+
+      const {
+        runAgenticLoop,
+        createCopilotProvider,
+        buildSystemPrompt,
+        COPILOT_TOOL_DECLARATIONS,
+        GAME_TOOL_DECLARATIONS,
+        isGameGenerationPrompt,
+        executeTool
+      } = await loadCopilotRuntime();
 
       const copilotProvider = createCopilotProvider(settings.provider);
       const systemPrompt = buildSystemPrompt(editor);

@@ -21,10 +21,6 @@ import {
   subdivideEditableMeshFace
 } from "@blud/geometry-kernel";
 import {
-  applyWebHammerWorldSettings,
-  clearWebHammerWorldSettings
-} from "@blud/three-runtime";
-import {
   addVec3,
   averageVec3,
   crossVec3,
@@ -110,6 +106,18 @@ import type {
   ViewportCanvasProps
 } from "@/viewport/types";
 
+type ThreeRuntimeWorldSettingsModule = typeof import("@blud/three-runtime");
+
+let threeRuntimeWorldSettingsPromise: Promise<ThreeRuntimeWorldSettingsModule> | null = null;
+
+function loadThreeRuntimeWorldSettings() {
+  if (!threeRuntimeWorldSettingsPromise) {
+    threeRuntimeWorldSettingsPromise = import("@blud/three-runtime");
+  }
+
+  return threeRuntimeWorldSettingsPromise;
+}
+
 type SculptBrushMode = "deflate" | "inflate";
 
 type SculptBrushHit = {
@@ -135,23 +143,47 @@ function ViewportWorldSettings({ renderMode, sceneSettings }: Pick<ViewportCanva
   const { scene } = useThree();
 
   useEffect(() => {
-    if (renderMode !== "lit") {
-      clearWebHammerWorldSettings(scene);
-      scene.background = new Color("#72879f");
+    let cancelled = false;
+
+    const resetScene = (background: Color | null) => {
+      scene.fog = null;
+      scene.background = background;
       scene.environment = null;
-      return;
+      scene.backgroundBlurriness = 0;
+      scene.backgroundIntensity = 1;
+      scene.environmentIntensity = 1;
+    };
+
+    if (renderMode !== "lit") {
+      void loadThreeRuntimeWorldSettings().then((module) => {
+        if (!cancelled) {
+          module.clearWebHammerWorldSettings(scene);
+        }
+      });
+      resetScene(new Color("#72879f"));
+      return () => {
+        cancelled = true;
+      };
     }
 
-    void applyWebHammerWorldSettings(scene, { settings: sceneSettings });
+    void loadThreeRuntimeWorldSettings().then((module) => {
+      if (cancelled) {
+        return;
+      }
 
-    if (!sceneSettings.world.skybox.enabled) {
-      scene.background = new Color("#a7bfd8");
-    }
+      void module.applyWebHammerWorldSettings(scene, { settings: sceneSettings });
+
+      if (!sceneSettings.world.skybox.enabled) {
+        scene.background = new Color("#a7bfd8");
+      }
+    });
 
     return () => {
-      clearWebHammerWorldSettings(scene);
-      scene.background = null;
-      scene.environment = null;
+      cancelled = true;
+      void loadThreeRuntimeWorldSettings().then((module) => {
+        module.clearWebHammerWorldSettings(scene);
+      });
+      resetScene(null);
     };
   }, [renderMode, scene, sceneSettings]);
 

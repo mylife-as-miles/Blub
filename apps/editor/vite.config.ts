@@ -1,8 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { searchForWorkspaceRoot, defineConfig, loadEnv } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { createCodexBridgePlugin } from "./server/codex-bridge-plugin";
 import { createEditorGameSyncPlugin } from "./server/editor-game-sync-plugin";
@@ -31,6 +30,137 @@ const workspaceAliases = {
   "@blud/workers": path.resolve(repoRoot, "packages/workers/src/index.ts")
 } as const;
 
+function resolveEditorManualChunk(id: string) {
+  const normalizedId = id.replace(/\\/g, "/");
+
+  if (normalizedId.includes("/node_modules/react/") || normalizedId.includes("/node_modules/react-dom/") || normalizedId.includes("/node_modules/scheduler/") || normalizedId.includes("/node_modules/valtio/")) {
+    return "react-vendor";
+  }
+
+  if (
+    normalizedId.includes("/node_modules/three/build/three.webgpu") ||
+    normalizedId.includes("/node_modules/three/build/three.tsl")
+  ) {
+    return "three-webgpu";
+  }
+
+  if (
+    normalizedId.includes("/node_modules/three/") ||
+    normalizedId.includes("/node_modules/@react-three/fiber/") ||
+    normalizedId.includes("/node_modules/@react-three/drei/") ||
+    normalizedId.includes("/node_modules/@dimforge/rapier3d-compat/") ||
+    normalizedId.includes("/node_modules/three-mesh-bvh/")
+  ) {
+    return "three-stack";
+  }
+
+  if (
+    normalizedId.includes("/node_modules/@xyflow/react/") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/logic-viewer/")
+  ) {
+    return "logic-viewer";
+  }
+
+  if (normalizedId.includes("/node_modules/@google/genai/") || normalizedId.includes("/node_modules/@fal-ai/client/")) {
+    return "ai-vendor";
+  }
+
+  if (
+    normalizedId.includes("/node_modules/@base-ui/") ||
+    normalizedId.includes("/node_modules/class-variance-authority/") ||
+    normalizedId.includes("/node_modules/clsx/") ||
+    normalizedId.includes("/node_modules/cmdk/") ||
+    normalizedId.includes("/node_modules/lucide-react/") ||
+    normalizedId.includes("/node_modules/motion/") ||
+    normalizedId.includes("/node_modules/next-themes/") ||
+    normalizedId.includes("/node_modules/react-resizable-panels/") ||
+    normalizedId.includes("/node_modules/sonner/") ||
+    normalizedId.includes("/node_modules/tailwind-merge/") ||
+    normalizedId.includes("/node_modules/vaul/")
+  ) {
+    return "ui-vendor";
+  }
+
+  if (
+    normalizedId.includes("/packages/geometry-kernel/") ||
+    normalizedId.includes("/apps/editor/src/viewport/editing.ts") ||
+    normalizedId.includes("/apps/editor/src/lib/primitive-to-mesh.ts")
+  ) {
+    return "editable-mesh";
+  }
+
+  if (
+    normalizedId.includes("/packages/three-runtime/") ||
+    normalizedId.includes("/packages/runtime-build/") ||
+    normalizedId.includes("/packages/runtime-format/")
+  ) {
+    return "runtime-scene";
+  }
+
+  if (
+    normalizedId.includes("/three/examples/jsm/loaders/GLTFLoader.js") ||
+    normalizedId.includes("/three/examples/jsm/utils/SkeletonUtils.js")
+  ) {
+    return "gltf-loader";
+  }
+
+  if (
+    normalizedId.includes("/three/examples/jsm/loaders/MTLLoader.js") ||
+    normalizedId.includes("/three/examples/jsm/loaders/OBJLoader.js")
+  ) {
+    return "obj-loader";
+  }
+
+  if (normalizedId.includes("/apps/editor/src/lib/model-assets.ts")) {
+    return "model-assets";
+  }
+
+  if (
+    normalizedId.includes("/node_modules/@react-three/rapier/") ||
+    normalizedId.includes("/apps/editor/src/viewport/components/ScenePreview.tsx") ||
+    normalizedId.includes("/apps/editor/src/viewport/components/GrassField.tsx")
+  ) {
+    return "scene-preview";
+  }
+
+  if (
+    normalizedId.includes("/apps/editor/src/viewport/") ||
+    normalizedId.includes("/packages/render-pipeline/")
+  ) {
+    return "viewport-tools";
+  }
+
+  if (
+    normalizedId.includes("/packages/editor-core/") ||
+    normalizedId.includes("/packages/shared/") ||
+    normalizedId.includes("/packages/tool-system/") ||
+    normalizedId.includes("/packages/workers/") ||
+    normalizedId.includes("/packages/dev-sync/")
+  ) {
+    return "editor-core";
+  }
+
+  if (
+    normalizedId.includes("/apps/editor/src/components/editor-shell/InspectorSidebar.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/FloorPresetsPanel.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/GameplayPanels.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/MaterialLibraryPanel.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/MeshFaceUvEditorDialog.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/NpcVoiceInspector.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/SceneHierarchyPanel.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/TextureBrowserOverlay.tsx") ||
+    normalizedId.includes("/apps/editor/src/components/editor-shell/VoicesPanel.tsx")
+  ) {
+    return "inspector-sidebar";
+  }
+
+  if (normalizedId.includes("/apps/editor/src/components/editor-shell/") || normalizedId.includes("/apps/editor/src/components/ui/")) {
+    return "editor-shell";
+  }
+
+  return undefined;
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const explicitBase = process.env.VITE_BASE_PATH ?? env.VITE_BASE_PATH;
@@ -48,7 +178,6 @@ export default defineConfig(({ mode }) => {
     base: explicitBase ?? inferredGithubPagesBase,
     plugins: [
       react(),
-      tsconfigPaths(),
       tailwindcss(),
       createCodexBridgePlugin(),
       createEditorGameSyncPlugin(),
@@ -57,6 +186,7 @@ export default defineConfig(({ mode }) => {
       createTextureGenerationApiPlugin()
     ],
     resolve: {
+      tsconfigPaths: true,
       alias: {
         ...workspaceAliases,
         three: editorThreePath,
@@ -66,6 +196,14 @@ export default defineConfig(({ mode }) => {
         "three/build/three.tsl.js": editorThreeTSLPath
       },
       dedupe: ["react", "react-dom", "three"]
+    },
+    build: {
+      chunkSizeWarningLimit: 2500,
+      rolldownOptions: {
+        output: {
+          manualChunks: resolveEditorManualChunk
+        }
+      }
     },
     server: {
       host: "0.0.0.0",

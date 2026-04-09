@@ -28,10 +28,6 @@ import {
   type Side
 } from "three";
 import type { GeometryNode, MaterialRenderSide, SceneHook, Transform, Vec3 } from "@blud/shared";
-import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { clone as cloneSkeletonScene } from "three/examples/jsm/utils/SkeletonUtils.js";
 import {
   disableBvhRaycast,
   enableBvhRaycast,
@@ -50,13 +46,49 @@ import type { SceneSettings } from "@blud/shared";
 
 const previewTextureCache = new Map<string, ReturnType<TextureLoader["load"]>>();
 const modelSceneCache = new Map<string, Object3D>();
-const gltfLoader = new GLTFLoader();
-const mtlLoader = new MTLLoader();
 const modelTextureLoader = new TextureLoader();
 const tempInstanceObject = new Object3D();
 const tempInstanceMatrix = new Matrix4();
 const tempPivotMatrix = new Matrix4();
 const tempInstanceColor = new Color();
+let cloneModelSceneImpl: (scene: Object3D) => Object3D = (scene) => scene.clone(true);
+let gltfPreviewToolsPromise: Promise<{ GLTFLoader: typeof import("three/examples/jsm/loaders/GLTFLoader.js").GLTFLoader }> | null = null;
+let objPreviewToolsPromise: Promise<{
+  MTLLoader: typeof import("three/examples/jsm/loaders/MTLLoader.js").MTLLoader;
+  OBJLoader: typeof import("three/examples/jsm/loaders/OBJLoader.js").OBJLoader;
+}> | null = null;
+
+function loadGltfPreviewTools() {
+  if (!gltfPreviewToolsPromise) {
+    gltfPreviewToolsPromise = Promise.all([
+      import("three/examples/jsm/loaders/GLTFLoader.js"),
+      import("three/examples/jsm/utils/SkeletonUtils.js")
+    ]).then(([gltfModule, skeletonUtilsModule]) => {
+      cloneModelSceneImpl = skeletonUtilsModule.clone;
+
+      return {
+        GLTFLoader: gltfModule.GLTFLoader
+      };
+    });
+  }
+
+  return gltfPreviewToolsPromise;
+}
+
+function loadObjPreviewTools() {
+  if (!objPreviewToolsPromise) {
+    objPreviewToolsPromise = Promise.all([
+      import("three/examples/jsm/loaders/MTLLoader.js"),
+      import("three/examples/jsm/loaders/OBJLoader.js")
+    ]).then(([mtlModule, objModule]) => ({
+      MTLLoader: mtlModule.MTLLoader,
+      OBJLoader: objModule.OBJLoader
+    }));
+  }
+
+  return objPreviewToolsPromise;
+}
+
 export function ScenePreview({
   hiddenSceneItemIds = [],
   interactive,
@@ -2009,10 +2041,11 @@ async function loadModelScene(
   mtlText?: string
 ) {
   if (format === "obj") {
+    const { MTLLoader, OBJLoader } = await loadObjPreviewTools();
     const objLoader = new OBJLoader();
 
     if (mtlText) {
-      const materialCreator = mtlLoader.parse(
+      const materialCreator = new MTLLoader().parse(
         patchMtlTextureReferences(mtlText, texturePath),
         ""
       );
@@ -2039,6 +2072,8 @@ async function loadModelScene(
     return object;
   }
 
+  const { GLTFLoader } = await loadGltfPreviewTools();
+  const gltfLoader = new GLTFLoader();
   const gltf = await gltfLoader.loadAsync(path);
   return gltf.scene;
 }
@@ -2138,7 +2173,7 @@ function buildModelParts(scene: Object3D | undefined, center: { x: number; y: nu
 }
 
 function cloneModelSceneGraph(scene: Object3D) {
-  const clone = cloneSkeletonScene(scene);
+  const clone = cloneModelSceneImpl(scene);
   clone.updateMatrixWorld(true);
   return clone;
 }

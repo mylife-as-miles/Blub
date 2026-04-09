@@ -19,19 +19,15 @@ import type { PrimitiveNodeData, PrimitiveShape } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import type { WorkerJob } from "@blud/workers";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { CopilotImageAttachment, CopilotSession } from "@/lib/copilot/types";
 import { buildGameBlobUrl } from "@/lib/game-html";
 import { AiModelPromptBar } from "@/components/editor-shell/AiModelPromptBar";
-import { CopilotPanel } from "@/components/editor-shell/CopilotPanel";
-import { GameBridgePanel } from "@/components/editor-shell/GameBridgePanel";
 import { EditorMenuBar } from "@/components/editor-shell/EditorMenuBar";
 import { InspectorSidebar } from "@/components/editor-shell/InspectorSidebar";
-import { SpatialAnalysisPanel } from "@/components/editor-shell/SpatialAnalysisPanel";
 import { StatusBar } from "@/components/editor-shell/StatusBar";
 import { ToolIconSidebar } from "@/components/editor-shell/ToolIconSidebar";
 import { ToolPalette } from "@/components/editor-shell/ToolPalette";
-import { LogicViewerSheet } from "@/components/editor-shell/logic-viewer/LogicViewerSheet";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ViewportCanvas } from "@/viewport/ViewportCanvas";
 import type { MeshEditMode } from "@/viewport/editing";
@@ -44,6 +40,18 @@ import {
   type ViewportPaneId
 } from "@/viewport/viewports";
 import { cn } from "@/lib/utils";
+
+const CopilotPanel = lazy(() =>
+  import("@/components/editor-shell/CopilotPanel").then((module) => ({ default: module.CopilotPanel }))
+);
+const GameBridgePanel = lazy(() =>
+  import("@/components/editor-shell/GameBridgePanel").then((module) => ({ default: module.GameBridgePanel }))
+);
+const LogicViewerSheet = lazy(() =>
+  import("@/components/editor-shell/logic-viewer/LogicViewerSheet").then((module) => ({
+    default: module.LogicViewerSheet
+  }))
+);
 
 type EditorShellProps = {
   activeBrushShape: BrushShape;
@@ -482,7 +490,9 @@ export function EditorShell({
               >
                 ← Editor
               </button>
-              <GameBridgePanel iframeRef={iframeRef} />
+              <Suspense fallback={null}>
+                <GameBridgePanel iframeRef={iframeRef} />
+              </Suspense>
             </div>
           )}
 
@@ -615,36 +625,40 @@ export function EditorShell({
         />
 
         {logicViewerOpen && (
-          <LogicViewerSheet
-            entities={entities}
-            nodes={nodes}
-            onClose={onToggleLogicViewer}
-            onNodeClick={(objectId) => {
-              onSelectNodes([objectId]);
-              if (editor.scene.getNode(objectId)) {
-                onFocusNode(objectId);
-              }
-            }}
-            onUpdateEntityHooks={onUpdateEntityHooks}
-            onUpdateNodeHooks={onUpdateNodeHooks}
-          />
+          <Suspense fallback={<LogicViewerFallback />}>
+            <LogicViewerSheet
+              entities={entities}
+              nodes={nodes}
+              onClose={onToggleLogicViewer}
+              onNodeClick={(objectId) => {
+                onSelectNodes([objectId]);
+                if (editor.scene.getNode(objectId)) {
+                  onFocusNode(objectId);
+                }
+              }}
+              onUpdateEntityHooks={onUpdateEntityHooks}
+              onUpdateNodeHooks={onUpdateNodeHooks}
+            />
+          </Suspense>
         )}
         </div>
 
         {copilotPanelOpen && (
           <div className="w-64 shrink-0 sm:w-80 lg:w-[22rem]">
-            <CopilotPanel
-              isConfigured={copilot.isConfigured}
-              latestGame={copilot.latestGame}
-              onAbort={copilot.abort}
-              onClearGame={copilot.clearLatestGame}
-              onClearHistory={copilot.clearHistory}
-              onClose={onToggleCopilot}
-              onPlayInViewport={handlePlayInViewport}
-              onSendMessage={copilot.sendMessage}
-              onSettingsChanged={copilot.refreshConfigured}
-              session={copilot.session}
-            />
+            <Suspense fallback={<CopilotPanelFallback />}>
+              <CopilotPanel
+                isConfigured={copilot.isConfigured}
+                latestGame={copilot.latestGame}
+                onAbort={copilot.abort}
+                onClearGame={copilot.clearLatestGame}
+                onClearHistory={copilot.clearHistory}
+                onClose={onToggleCopilot}
+                onPlayInViewport={handlePlayInViewport}
+                onSendMessage={copilot.sendMessage}
+                onSettingsChanged={copilot.refreshConfigured}
+                session={copilot.session}
+              />
+            </Suspense>
           </div>
         )}
       </main>
@@ -769,5 +783,27 @@ function ViewportSplitHandle({ direction = "vertical" }: { direction?: "horizont
       className="bg-white/[0.04] after:bg-white/[0.08] hover:bg-[#f6d07d]/14 data-[dragging]:bg-[#f6d07d]/20"
       withHandle={direction === "vertical"}
     />
+  );
+}
+
+function CopilotPanelFallback() {
+  return (
+    <div className="glass-panel glass-panel-strong flex h-full items-center justify-center rounded-[32px] px-4">
+      <div className="text-[11px] font-medium tracking-[0.18em] text-foreground/48 uppercase">
+        Loading Copilot
+      </div>
+    </div>
+  );
+}
+
+function LogicViewerFallback() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-8 z-30 flex">
+      <div className="glass-panel glass-panel-strong mx-auto flex min-h-[240px] w-[min(100%,calc(100%-1rem))] items-center justify-center rounded-t-[1.35rem] border-x border-t border-white/8 bg-[#040907]/76">
+        <div className="text-[11px] font-medium tracking-[0.18em] text-foreground/48 uppercase">
+          Loading Logic View
+        </div>
+      </div>
+    </div>
   );
 }

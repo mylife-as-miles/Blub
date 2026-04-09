@@ -84,11 +84,8 @@ import {
   createWorkerTaskManager,
   type WorkerJob
 } from "@blud/workers";
-import {
-  createWebHammerEngineBundleZip,
-  isWebHammerEngineBundle
-} from "@blud/three-runtime";
 import { slugifyProjectName, type EditorFileMetadata } from "@blud/dev-sync";
+import { isWebHammerEngineBundle, type WebHammerEngineBundle } from "@blud/runtime-format";
 import { EditorShell } from "@/components/EditorShell";
 import { useGameConnection } from "@/app/hooks/useGameConnection";
 import { uiStore, type RightPanelId } from "@/state/ui-store";
@@ -112,14 +109,6 @@ import {
 import { getFloorPreset, type FloorPresetId } from "@/lib/floor-presets";
 import type { ObjectGenerationResponse } from "@/lib/object-generation-contract";
 import { convertPrimitiveNodeToMeshNode } from "@/lib/primitive-to-mesh";
-import {
-  analyzeModelSource,
-  createAiModelPlaceholder,
-  createModelAsset,
-  readFileAsDataUrl,
-  resolveModelFitScale,
-  resolvePrimitiveNodeBounds
-} from "@/lib/model-assets";
 import { createEditableMeshFromPlane, createEditableMeshFromPrimitiveData } from "@/lib/primitive-to-mesh";
 import { resolveEffectiveSceneItemIds, toggleSceneItemId } from "@/lib/scene-hierarchy";
 import {
@@ -130,6 +119,18 @@ import {
   type ViewportPaneId
 } from "@/viewport/viewports";
 import { loadStoredSceneEditorDraft, saveSceneEditorDraft } from "@/lib/draft-storage";
+
+type ModelAssetTools = typeof import("@/lib/model-assets");
+
+let modelAssetToolsPromise: Promise<ModelAssetTools> | null = null;
+
+function loadModelAssetTools() {
+  if (!modelAssetToolsPromise) {
+    modelAssetToolsPromise = import("@/lib/model-assets");
+  }
+
+  return modelAssetToolsPromise;
+}
 
 export function App() {
   const [editor] = useState(() => createEditorCore(createSeedSceneDocument()));
@@ -825,6 +826,7 @@ export function App() {
     }
 
     try {
+      const { analyzeModelSource, createModelAsset, readFileAsDataUrl, resolveModelFitScale } = await loadModelAssetTools();
       const dataUrl = await readFileAsDataUrl(file);
       const bounds = await analyzeModelSource({
         format: "glb",
@@ -918,23 +920,25 @@ export function App() {
   };
 
   const handlePlaceAiModelPlaceholder = (position: Vec3) => {
-    const placeholder = createAiModelPlaceholder(position);
-    const { command, nodeId } = createPlacePrimitiveNodeCommand(editor.scene, placeholder.transform, {
-      data: placeholder.data,
-      name: placeholder.name
-    });
+    void loadModelAssetTools().then(({ createAiModelPlaceholder }) => {
+      const placeholder = createAiModelPlaceholder(position);
+      const { command, nodeId } = createPlacePrimitiveNodeCommand(editor.scene, placeholder.transform, {
+        data: placeholder.data,
+        name: placeholder.name
+      });
 
-    editor.execute(command);
-    editor.select([nodeId], "object");
-    setAiModelPlacementArmed(false);
-    setActiveToolId("transform");
-    setTransformMode("scale");
-    setAiModelDraft((current) => ({
-      error: undefined,
-      nodeId,
-      prompt: current?.prompt ?? ""
-    }));
-    enqueueWorkerJob("AI proxy placement", { task: "triangulation", worker: "geometryWorker" }, 500);
+      editor.execute(command);
+      editor.select([nodeId], "object");
+      setAiModelPlacementArmed(false);
+      setActiveToolId("transform");
+      setTransformMode("scale");
+      setAiModelDraft((current) => ({
+        error: undefined,
+        nodeId,
+        prompt: current?.prompt ?? ""
+      }));
+      enqueueWorkerJob("AI proxy placement", { task: "triangulation", worker: "geometryWorker" }, 500);
+    });
   };
 
   const handleGenerateAiModel = async () => {
@@ -964,6 +968,8 @@ export function App() {
 
   const queueAiModelGeneration = async (nodeId: string, prompt: string) => {
     try {
+      const { analyzeModelSource, createModelAsset, resolveModelFitScale, resolvePrimitiveNodeBounds } =
+        await loadModelAssetTools();
       const payload = await runWorkerRequest(
         {
           kind: "ai-model-generate",
@@ -1625,7 +1631,7 @@ export function App() {
     );
 
     if (isWebHammerEngineBundle(payload)) {
-      const zip = createWebHammerEngineBundleZip(payload);
+      const zip = await packWebHammerEngineBundleZip(payload);
       downloadBinaryFile(`${resolvedProjectSlug}.runtime.zip`, zip, "application/zip");
     }
   };
@@ -1904,7 +1910,12 @@ function preserveMeshMetadata(mesh: EditableMesh, existingMesh?: EditableMesh) {
     : structuredClone(mesh);
 }
 
-function serializeRuntimeBundleForSync(bundle: Parameters<typeof createWebHammerEngineBundleZip>[0]) {
+async function packWebHammerEngineBundleZip(bundle: WebHammerEngineBundle) {
+  const { createWebHammerEngineBundleZip } = await import("@blud/three-runtime");
+  return createWebHammerEngineBundleZip(bundle);
+}
+
+function serializeRuntimeBundleForSync(bundle: WebHammerEngineBundle) {
   return {
     files: bundle.files.map((file) => ({
       bytes: Array.from(file.bytes),
