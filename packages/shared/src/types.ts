@@ -17,6 +17,22 @@ export type LightType = "ambient" | "directional" | "hemisphere" | "point" | "sp
 export type EntityType = "npc-spawn" | "player-spawn" | "smart-object";
 export type PlayerCameraMode = "fps" | "third-person" | "top-down";
 
+export type SkateparkElementType =
+  | "quarter-pipe"
+  | "half-pipe"
+  | "rail"
+  | "fun-box"
+  | "bowl"
+  | "ledge"
+  | "bank"
+  | "spine"
+  | "pyramid"
+  | "stair-set"
+  | "kicker"
+  | "manual-pad"
+  | "hip"
+  | "hubba-ledge";
+
 export type Vec3 = {
   x: number;
   y: number;
