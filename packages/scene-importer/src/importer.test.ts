@@ -29,7 +29,8 @@ describe("scene-importer", () => {
 
     expect(result.report.status).toBe("imported");
     expect(result.snapshot?.nodes.some((node) => node.kind === "primitive")).toBe(true);
-    expect(result.snapshot?.materials).toHaveLength(1);
+    expect(result.report.summary.materials).toBe(1);
+    expect(result.snapshot?.materials.some((material) => material.id.startsWith("material:import:"))).toBe(true);
     expect(result.snapshot?.entities.some((entity) => entity.type === "player-spawn")).toBe(true);
   });
 

@@ -345,100 +345,10 @@ function analyzeScript(
       }
     },
     CallExpression(path) {
-      const calleeName = resolveMemberName(path.node.callee);
-
-      if (calleeName === "requestAnimationFrame" || calleeName.endsWith(".setAnimationLoop")) {
-        analysis.animationLoopDetected = true;
-        analysis.needsCustomScript = true;
-      }
-
-      if (calleeName.startsWith("document.") || calleeName.includes("document.body") || calleeName.endsWith(".appendChild")) {
-        analysis.diagnostics.push(
-          createDiagnostic(
-            "dom-ownership",
-            "warning",
-            "DOM ownership code was omitted. Blob keeps renderer and shell ownership.",
-            resolveTraversalFilename(path.hub, entrypoint)
-          )
-        );
-        analysis.needsCustomScript = true;
-      }
-
-      if (calleeName.endsWith(".position.set") || calleeName.endsWith(".rotation.set") || calleeName.endsWith(".scale.set")) {
-        applyTransformSetter(analysis.nodes, analysis.cameras, calleeName, path.node.arguments);
-      }
-
-      if (calleeName.endsWith(".add") && t.isMemberExpression(path.node.callee) && t.isIdentifier(path.node.callee.object)) {
-        const parentVariableName = path.node.callee.object.name;
-
-        path.node.arguments.forEach((argument) => {
-          if (t.isIdentifier(argument)) {
-            const target = analysis.nodes.get(argument.name);
-
-            if (target) {
-              target.parentVariableName = parentVariableName;
-            }
-          }
-        });
-      }
-
-      if (calleeName.endsWith(".load") && t.isMemberExpression(path.node.callee) && t.isIdentifier(path.node.callee.object) && gltfLoaders.has(path.node.callee.object.name)) {
-        const pathArgument = path.node.arguments[0];
-
-        if (!t.isStringLiteral(pathArgument)) {
-          analysis.needsCustomScript = true;
-          analysis.diagnostics.push(
-            createDiagnostic(
-              "dynamic-model-load",
-              "warning",
-              "Dynamic GLTFLoader paths require a manual follow-up after import.",
-              resolveTraversalFilename(path.hub, entrypoint)
-            )
-          );
-          return;
-        }
-
-        const asset = createModelAsset(
-          project,
-          resolveRelativePath(resolveTraversalFilename(path.hub, entrypoint), pathArgument.value),
-          analysis.modelLoads.length + 1
-        );
-
-        if (!asset) {
-          analysis.diagnostics.push(
-            createDiagnostic(
-              "model-asset-missing",
-              "warning",
-              `Model asset "${pathArgument.value}" was referenced but not found in the imported payload.`,
-              resolveTraversalFilename(path.hub, entrypoint)
-            )
-          );
-          return;
-        }
-
-        analysis.modelLoads.push({
-          asset,
-          name: deriveLabelFromPath(pathArgument.value, "Imported Model"),
-          parentVariableName: resolveAddParentFromCallback(path.node.arguments[1]),
-          variableName: `model-load-${analysis.modelLoads.length + 1}`
-        });
-      }
-
-      if (t.isMemberExpression(path.node.callee) && t.isIdentifier(path.node.callee.object) && rapierWorlds.has(path.node.callee.object.name)) {
-        analysis.physicsDetected = true;
-
-        if (t.isIdentifier(path.node.callee.property, { name: "createVehicleController" })) {
-          analysis.diagnostics.push(
-            createDiagnostic(
-              "advanced-physics",
-              "warning",
-              "Rapier vehicle logic was compiled into a generated custom_script hook.",
-              resolveTraversalFilename(path.hub, entrypoint)
-            )
-          );
-          analysis.needsCustomScript = true;
-        }
-      }
+      analyzeRuntimeCall(project, entrypoint, analysis, gltfLoaders, rapierWorlds, path.hub, path.node);
+    },
+    OptionalCallExpression(path) {
+      analyzeRuntimeCall(project, entrypoint, analysis, gltfLoaders, rapierWorlds, path.hub, path.node);
     },
     ImportDeclaration(path) {
       const source = path.node.source.value;
@@ -579,6 +489,98 @@ function analyzeScript(
       node.materialVariableName = material.variableName;
     }
   });
+}
+
+function analyzeRuntimeCall(
+  project: Awaited<ReturnType<typeof loadProject>>,
+  entrypoint: string,
+  analysis: Analysis,
+  gltfLoaders: Set<string>,
+  rapierWorlds: Set<string>,
+  hub: unknown,
+  node: t.CallExpression | t.OptionalCallExpression
+) {
+  const calleeName = resolveMemberName(node.callee);
+  const calleeObjectName = resolveMemberObjectName(node.callee);
+  const calleePropertyName = resolveMemberPropertyName(node.callee);
+  const filename = resolveTraversalFilename(hub, entrypoint);
+
+  if (calleeName === "requestAnimationFrame" || calleeName.endsWith(".setAnimationLoop")) {
+    analysis.animationLoopDetected = true;
+    analysis.needsCustomScript = true;
+  }
+
+  if (calleeName.startsWith("document.") || calleeName.includes("document.body") || calleeName.endsWith(".appendChild")) {
+    analysis.diagnostics.push(
+      createDiagnostic("dom-ownership", "warning", "DOM ownership code was omitted. Blob keeps renderer and shell ownership.", filename)
+    );
+    analysis.needsCustomScript = true;
+  }
+
+  if (calleeName.endsWith(".position.set") || calleeName.endsWith(".rotation.set") || calleeName.endsWith(".scale.set")) {
+    applyTransformSetter(analysis.nodes, analysis.cameras, calleeName, node.arguments);
+  }
+
+  if (calleeName.endsWith(".add") && calleeObjectName) {
+    node.arguments.forEach((argument) => {
+      if (t.isIdentifier(argument)) {
+        const target = analysis.nodes.get(argument.name);
+
+        if (target) {
+          target.parentVariableName = calleeObjectName;
+        }
+      }
+    });
+  }
+
+  if (calleeName.endsWith(".load") && calleeObjectName && gltfLoaders.has(calleeObjectName)) {
+    const pathArgument = node.arguments[0];
+
+    if (!t.isStringLiteral(pathArgument)) {
+      analysis.needsCustomScript = true;
+      analysis.diagnostics.push(
+        createDiagnostic("dynamic-model-load", "warning", "Dynamic GLTFLoader paths require a manual follow-up after import.", filename)
+      );
+      return;
+    }
+
+    const asset = createModelAsset(project, resolveRelativePath(filename, pathArgument.value), analysis.modelLoads.length + 1);
+
+    if (!asset) {
+      analysis.diagnostics.push(
+        createDiagnostic(
+          "model-asset-missing",
+          "warning",
+          `Model asset "${pathArgument.value}" was referenced but not found in the imported payload.`,
+          filename
+        )
+      );
+      return;
+    }
+
+    analysis.modelLoads.push({
+      asset,
+      name: deriveLabelFromPath(pathArgument.value, "Imported Model"),
+      parentVariableName: resolveAddParentFromCallback(node.arguments[1]),
+      variableName: `model-load-${analysis.modelLoads.length + 1}`
+    });
+  }
+
+  if (calleeObjectName && rapierWorlds.has(calleeObjectName)) {
+    analysis.physicsDetected = true;
+
+    if (calleePropertyName === "createVehicleController") {
+      analysis.diagnostics.push(
+        createDiagnostic(
+          "advanced-physics",
+          "warning",
+          "Rapier vehicle logic was compiled into a generated custom_script hook.",
+          filename
+        )
+      );
+      analysis.needsCustomScript = true;
+    }
+  }
 }
 
 function buildSnapshot(projectName: string, entrypoint: string, analysis: Analysis): SceneDocumentSnapshot | undefined {
@@ -1036,18 +1038,42 @@ function resolveAddParentFromCallback(argument?: t.Expression | t.SpreadElement 
   return parentName;
 }
 
-function resolveMemberName(expression: t.Expression | t.V8IntrinsicIdentifier): string {
+function resolveMemberName(expression: t.Expression | t.V8IntrinsicIdentifier | t.OptionalMemberExpression): string {
   if (t.isIdentifier(expression)) {
     return expression.name;
   }
 
-  if (!t.isMemberExpression(expression)) {
+  if (!t.isMemberExpression(expression) && !t.isOptionalMemberExpression(expression)) {
     return "";
   }
 
-  const objectName = resolveMemberName(expression.object as t.Expression);
+  const objectName = resolveMemberName(expression.object as t.Expression | t.V8IntrinsicIdentifier | t.OptionalMemberExpression);
   const propertyName = t.isIdentifier(expression.property) ? expression.property.name : t.isStringLiteral(expression.property) ? expression.property.value : "";
   return objectName ? `${objectName}.${propertyName}` : propertyName;
+}
+
+function resolveMemberObjectName(expression: t.Expression | t.V8IntrinsicIdentifier | t.OptionalMemberExpression) {
+  if (!t.isMemberExpression(expression) && !t.isOptionalMemberExpression(expression)) {
+    return undefined;
+  }
+
+  return t.isIdentifier(expression.object) ? expression.object.name : undefined;
+}
+
+function resolveMemberPropertyName(expression: t.Expression | t.V8IntrinsicIdentifier | t.OptionalMemberExpression) {
+  if (!t.isMemberExpression(expression) && !t.isOptionalMemberExpression(expression)) {
+    return undefined;
+  }
+
+  if (t.isIdentifier(expression.property)) {
+    return expression.property.name;
+  }
+
+  if (t.isStringLiteral(expression.property)) {
+    return expression.property.value;
+  }
+
+  return undefined;
 }
 
 function readProperty(objectExpression: t.ObjectExpression, propertyName: string) {
