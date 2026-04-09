@@ -100,7 +100,7 @@ export function ToolPalette({
 }: ToolPaletteProps) {
   return (
     <>
-      <div className="pointer-events-none absolute left-[4.5rem] top-4 z-30 flex max-w-[calc(100%-6.5rem)] flex-col items-start gap-2">
+      <div className="pointer-events-none absolute left-[4.75rem] top-[3.75rem] z-30 flex max-w-[calc(100%-7rem)] flex-col items-start gap-2">
         <div className="editor-toolbar-shell flex max-w-full flex-wrap items-center gap-2 rounded-[18px] p-2">
           <ViewModeControl currentViewMode={viewMode} onSetViewMode={onSetViewMode} />
           <SnapControl
