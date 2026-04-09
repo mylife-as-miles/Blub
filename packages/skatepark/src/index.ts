@@ -1,3 +1,6 @@
+import { SkateparkElementType } from "@blud/shared";
+export { SkateparkElementType };
+
 export * from "./materials.js";
 export * from "./geometry/quarter-pipe.js";
 export * from "./geometry/half-pipe.js";
