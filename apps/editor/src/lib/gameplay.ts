@@ -78,6 +78,8 @@ export type HookDefinition = {
   fields: HookFieldDefinition[];
   label: string;
   listens: string[];
+  readOnly?: boolean;
+  showInPicker?: boolean;
   type: string;
 };
 
@@ -1037,10 +1039,30 @@ const hookDefinitionEntries: Array<HookDefinition & { defaultConfig: SceneHook["
     label: "Sound Effect",
     listens: [],
     type: "sound_effect"
+  },
+  {
+    category: "Import",
+    defaultConfig: {
+      capabilities: [],
+      diagnostics: [],
+      origin: {},
+      runtime: "blob.custom_script.v1",
+      source: ""
+    },
+    description: "Generated bridge script compiled by the HTML/JS importer.",
+    emits: [],
+    fields: [],
+    label: "Custom Script",
+    listens: [],
+    readOnly: true,
+    showInPicker: false,
+    type: "custom_script"
   }
 ];
 
-export const HOOK_DEFINITIONS: HookDefinition[] = hookDefinitionEntries.map(({ defaultConfig: _defaultConfig, ...definition }) => definition);
+export const HOOK_DEFINITIONS: HookDefinition[] = hookDefinitionEntries
+  .filter((definition) => definition.showInPicker !== false)
+  .map(({ defaultConfig: _defaultConfig, ...definition }) => definition);
 
 export const HOOK_DEFINITION_MAP = new Map(hookDefinitionEntries.map((definition) => [definition.type, definition] as const));
 
@@ -1139,6 +1161,10 @@ export function createSceneHook(
   const definition = HOOK_DEFINITION_MAP.get(type);
 
   if (!definition) {
+    return undefined;
+  }
+
+  if (definition.showInPicker === false || definition.readOnly) {
     return undefined;
   }
 

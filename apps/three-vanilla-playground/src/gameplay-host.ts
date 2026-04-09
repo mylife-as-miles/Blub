@@ -1,6 +1,7 @@
 import { Euler, Quaternion, type Object3D } from "three";
 import type { GameplayRuntimeHost } from "@blud/gameplay-runtime";
 import type { Transform } from "@blud/shared";
+import type { CustomScriptHostServices } from "@blud/runtime-scripting";
 
 type KinematicPhysicsBody = {
   setNextKinematicRotation: (rotation: QuaternionLike) => void;
@@ -21,8 +22,15 @@ type VectorLike = {
 };
 
 export type PlaybackGameplayHost = {
+  bindPhysicsWorld: (world: unknown | null, rapier?: unknown | null) => void;
   bindNodePhysicsBody: (nodeId: string, body: KinematicPhysicsBody | null) => void;
   bindNodeObject: (nodeId: string, object: Object3D | null) => void;
+  createCustomScriptServices: (options?: {
+    resolveAssetPath?: (path: string) => Promise<string> | string;
+  }) => Omit<
+    CustomScriptHostServices,
+    "entities" | "getLocalTransform" | "getWorldTransform" | "nodes" | "setLocalTransform" | "setWorldTransform"
+  >;
   host: GameplayRuntimeHost;
   reset: () => void;
 };
@@ -31,8 +39,27 @@ export function createPlaybackGameplayHost(): PlaybackGameplayHost {
   const physicsBodiesByNodeId = new Map<string, KinematicPhysicsBody | null>();
   const objectsByNodeId = new Map<string, Object3D | null>();
   const pendingTransforms = new Map<string, Transform>();
+  const pressedKeys = new Set<string>();
+  let physicsWorld: unknown | null = null;
+  let rapierApi: unknown | null = null;
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("keydown", (event) => {
+      pressedKeys.add(event.code);
+    });
+    window.addEventListener("keyup", (event) => {
+      pressedKeys.delete(event.code);
+    });
+    window.addEventListener("blur", () => {
+      pressedKeys.clear();
+    });
+  }
 
   return {
+    bindPhysicsWorld(world, rapier) {
+      physicsWorld = world;
+      rapierApi = rapier ?? null;
+    },
     bindNodePhysicsBody(nodeId, body) {
       if (body) {
         physicsBodiesByNodeId.set(nodeId, body);
@@ -61,6 +88,33 @@ export function createPlaybackGameplayHost(): PlaybackGameplayHost {
 
       objectsByNodeId.delete(nodeId);
     },
+    createCustomScriptServices(options) {
+      return {
+        assets: options?.resolveAssetPath
+          ? {
+              resolve: (path) => options.resolveAssetPath!(path)
+            }
+          : undefined,
+        input: {
+          isKeyDown: (key) => pressedKeys.has(key)
+        },
+        log: (level, message, data) => {
+          const logger =
+            level === "error"
+              ? console.error
+              : level === "warn"
+                ? console.warn
+                : level === "debug"
+                  ? console.debug
+                  : console.info;
+          logger("[custom_script]", message, data);
+        },
+        physics: {
+          rapier: rapierApi ?? undefined,
+          world: physicsWorld ?? undefined
+        }
+      };
+    },
     host: {
       applyNodeWorldTransform(nodeId, transform) {
         const object = objectsByNodeId.get(nodeId);
@@ -86,6 +140,8 @@ export function createPlaybackGameplayHost(): PlaybackGameplayHost {
       pendingTransforms.clear();
       physicsBodiesByNodeId.clear();
       objectsByNodeId.clear();
+      physicsWorld = null;
+      rapierApi = null;
     }
   };
 }

@@ -79,6 +79,7 @@ import {
   type SceneSettings
 } from "@blud/shared";
 import type { PrimitiveShape } from "@blud/shared";
+import type { HtmlJsImportFile, HtmlJsImportResult } from "@blud/scene-importer";
 import { createToolSession, defaultToolId, defaultTools, type ToolId } from "@blud/tool-system";
 import {
   createWorkerTaskManager,
@@ -87,6 +88,7 @@ import {
 import { slugifyProjectName, type EditorFileMetadata } from "@blud/dev-sync";
 import { isWebHammerEngineBundle, type WebHammerEngineBundle } from "@blud/runtime-format";
 import { EditorShell } from "@/components/EditorShell";
+import { HtmlJsImportDialog } from "@/components/editor-shell/HtmlJsImportDialog";
 import { useGameConnection } from "@/app/hooks/useGameConnection";
 import { uiStore, type RightPanelId } from "@/state/ui-store";
 import type { Transform } from "@blud/shared";
@@ -121,6 +123,13 @@ import {
 import { loadStoredSceneEditorDraft, saveSceneEditorDraft } from "@/lib/draft-storage";
 
 type ModelAssetTools = typeof import("@/lib/model-assets");
+type HtmlJsImportSession = {
+  entrypointSelection: string;
+  files: HtmlJsImportFile[];
+  loading: boolean;
+  projectName: string;
+  result?: HtmlJsImportResult | null;
+};
 
 let modelAssetToolsPromise: Promise<ModelAssetTools> | null = null;
 
@@ -164,10 +173,12 @@ export function App() {
   const [projectSlugDirty, setProjectSlugDirty] = useState(false);
   const [hiddenSceneItemIds, setHiddenSceneItemIds] = useState<string[]>([]);
   const [lockedSceneItemIds, setLockedSceneItemIds] = useState<string[]>([]);
+  const [htmlJsImportSession, setHtmlJsImportSession] = useState<HtmlJsImportSession | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const latestDraftRef = useRef<ReturnType<typeof buildSceneDraftPayload> | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const glbImportInputRef = useRef<HTMLInputElement | null>(null);
+  const htmlJsImportInputRef = useRef<HTMLInputElement | null>(null);
   const previewRestoreViewportIdRef = useRef<ViewportPaneId | null>(null);
   const renderSceneCacheRef = useRef(createDerivedRenderSceneCache());
   const ui = useSnapshot(uiStore);
@@ -820,6 +831,74 @@ export function App() {
 
   const handleImportGlb = () => {
     glbImportInputRef.current?.click();
+  };
+
+  const handleImportHtmlJs = () => {
+    htmlJsImportInputRef.current?.click();
+  };
+
+  const runHtmlJsImport = async (files: HtmlJsImportFile[], nextProjectName: string, entrypointSelection = "") => {
+    setHtmlJsImportSession((current) => ({
+      entrypointSelection,
+      files,
+      loading: true,
+      projectName: nextProjectName,
+      result: current?.result ?? null
+    }));
+
+    try {
+      const payload = await runWorkerRequest(
+        {
+          ...(entrypointSelection ? { entrypoint: entrypointSelection } : {}),
+          files,
+          kind: "htmljs-import",
+          projectName: nextProjectName
+        },
+        "Analyze HTML/JS Scene"
+      );
+
+      if (!isHtmlJsImportResult(payload)) {
+        throw new Error("HTML/JS import worker returned an unexpected payload.");
+      }
+
+      setHtmlJsImportSession({
+        entrypointSelection: payload.report.entrypoint ?? entrypointSelection,
+        files,
+        loading: false,
+        projectName: nextProjectName,
+        result: payload
+      });
+    } catch (error) {
+      console.error("Failed to import the HTML/JS scene.", error);
+      setHtmlJsImportSession((current) =>
+        current
+          ? {
+              ...current,
+              loading: false
+            }
+          : null
+      );
+    }
+  };
+
+  const handleHtmlJsFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const fileList = Array.from(event.target.files ?? []);
+    event.target.value = "";
+
+    if (fileList.length === 0) {
+      return;
+    }
+
+    const files = await Promise.all(
+      fileList.map(async (file) => ({
+        bytes: new Uint8Array(await file.arrayBuffer()),
+        mimeType: file.type || undefined,
+        path: file.webkitRelativePath || file.name
+      }))
+    );
+    const nextProjectName = deriveHtmlJsImportProjectName(fileList);
+
+    await runHtmlJsImport(files, nextProjectName);
   };
 
   const handleGlbFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1633,6 +1712,52 @@ export function App() {
     fileInputRef.current?.click();
   };
 
+  const handleReloadHtmlJsImport = async () => {
+    if (!htmlJsImportSession) {
+      return;
+    }
+
+    await runHtmlJsImport(
+      htmlJsImportSession.files,
+      htmlJsImportSession.projectName,
+      htmlJsImportSession.entrypointSelection
+    );
+  };
+
+  const handleCloseHtmlJsImport = () => {
+    if (htmlJsImportSession?.loading) {
+      return;
+    }
+
+    setHtmlJsImportSession(null);
+  };
+
+  const handleConfirmHtmlJsImport = () => {
+    const snapshot = htmlJsImportSession?.result?.snapshot;
+
+    if (!snapshot) {
+      return;
+    }
+
+    applyProjectMetadata(snapshot.metadata);
+    editor.importSnapshot(snapshot, "scene:import-htmljs");
+    editor.commands.clear();
+    setSelectedScenePathId(undefined);
+    setSelectedMaterialFaceIds([]);
+    setHiddenSceneItemIds([]);
+    setLockedSceneItemIds([]);
+    setAiModelPlacementArmed(false);
+    setAiModelDraft(null);
+    setPhysicsPlayback("stopped");
+    setPreviewSessionMode(null);
+    setPreviewPossessed(false);
+    setPhysicsRevision((current) => current + 1);
+    previewRestoreViewportIdRef.current = null;
+    uiStore.selectedAssetId = "";
+    uiStore.selectedMaterialId = "material:blockout:concrete";
+    setHtmlJsImportSession(null);
+  };
+
   const handleWhmapFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -1857,6 +1982,7 @@ export function App() {
         onGroupSelection={handleGroupSelection}
         onGenerateAiModel={handleGenerateAiModel}
         onImportGlb={handleImportGlb}
+        onImportHtmlJs={handleImportHtmlJs}
         onLoadWhmap={handleLoadWhmap}
         onNewFile={handleNewFile}
         onPausePhysics={handlePausePhysics}
@@ -1951,6 +2077,25 @@ export function App() {
         viewportQuality={ui.viewportQuality}
         viewports={ui.viewports}
       />
+      <HtmlJsImportDialog
+        entrypointSelection={htmlJsImportSession?.entrypointSelection ?? ""}
+        loading={htmlJsImportSession?.loading ?? false}
+        onClose={handleCloseHtmlJsImport}
+        onConfirm={handleConfirmHtmlJsImport}
+        onEntrypointChange={(value) =>
+          setHtmlJsImportSession((current) =>
+            current
+              ? {
+                  ...current,
+                  entrypointSelection: value
+                }
+              : current
+          )
+        }
+        onReloadEntrypoint={handleReloadHtmlJsImport}
+        open={Boolean(htmlJsImportSession)}
+        result={htmlJsImportSession?.result}
+      />
       <input
         accept=".whmap,.json"
         hidden
@@ -1963,6 +2108,14 @@ export function App() {
         hidden
         onChange={handleGlbFileChange}
         ref={glbImportInputRef}
+        type="file"
+      />
+      <input
+        accept=".zip,.html,.htm,.js,.jsx,.mjs,.ts,.tsx"
+        hidden
+        multiple
+        onChange={handleHtmlJsFileChange}
+        ref={htmlJsImportInputRef}
         type="file"
       />
     </>
@@ -1993,4 +2146,24 @@ function serializeRuntimeBundleForSync(bundle: WebHammerEngineBundle) {
     })),
     manifest: bundle.manifest
   };
+}
+
+function deriveHtmlJsImportProjectName(files: File[]) {
+  const firstFile = files[0];
+
+  if (!firstFile) {
+    return "Imported HTML Scene";
+  }
+
+  return firstFile.name.replace(/\.[^.]+$/, "") || "Imported HTML Scene";
+}
+
+function isHtmlJsImportResult(value: unknown): value is HtmlJsImportResult {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "report" in value &&
+      value.report &&
+      typeof value.report === "object"
+  );
 }

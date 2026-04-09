@@ -28,6 +28,7 @@ type EditorMenuBarProps = {
   onExportEngine: () => void;
   onExportGltf: () => void;
   onFocusSelection: () => void;
+  onImportHtmlJs: () => void;
   onLoadWhmap: () => void;
   onNewFile: () => void;
   onPausePreview: () => void;
@@ -65,6 +66,7 @@ export function EditorMenuBar({
   onExportEngine,
   onExportGltf,
   onFocusSelection,
+  onImportHtmlJs,
   onLoadWhmap,
   onNewFile,
   onPausePreview,
@@ -132,6 +134,9 @@ export function EditorMenuBar({
                     </MenubarItem>
                     <MenubarItem className="rounded-lg text-xs" onClick={onLoadWhmap}>
                       Load `.whmap`
+                    </MenubarItem>
+                    <MenubarItem className="rounded-lg text-xs" onClick={onImportHtmlJs}>
+                      Import HTML/JS Scene
                     </MenubarItem>
                     <MenubarItem className="rounded-lg text-xs" onClick={onExportGltf}>
                       Export glTF

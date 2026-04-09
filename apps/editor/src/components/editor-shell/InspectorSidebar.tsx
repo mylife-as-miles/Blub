@@ -387,7 +387,7 @@ export function InspectorSidebar({
 
   return (
     <div className={cn(
-      "pointer-events-none absolute z-20 flex flex-col gap-2",
+      "pointer-events-none absolute z-40 flex flex-col gap-2 overflow-visible",
       /* Always a left sidebar — from just below menu bar to near bottom */
       "right-2 top-16 items-end",
       sidebarOpen ? "bottom-2 w-56 sm:w-72 md:w-80 lg:w-[23rem]" : "w-auto",
@@ -406,7 +406,7 @@ export function InspectorSidebar({
 
       {/* Panel body */}
       {sidebarOpen && (
-        <div className="editor-dock-panel flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-[20px]">
+        <div className="editor-dock-panel pointer-events-auto relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-[20px]">
         <Tabs
           className="flex min-h-0 flex-1 flex-col gap-0"
           onValueChange={(value) => onChangeRightPanel(value as RightPanelId)}
@@ -1378,8 +1378,8 @@ export function InspectorSidebar({
             />
           </TabsContent>
 
-          <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="voices">
-            <ScrollArea className="h-full pr-1">
+          <TabsContent className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-2" value="voices">
+            <ScrollArea className="min-h-0 flex-1 pr-1">
               <VoicesPanel />
             </ScrollArea>
           </TabsContent>

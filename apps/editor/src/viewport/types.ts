@@ -41,6 +41,7 @@ export type ViewportCanvasProps = {
   aiModelPlacementArmed: boolean;
   activeToolId: ToolId;
   dprScale: number;
+  entities: Entity[];
   hiddenSceneItemIds?: string[];
   isActiveViewport: boolean;
   meshEditMode: MeshEditMode;
@@ -80,6 +81,7 @@ export type ViewportCanvasProps = {
   renderScene: DerivedRenderScene;
   renderMode: ViewportRenderMode;
   sceneSettings: SceneSettings;
+  nodes: GeometryNode[];
   selectedScenePathId?: string;
   selectedEntity?: Entity;
   selectedNode?: GeometryNode;

@@ -387,6 +387,7 @@ export class PlaybackSceneController {
     }
 
     this.world = createRapierPhysicsWorld(config.sceneSettings);
+    this.options.host.bindPhysicsWorld(this.world, RAPIER);
     staticMeshes.forEach((mesh) => {
       const body = createStaticRigidBody(this.world!, mesh);
       this.staticBodies.push({ body, nodeId: mesh.nodeId });
@@ -496,6 +497,7 @@ export class PlaybackSceneController {
     });
     this.staticBodies = [];
     this.world = undefined;
+    this.options.host.bindPhysicsWorld(null, null);
     this.physicsAccumulator = 0;
 
     this.staticObjects.forEach((entry) => {

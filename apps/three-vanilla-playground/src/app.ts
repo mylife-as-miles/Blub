@@ -118,7 +118,11 @@ class RuntimePlaygroundApp {
     const gameplayRuntime = createGameplayRuntime({
       host: this.host.host,
       scene: createGameplayRuntimeSceneFromRuntimeScene(this.scene),
-      systems: createPlaybackGameplaySystems(this.scene, this.enabledSystems)
+      systems: createPlaybackGameplaySystems(this.scene, this.enabledSystems, () =>
+        this.host.createCustomScriptServices({
+          resolveAssetPath: (path) => this.resolveAssetPath(path)
+        })
+      )
     });
 
     // Wire AudioManager to gameplay audio events.

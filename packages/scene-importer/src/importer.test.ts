@@ -1,34 +1,149 @@
 import { describe, expect, test } from "bun:test";
+import JSZip from "jszip";
 import { importHtmlJsProject } from "./importer";
+import type { HtmlJsImportFile } from "./types";
 
 const encoder = new TextEncoder();
 
-function makeFile(path: string, content: string, mimeType?: string) {
-  return {
-    bytes: encoder.encode(content),
-    mimeType,
-    path
-  };
-}
-
 describe("scene-importer", () => {
-  test("imports a single JS file with a mesh, camera, and generated custom script", async () => {
+  test("imports a single JS scene into native nodes", async () => {
     const result = await importHtmlJsProject({
       files: [
-        makeFile(
-          "vehicle-demo.js",
+        textFile(
+          "main.js",
           `
             import * as THREE from "three";
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-            camera.position.set(0, 3, 8);
-            const boxGeometry = new THREE.BoxGeometry(2, 1, 4);
-            const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.5 });
-            const chassis = new THREE.Mesh(boxGeometry, carMaterial);
-            chassis.name = "Chassis";
-            chassis.position.set(0, 1, 0);
-            scene.add(chassis);
+            const material = new THREE.MeshStandardMaterial({ color: "#ff5533", roughness: 0.2 });
+            const box = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 3), material);
+            box.position.set(1, 2, 3);
+            scene.add(box);
+
+            const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+            camera.position.set(4, 5, 6);
+          `
+        )
+      ],
+      projectName: "Vehicle Sandbox"
+    });
+
+    expect(result.report.status).toBe("imported");
+    expect(result.snapshot?.nodes.some((node) => node.kind === "primitive")).toBe(true);
+    expect(result.snapshot?.materials).toHaveLength(1);
+    expect(result.snapshot?.entities.some((entity) => entity.type === "player-spawn")).toBe(true);
+  });
+
+  test("imports HTML with an inline module", async () => {
+    const result = await importHtmlJsProject({
+      files: [
+        textFile(
+          "index.html",
+          `
+            <!doctype html>
+            <html>
+              <body>
+                <script type="module">
+                  import * as THREE from "three";
+                  const scene = new THREE.Scene();
+                  const light = new THREE.AmbientLight("#ffffff", 0.8);
+                  scene.add(light);
+                </script>
+              </body>
+            </html>
+          `
+        )
+      ]
+    });
+
+    expect(result.report.entrypoint).toBe("index.html");
+    expect(result.snapshot?.nodes.some((node) => node.kind === "light")).toBe(true);
+  });
+
+  test("imports HTML with linked local scripts and model assets", async () => {
+    const result = await importHtmlJsProject({
+      files: [
+        textFile(
+          "index.html",
+          `
+            <!doctype html>
+            <html>
+              <body>
+                <script type="module" src="./main.js"></script>
+              </body>
+            </html>
+          `
+        ),
+        textFile(
+          "main.js",
+          `
+            import * as THREE from "three";
+            import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+            const scene = new THREE.Scene();
+            const loader = new GLTFLoader();
+            loader.load("./models/buggy.glb", (gltf) => {
+              scene.add(gltf.scene);
+            });
+          `
+        ),
+        binaryFile("models/buggy.glb", new Uint8Array([1, 2, 3, 4]), "model/gltf-binary")
+      ]
+    });
+
+    expect(result.report.status).toBe("imported");
+    expect(result.snapshot?.assets.some((asset) => asset.type === "model")).toBe(true);
+    expect(result.snapshot?.nodes.some((node) => node.kind === "model")).toBe(true);
+  });
+
+  test("prefers index.html when resolving ZIP entrypoints", async () => {
+    const zip = new JSZip();
+    zip.file("demo.js", "console.log('ignore');");
+    zip.file(
+      "index.html",
+      `
+        <!doctype html>
+        <html>
+          <body>
+            <script type="module">
+              import * as THREE from "three";
+              const scene = new THREE.Scene();
+              scene.add(new THREE.Group());
+            </script>
+          </body>
+        </html>
+      `
+    );
+    zip.file("other.html", "<html><body>other</body></html>");
+
+    const bytes = new Uint8Array(await zip.generateAsync({ type: "uint8array" }));
+    const result = await importHtmlJsProject({
+      files: [binaryFile("scene.zip", bytes, "application/zip")]
+    });
+
+    expect(result.report.entrypoint).toBe("index.html");
+    expect(result.snapshot?.nodes.length).toBeGreaterThan(1);
+  });
+
+  test("partially imports Three.js and Rapier vehicle scenes into a generated custom script bridge", async () => {
+    const result = await importHtmlJsProject({
+      files: [
+        textFile(
+          "vehicle.js",
+          `
+            import * as THREE from "three";
+            import RAPIER from "@dimforge/rapier3d-compat";
+
+            const scene = new THREE.Scene();
             const renderer = new THREE.WebGLRenderer();
+            document.body.appendChild(renderer.domElement);
+
+            const chassis = new THREE.Group();
+            scene.add(chassis);
+
+            const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 200);
+            camera.position.set(0, 4, 10);
+
+            const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+            const vehicle = world.createVehicleController?.(null);
             renderer.setAnimationLoop(() => {});
           `
         )
@@ -36,105 +151,20 @@ describe("scene-importer", () => {
     });
 
     expect(result.report.status).toBe("partially-imported");
-    expect(result.report.detectedLibraries).toContain("three");
-    expect(result.snapshot?.nodes.some((node) => node.name === "Chassis")).toBe(true);
-    expect(result.snapshot?.entities.some((entity) => entity.type === "player-spawn")).toBe(true);
     expect(result.snapshot?.nodes.flatMap((node) => node.hooks ?? []).some((hook) => hook.type === "custom_script")).toBe(true);
+    expect(result.report.diagnostics.some((diagnostic) => diagnostic.code === "advanced-physics")).toBe(true);
   });
 
-  test("imports HTML with inline module scripts", async () => {
+  test("marks DOM-heavy projects as unsupported when no native scene graph can be extracted", async () => {
     const result = await importHtmlJsProject({
       files: [
-        makeFile(
-          "index.html",
+        textFile(
+          "app.js",
           `
-            <html>
-              <body>
-                <script type="module">
-                  import { Scene, Group } from "three";
-                  const scene = new Scene();
-                  const rootGroup = new Group();
-                  rootGroup.name = "Imported Root Group";
-                  scene.add(rootGroup);
-                </script>
-              </body>
-            </html>
-          `,
-          "text/html"
-        )
-      ]
-    });
-
-    expect(result.report.entrypoint).toBe("index.html");
-    expect(result.snapshot?.nodes.some((node) => node.name === "Imported Root Group")).toBe(true);
-  });
-
-  test("imports HTML with linked local scripts", async () => {
-    const result = await importHtmlJsProject({
-      files: [
-        makeFile("index.html", `<script type="module" src="./app/main.js"></script>`, "text/html"),
-        makeFile(
-          "app/main.js",
-          `
-            import * as THREE from "three";
-            const scene = new THREE.Scene();
-            const sun = new THREE.DirectionalLight(0xffffff, 1.5);
-            sun.position.set(5, 8, 2);
-            scene.add(sun);
-          `
-        )
-      ]
-    });
-
-    expect(result.snapshot?.nodes.some((node) => node.kind === "light")).toBe(true);
-  });
-
-  test("prefers index.html when multiple entrypoints are present", async () => {
-    const result = await importHtmlJsProject({
-      files: [
-        makeFile("alt.html", `<script>console.log("alt")</script>`, "text/html"),
-        makeFile("index.html", `<script type="module">import { Scene } from "three"; new Scene();</script>`, "text/html")
-      ]
-    });
-
-    expect(result.report.entrypoint).toBe("index.html");
-  });
-
-  test("captures rapier scenes as partial imports with a generated custom script", async () => {
-    const result = await importHtmlJsProject({
-      files: [
-        makeFile(
-          "terrain-vehicle.js",
-          `
-            import * as THREE from "three";
-            import RAPIER from "@dimforge/rapier3d-compat";
-            const scene = new THREE.Scene();
-            const renderer = new THREE.WebGLRenderer();
-            document.body.appendChild(renderer.domElement);
-            const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
-            const chassis = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 4), new THREE.MeshStandardMaterial({ color: "#ff6600" }));
-            scene.add(chassis);
-            world.createVehicleController?.(null);
-          `
-        )
-      ]
-    });
-
-    expect(result.report.detectedLibraries).toEqual(expect.arrayContaining(["rapier", "three"]));
-    expect(result.report.status).toBe("partially-imported");
-    expect(result.snapshot?.settings.world.gravity.y).toBeCloseTo(-9.81, 5);
-    expect(result.snapshot?.nodes.flatMap((node) => node.hooks ?? []).some((hook) => hook.type === "custom_script")).toBe(true);
-  });
-
-  test("marks DOM-only projects as unsupported", async () => {
-    const result = await importHtmlJsProject({
-      files: [
-        makeFile(
-          "dom-heavy.js",
-          `
-            const panel = document.createElement("div");
-            document.body.appendChild(panel);
-            requestAnimationFrame(() => panel.classList.add("ready"));
+            const button = document.createElement("button");
+            button.textContent = "Launch";
+            document.body.appendChild(button);
+            requestAnimationFrame(() => {});
           `
         )
       ]
@@ -142,5 +172,22 @@ describe("scene-importer", () => {
 
     expect(result.report.status).toBe("unsupported");
     expect(result.snapshot).toBeUndefined();
+    expect(result.report.diagnostics.some((diagnostic) => diagnostic.code === "dom-ownership")).toBe(true);
   });
 });
+
+function textFile(path: string, text: string): HtmlJsImportFile {
+  return {
+    bytes: encoder.encode(text),
+    mimeType: "text/plain",
+    path
+  };
+}
+
+function binaryFile(path: string, bytes: Uint8Array, mimeType: string): HtmlJsImportFile {
+  return {
+    bytes,
+    mimeType,
+    path
+  };
+}

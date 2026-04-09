@@ -104,6 +104,7 @@ type EditorShellProps = {
   onExportGltf: () => void;
   onExtrudeSelection: (axis: TransformAxis, direction: -1 | 1) => void;
   onFocusNode: (nodeId: string) => void;
+  onImportHtmlJs: () => void;
   onDeleteMaterial: (materialId: string) => void;
   onDeleteTexture: (textureId: string) => void;
   onCancelAiModelPlacement: () => void;
@@ -244,6 +245,7 @@ export function EditorShell({
   onExportGltf,
   onExtrudeSelection,
   onFocusNode,
+  onImportHtmlJs,
   onDeleteMaterial,
   onDeleteTexture,
   onCancelAiModelPlacement,
@@ -404,6 +406,7 @@ export function EditorShell({
           aiModelPlacementArmed={aiModelPlacementArmed}
           activeToolId={activeToolId}
           dprScale={resolveViewportDprScale(viewportQuality)}
+          entities={entities}
           hiddenSceneItemIds={effectiveHiddenSceneItemIds}
           isActiveViewport={isActiveViewport}
           meshEditMode={meshEditMode}
@@ -443,6 +446,7 @@ export function EditorShell({
           renderMode={definition.renderMode}
           renderScene={renderScene}
           sceneSettings={sceneSettings}
+          nodes={nodes}
           selectedScenePathId={selectedScenePathId}
           selectedEntity={selectedEntity}
           selectedNode={selectedNode}
@@ -479,6 +483,7 @@ export function EditorShell({
                 onFocusNode(selectedObjectId);
               }
             }}
+            onImportHtmlJs={onImportHtmlJs}
             onLoadWhmap={onLoadWhmap}
             onNewFile={onNewFile}
             onPausePreview={onPausePhysics}

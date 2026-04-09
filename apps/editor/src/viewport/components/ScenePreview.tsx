@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { BallCollider, CapsuleCollider, ConeCollider, CuboidCollider, CylinderCollider, Physics, RigidBody, TrimeshCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { createCustomScriptController, createMutableSceneHostState } from "@blud/runtime-scripting";
 import {
   BackSide,
   Box3,
@@ -12,6 +13,7 @@ import {
   Float32BufferAttribute,
   FrontSide,
   InstancedMesh,
+  Material,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
@@ -26,7 +28,7 @@ import {
   BufferGeometry,
   type Side
 } from "three";
-import type { GeometryNode, MaterialRenderSide, SceneHook, Transform, Vec3 } from "@blud/shared";
+import type { Entity, GeometryNode, MaterialRenderSide, SceneHook, Transform, Vec3 } from "@blud/shared";
 import {
   disableBvhRaycast,
   enableBvhRaycast,
@@ -91,8 +93,10 @@ function loadObjPreviewTools() {
 }
 
 export function ScenePreview({
+  entities,
   hiddenSceneItemIds = [],
   interactive,
+  nodes,
   onFocusNode,
   onMeshObjectChange,
   onPreviewCursorCapturedChange,
@@ -110,8 +114,10 @@ export function ScenePreview({
   selectedPathId,
   selectedNodeIds
 }: {
+  entities: Entity[];
   hiddenSceneItemIds?: string[];
   interactive: boolean;
+  nodes: GeometryNode[];
   onFocusNode: (nodeId: string) => void;
   onMeshObjectChange: (nodeId: string, object: Object3D | null) => void;
   onPreviewCursorCapturedChange?: (captured: boolean) => void;
@@ -130,9 +136,22 @@ export function ScenePreview({
   selectedNodeIds: string[];
 }) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string>();
+  const boundObjectsRef = useRef(new Map<string, Object3D>());
   const hiddenIds = useMemo(() => new Set(hiddenSceneItemIds), [hiddenSceneItemIds]);
   const selectedIdSet = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
   const physicsActive = renderMode === "lit" && physicsPlayback !== "stopped" && sceneSettings.world.physicsEnabled;
+  const handleSceneObjectChange = useCallback(
+    (nodeId: string, object: Object3D | null) => {
+      if (object) {
+        boundObjectsRef.current.set(nodeId, object);
+      } else {
+        boundObjectsRef.current.delete(nodeId);
+      }
+
+      onMeshObjectChange(nodeId, object);
+    },
+    [onMeshObjectChange]
+  );
   const { physicsPropMeshes, playerSpawn, staticMeshes, visibleEntityMarkers, visibleGroups, visibleInstancedMeshes, visibleLights } = useMemo(() => {
     const nextPlayerSpawn = physicsActive
       ? renderScene.entityMarkers.find((entity) => entity.entityType === "player-spawn")
@@ -185,7 +204,7 @@ export function ScenePreview({
           onFocusNode={onFocusNode}
           onHoverEnd={() => setHoveredNodeId(undefined)}
           onHoverStart={setHoveredNodeId}
-          onMeshObjectChange={onMeshObjectChange}
+          onMeshObjectChange={handleSceneObjectChange}
           onSelectNodes={onSelectNode}
           renderMode={renderMode}
           selected={selectedIdSet.has(mesh.nodeId)}
@@ -201,7 +220,7 @@ export function ScenePreview({
           onFocusNode={onFocusNode}
           onHoverEnd={() => setHoveredNodeId(undefined)}
           onHoverStart={setHoveredNodeId}
-          onMeshObjectChange={onMeshObjectChange}
+          onMeshObjectChange={handleSceneObjectChange}
           onSelectNodes={onSelectNode}
           renderMode={renderMode}
           selectedNodeIds={selectedIdSet}
@@ -228,12 +247,19 @@ export function ScenePreview({
               onFocusNode={onFocusNode}
               onHoverEnd={() => setHoveredNodeId(undefined)}
               onHoverStart={setHoveredNodeId}
-              onMeshObjectChange={onMeshObjectChange}
+              onMeshObjectChange={handleSceneObjectChange}
               onSelectNodes={onSelectNode}
               renderMode={renderMode}
               selected={selectedIdSet.has(mesh.nodeId)}
             />
           ))}
+          <PreviewCustomScriptRuntimeWithPhysics
+            entities={entities}
+            nodes={nodes}
+            objectBindings={boundObjectsRef}
+            physicsPlayback={physicsPlayback}
+            previewStepTick={previewStepTick}
+          />
           {playerSpawn ? (
             <RuntimePlayer
               onCursorCaptureChange={onPreviewCursorCapturedChange}
@@ -244,6 +270,14 @@ export function ScenePreview({
             />
           ) : null}
         </Physics>
+      ) : physicsPlayback !== "stopped" ? (
+        <PreviewCustomScriptRuntime
+          entities={entities}
+          nodes={nodes}
+          objectBindings={boundObjectsRef}
+          physicsPlayback={physicsPlayback}
+          previewStepTick={previewStepTick}
+        />
       ) : null}
 
       {visibleEntityMarkers.map((entity) => {
@@ -255,6 +289,7 @@ export function ScenePreview({
             hovered={hoveredNodeId === entity.entityId}
             interactive={interactive}
             key={entity.entityId}
+            onMeshObjectChange={handleSceneObjectChange}
             onFocusNode={onFocusNode}
             onHoverEnd={() => setHoveredNodeId(undefined)}
             onHoverStart={setHoveredNodeId}
@@ -270,6 +305,7 @@ export function ScenePreview({
           interactive={interactive}
           key={group.nodeId}
           group={group}
+          onMeshObjectChange={handleSceneObjectChange}
           onFocusNode={onFocusNode}
           onHoverEnd={() => setHoveredNodeId(undefined)}
           onHoverStart={setHoveredNodeId}
@@ -284,6 +320,7 @@ export function ScenePreview({
           interactive={interactive}
           key={light.nodeId}
           light={light}
+          onMeshObjectChange={handleSceneObjectChange}
           onFocusNode={onFocusNode}
           onHoverEnd={() => setHoveredNodeId(undefined)}
           onHoverStart={setHoveredNodeId}
@@ -427,6 +464,208 @@ function SinglePathGuide({
   );
 }
 
+function PreviewCustomScriptRuntimeWithPhysics({
+  entities,
+  nodes,
+  objectBindings,
+  physicsPlayback,
+  previewStepTick
+}: {
+  entities: Entity[];
+  nodes: GeometryNode[];
+  objectBindings: MutableRefObject<Map<string, Object3D>>;
+  physicsPlayback: "paused" | "running" | "stopped";
+  previewStepTick: number;
+}) {
+  const { rapier, world } = useRapier();
+
+  return (
+    <PreviewCustomScriptRuntime
+      entities={entities}
+      nodes={nodes}
+      objectBindings={objectBindings}
+      physics={{ rapier, world }}
+      physicsPlayback={physicsPlayback}
+      previewStepTick={previewStepTick}
+    />
+  );
+}
+
+function PreviewCustomScriptRuntime({
+  entities,
+  nodes,
+  objectBindings,
+  physics,
+  physicsPlayback,
+  previewStepTick
+}: {
+  entities: Entity[];
+  nodes: GeometryNode[];
+  objectBindings: MutableRefObject<Map<string, Object3D>>;
+  physics?: { rapier: unknown; world: unknown };
+  physicsPlayback: "paused" | "running" | "stopped";
+  previewStepTick: number;
+}) {
+  const controllerRef = useRef<ReturnType<typeof createCustomScriptController>>();
+  const previousStepTickRef = useRef(previewStepTick);
+  const keyStateRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (physicsPlayback === "stopped") {
+      return;
+    }
+
+    const sceneState = createMutableSceneHostState(nodes, entities);
+    const syncBoundObjects = () => {
+      objectBindings.current.forEach((object, targetId) => {
+        const worldTransform = sceneState.getWorldTransform(targetId);
+
+        if (!worldTransform) {
+          return;
+        }
+
+        applyObjectTransform(object, worldTransform);
+      });
+    };
+    const eventListeners = new Set<(event: { event: string; payload?: unknown; sourceId: string; targetId?: string }) => void>();
+    const controller = createCustomScriptController({
+      emitEvent: (event) => {
+        eventListeners.forEach((listener) => listener(event));
+      },
+      entities,
+      getLocalTransform: (targetId) => sceneState.getLocalTransform(targetId),
+      getWorldTransform: (targetId) => sceneState.getWorldTransform(targetId),
+      input: {
+        isKeyDown: (key) => keyStateRef.current.has(key)
+      },
+      log: (level, message, data) => {
+        const logger =
+          level === "error"
+            ? console.error
+            : level === "warn"
+              ? console.warn
+              : level === "debug"
+                ? console.debug
+                : console.info;
+        logger("[preview custom_script]", message, data);
+      },
+      nodes,
+      onEvent: (filter, listener) => {
+        const wrapped = (event: { event: string; payload?: unknown; sourceId: string; targetId?: string }) => {
+          if (!matchesPreviewEventFilter(filter, event)) {
+            return;
+          }
+
+          listener(event);
+        };
+
+        eventListeners.add(wrapped);
+        return () => {
+          eventListeners.delete(wrapped);
+        };
+      },
+      physics: physics
+        ? {
+            rapier: physics.rapier,
+            world: physics.world
+          }
+        : undefined,
+      setLocalTransform: (targetId, transform) => {
+        sceneState.setLocalTransform(targetId, transform);
+        syncBoundObjects();
+      },
+      setWorldTransform: (targetId, transform) => {
+        sceneState.setWorldTransform(targetId, transform);
+        syncBoundObjects();
+      }
+    });
+
+    controller.start();
+    syncBoundObjects();
+    controllerRef.current = controller;
+    previousStepTickRef.current = previewStepTick;
+
+    return () => {
+      controller.stop();
+      controllerRef.current = undefined;
+    };
+  }, [entities, nodes, objectBindings, physics, physicsPlayback]);
+
+  useEffect(() => {
+    if (physicsPlayback === "stopped") {
+      keyStateRef.current.clear();
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTextInputTarget(event.target)) {
+        return;
+      }
+
+      keyStateRef.current.add(event.code);
+    };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      keyStateRef.current.delete(event.code);
+    };
+    const handleBlur = () => {
+      keyStateRef.current.clear();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [physicsPlayback]);
+
+  useFrame((_state, delta) => {
+    const controller = controllerRef.current;
+
+    if (!controller || physicsPlayback === "stopped") {
+      return;
+    }
+
+    if (physicsPlayback === "running") {
+      controller.update(delta);
+      return;
+    }
+
+    if (previousStepTickRef.current !== previewStepTick) {
+      previousStepTickRef.current = previewStepTick;
+      controller.update(1 / 60);
+    }
+  });
+
+  return null;
+}
+
+function matchesPreviewEventFilter(
+  filter: { event?: string | string[]; sourceId?: string; targetId?: string },
+  event: { event: string; sourceId: string; targetId?: string }
+) {
+  const eventMatches =
+    !filter.event ||
+    (Array.isArray(filter.event) ? filter.event.includes(event.event) : filter.event === event.event);
+
+  if (!eventMatches) {
+    return false;
+  }
+
+  if (filter.sourceId && filter.sourceId !== event.sourceId) {
+    return false;
+  }
+
+  if (filter.targetId && filter.targetId !== event.targetId) {
+    return false;
+  }
+
+  return true;
+}
+
 function readHookNumber(config: SceneHook["config"], key: string, fallback: number) {
   const value = config[key];
   return typeof value === "number" ? value : fallback;
@@ -455,6 +694,7 @@ function RenderEntityMarker({
   entity,
   hovered,
   interactive,
+  onMeshObjectChange,
   onFocusNode,
   onHoverEnd,
   onHoverStart,
@@ -464,6 +704,7 @@ function RenderEntityMarker({
   entity: DerivedEntityMarker;
   hovered: boolean;
   interactive: boolean;
+  onMeshObjectChange: (nodeId: string, object: Object3D | null) => void;
   onFocusNode: (nodeId: string) => void;
   onHoverEnd: () => void;
   onHoverStart: (nodeId: string) => void;
@@ -479,6 +720,9 @@ function RenderEntityMarker({
   return (
     <group
       name={`entity:${entity.entityId}`}
+      ref={(object) => {
+        onMeshObjectChange(entity.entityId, object);
+      }}
       onClick={(event) => {
         if (!interactive) {
           return;
@@ -554,6 +798,7 @@ function RenderGroupNode({
   group,
   hovered,
   interactive,
+  onMeshObjectChange,
   onFocusNode,
   onHoverEnd,
   onHoverStart,
@@ -563,6 +808,7 @@ function RenderGroupNode({
   group: DerivedGroupMarker;
   hovered: boolean;
   interactive: boolean;
+  onMeshObjectChange: (nodeId: string, object: Object3D | null) => void;
   onFocusNode: (nodeId: string) => void;
   onHoverEnd: () => void;
   onHoverStart: (nodeId: string) => void;
@@ -574,6 +820,9 @@ function RenderGroupNode({
   return (
     <group
       name={`node:${group.nodeId}`}
+      ref={(object) => {
+        onMeshObjectChange(group.nodeId, object);
+      }}
       onClick={(event) => {
         if (!interactive) {
           return;
@@ -2053,14 +2302,7 @@ function RenderModelBody({
       return undefined;
     }
 
-    const clone = cloneModelSceneGraph(loadedScene);
-    clone.traverse((child) => {
-      if (child instanceof Mesh) {
-        child.castShadow = renderMode === "lit";
-        child.receiveShadow = renderMode === "lit";
-      }
-    });
-    return clone;
+    return createPreviewModelScene(loadedScene, renderMode);
   }, [loadedScene, renderMode]);
   const modelBounds = loadedBounds ?? (mesh.modelSize && mesh.modelCenter
     ? {
@@ -2091,6 +2333,12 @@ function RenderModelBody({
 
     return clone;
   }, [loadedScene, overlayColor, renderMode, showOverlay]);
+
+  useEffect(() => {
+    return () => {
+      disposeSceneMeshMaterials(modelScene);
+    };
+  }, [modelScene]);
 
   useEffect(() => {
     return () => {
@@ -2383,6 +2631,54 @@ function cloneModelSceneGraph(scene: Object3D) {
   return clone;
 }
 
+function createPreviewModelScene(scene: Object3D, renderMode: ViewportRenderMode) {
+  const clone = cloneModelSceneGraph(scene);
+
+  clone.traverse((child) => {
+    if (!(child instanceof Mesh)) {
+      return;
+    }
+
+    child.castShadow = renderMode === "lit";
+    child.receiveShadow = renderMode === "lit";
+    child.material = clonePreviewModelMaterial(child.material);
+    tunePreviewModelMaterial(child.material);
+  });
+
+  return clone;
+}
+
+function clonePreviewModelMaterial(material: Mesh["material"]) {
+  if (Array.isArray(material)) {
+    return material.map((entry) => entry.clone());
+  }
+
+  return material.clone();
+}
+
+function tunePreviewModelMaterial(material: Mesh["material"]) {
+  if (Array.isArray(material)) {
+    material.forEach((entry) => tunePreviewSingleMaterial(entry));
+    return;
+  }
+
+  tunePreviewSingleMaterial(material);
+}
+
+function tunePreviewSingleMaterial(material: Material) {
+  if (!(material instanceof MeshStandardMaterial)) {
+    return;
+  }
+
+  material.envMapIntensity = Math.max(material.envMapIntensity ?? 1, 1.15);
+
+  if (material.roughness > 0.94) {
+    material.roughness = 0.94;
+  }
+
+  material.needsUpdate = true;
+}
+
 function bakeSkinnedMeshGeometry(mesh: SkinnedMesh) {
   const sourceGeometry = mesh.geometry;
   const positionAttribute = sourceGeometry.getAttribute("position");
@@ -2447,10 +2743,30 @@ function disposeOverlaySceneMaterials(scene: Object3D | undefined) {
   });
 }
 
+function disposeSceneMeshMaterials(scene: Object3D | undefined) {
+  if (!scene) {
+    return;
+  }
+
+  scene.traverse((child) => {
+    if (!(child instanceof Mesh)) {
+      return;
+    }
+
+    if (Array.isArray(child.material)) {
+      child.material.forEach((entry) => entry.dispose());
+      return;
+    }
+
+    child.material.dispose();
+  });
+}
+
 function RenderLightNode({
   hovered,
   interactive,
   light,
+  onMeshObjectChange,
   onFocusNode,
   onHoverEnd,
   onHoverStart,
@@ -2461,6 +2777,7 @@ function RenderLightNode({
   hovered: boolean;
   interactive: boolean;
   light: DerivedLight;
+  onMeshObjectChange: (nodeId: string, object: Object3D | null) => void;
   onFocusNode: (nodeId: string) => void;
   onHoverEnd: () => void;
   onHoverStart: (nodeId: string) => void;
@@ -2483,6 +2800,9 @@ function RenderLightNode({
   return (
     <group
       name={`node:${light.nodeId}`}
+      ref={(object) => {
+        onMeshObjectChange(light.nodeId, object);
+      }}
       onClick={(event) => {
         if (!interactive) {
           return;
@@ -2777,6 +3097,7 @@ function createPreviewMaterial(spec: DerivedRenderMesh["material"], selected: bo
     color: colorTexture ? "#ffffff" : selected ? "#ffb35a" : hovered ? "#d8f4f0" : spec.color,
     emissive: selected ? "#f69036" : hovered ? "#2a7f74" : spec.emissiveColor ?? "#000000",
     emissiveIntensity: selected ? 0.38 : hovered ? 0.14 : spec.emissiveIntensity ?? 0,
+    envMapIntensity: spec.wireframe ? 0 : 1.15,
     flatShading: spec.flatShaded,
     metalness: spec.wireframe ? 0.05 : spec.metalness,
     opacity,
@@ -2825,6 +3146,13 @@ function loadTexture(source: string, isColor: boolean) {
   previewTextureCache.set(cacheKey, texture);
 
   return texture;
+}
+
+function applyObjectTransform(object: Object3D, transform: Transform) {
+  object.position.set(transform.position.x, transform.position.y, transform.position.z);
+  object.rotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z);
+  object.scale.set(transform.scale.x, transform.scale.y, transform.scale.z);
+  object.updateMatrixWorld();
 }
 
 function resolveViewDirection(yaw: number, pitch: number, target: Vector3) {

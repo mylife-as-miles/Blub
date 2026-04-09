@@ -545,7 +545,7 @@ function analyzeScript(
 function buildSnapshot(projectName: string, entrypoint: string, analysis: Analysis): SceneDocumentSnapshot | undefined {
   const hasImportableContent = analysis.nodes.size > 0 || analysis.modelLoads.length > 0 || analysis.cameras.length > 0;
 
-  if (!hasImportableContent && !analysis.needsCustomScript) {
+  if (!hasImportableContent) {
     return undefined;
   }
 

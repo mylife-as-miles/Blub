@@ -93,7 +93,30 @@ import {
 import { composeTransformRotation, rebaseTransformPivot } from "@/viewport/utils/geometry";
 import { resolveViewportSnapSize } from "@/viewport/utils/snap";
 import { useEffect, useMemo, useRef, useState, type PointerEventHandler } from "react";
-import { ACESFilmicToneMapping, BufferGeometry, Camera, Color, Float32BufferAttribute, Matrix4, Object3D, Plane, Raycaster, Vector2, Vector3 } from "three";
+import {
+  ACESFilmicToneMapping,
+  BackSide,
+  BufferGeometry,
+  Camera,
+  Color,
+  DoubleSide,
+  Float32BufferAttribute,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  Object3D,
+  PCFSoftShadowMap,
+  Plane,
+  PlaneGeometry,
+  PMREMGenerator,
+  Raycaster,
+  Scene as ThreeScene,
+  ShaderMaterial,
+  SphereGeometry,
+  SRGBColorSpace,
+  Vector2,
+  Vector3
+} from "three";
 import type {
   ArcState,
   BevelState,
@@ -174,7 +197,7 @@ function ViewportWorldSettings({ renderMode, sceneSettings }: Pick<ViewportCanva
       void module.applyWebHammerWorldSettings(scene, { settings: sceneSettings });
 
       if (!sceneSettings.world.skybox.enabled) {
-        scene.background = new Color("#a7bfd8");
+        scene.background = new Color("#0b1320");
       }
     });
 
@@ -202,9 +225,9 @@ const SKY_FRAG = /* glsl */ `
   varying vec3 vDir;
   void main() {
     float t = clamp(vDir.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 zenith  = vec3(0.040, 0.055, 0.085);
-    vec3 horizon = vec3(0.068, 0.088, 0.120);
-    vec3 nadir   = vec3(0.022, 0.026, 0.034);
+    vec3 zenith  = vec3(0.090, 0.125, 0.195);
+    vec3 horizon = vec3(0.150, 0.195, 0.285);
+    vec3 nadir   = vec3(0.030, 0.040, 0.065);
     vec3 col = t > 0.5
       ? mix(horizon, zenith, (t - 0.5) * 2.0)
       : mix(nadir,   horizon, t * 2.0);
@@ -228,10 +251,101 @@ function EditorSkyDome() {
 
 function ViewportRendererSetup() {
   const { gl } = useThree();
+
   useEffect(() => {
-    gl.toneMapping = ACESFilmicToneMapping;
-    gl.toneMappingExposure = 0.92;
+    if ("outputColorSpace" in gl) {
+      gl.outputColorSpace = SRGBColorSpace;
+    }
+
+    if ("shadowMap" in gl) {
+      gl.shadowMap.enabled = true;
+      gl.shadowMap.type = PCFSoftShadowMap;
+    }
+
+    if ("toneMapping" in gl) {
+      gl.toneMapping = ACESFilmicToneMapping;
+    }
+
+    if ("toneMappingExposure" in gl) {
+      gl.toneMappingExposure = 1.04;
+    }
   }, [gl]);
+
+  return null;
+}
+
+function ViewportStudioEnvironment({
+  enabled,
+  sceneSettings
+}: {
+  enabled: boolean;
+  sceneSettings: ViewportCanvasProps["sceneSettings"];
+}) {
+  const { gl, scene } = useThree();
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const previousEnvironment = scene.environment;
+    const previousEnvironmentIntensity = scene.environmentIntensity;
+    const pmremGenerator = new PMREMGenerator(gl as never);
+    const environmentScene = new ThreeScene();
+    const environmentObjects: Array<Mesh<SphereGeometry | PlaneGeometry, ShaderMaterial | MeshBasicMaterial>> = [];
+
+    const sky = new Mesh(
+      new SphereGeometry(64, 40, 20),
+      new ShaderMaterial({
+        side: BackSide,
+        vertexShader: SKY_VERT,
+        fragmentShader: SKY_FRAG
+      })
+    );
+    environmentScene.add(sky);
+    environmentObjects.push(sky);
+
+    const addLightCard = (
+      colorValue: string,
+      intensity: number,
+      position: [number, number, number],
+      scale: [number, number]
+    ) => {
+      const material = new MeshBasicMaterial({
+        color: new Color(colorValue).multiplyScalar(intensity),
+        side: DoubleSide
+      });
+      const card = new Mesh(new PlaneGeometry(scale[0], scale[1]), material);
+      card.position.set(...position);
+      card.lookAt(0, 0, 0);
+      environmentScene.add(card);
+      environmentObjects.push(card);
+    };
+
+    addLightCard("#fff3db", 3.2, [16, 13, 10], [24, 24]);
+    addLightCard("#9fd5ff", 1.5, [-18, 6, -12], [18, 14]);
+    addLightCard("#ffbf86", 1.1, [0, 10, -22], [16, 12]);
+    addLightCard("#b8d6ff", 0.8, [0, -14, 0], [36, 18]);
+
+    const environmentTarget = pmremGenerator.fromScene(environmentScene, 0.04);
+    scene.environment = environmentTarget.texture;
+    scene.environmentIntensity = 1.1;
+
+    return () => {
+      if (scene.environment === environmentTarget.texture) {
+        scene.environment = previousEnvironment;
+        scene.environmentIntensity = previousEnvironmentIntensity;
+      }
+
+      environmentTarget.dispose();
+      pmremGenerator.dispose();
+      environmentObjects.forEach((entry) => {
+        entry.geometry.dispose();
+        entry.material.dispose();
+      });
+    };
+  }, [enabled, gl, scene, sceneSettings]);
+
   return null;
 }
 
@@ -240,6 +354,7 @@ export function ViewportCanvas({
   aiModelPlacementArmed,
   activeToolId,
   dprScale,
+  entities,
   hiddenSceneItemIds = [],
   isActiveViewport,
   meshEditMode,
@@ -279,6 +394,7 @@ export function ViewportCanvas({
   renderMode,
   renderScene,
   sceneSettings,
+  nodes,
   selectedScenePathId,
   selectedEntity,
   selectedNode,
@@ -3128,20 +3244,21 @@ export function ViewportCanvas({
       >
         <ViewportRendererSetup />
         <ViewportWorldSettings renderMode={renderMode} sceneSettings={sceneSettings} />
-        {renderMode !== "lit" ? <EditorSkyDome /> : null}
+        {renderMode !== "lit" || !sceneSettings.world.skybox.enabled ? <EditorSkyDome /> : null}
+        {renderMode === "lit" ? <ViewportStudioEnvironment enabled={!sceneSettings.world.skybox.enabled} sceneSettings={sceneSettings} /> : null}
         {renderMode === "lit" ? (
           <ambientLight color={sceneSettings.world.ambientColor} intensity={sceneSettings.world.ambientIntensity} />
         ) : null}
-        {renderMode === "lit" ? <hemisphereLight args={["#b8d4f0", "#0a1420", 0.85]} /> : null}
-        {renderMode !== "lit" ? <hemisphereLight args={["#4a6890", "#060c14", 0.45]} /> : null}
+        {renderMode === "lit" ? <hemisphereLight args={["#c7dcf8", "#07121f", 0.48]} /> : null}
+        {renderMode !== "lit" ? <hemisphereLight args={["#4a6890", "#060c14", 0.38]} /> : null}
         {renderMode === "lit" ? <DefaultViewportSun center={renderScene.boundsCenter} /> : null}
         {renderMode === "lit" ? (
           <ContactShadows
-            opacity={0.42}
+            opacity={0.34}
             scale={80}
-            blur={2.2}
+            blur={1.9}
             far={24}
-            resolution={512}
+            resolution={1024}
             color="#000814"
             position={[renderScene.boundsCenter.x, renderScene.boundsCenter.y - 0.01, renderScene.boundsCenter.z]}
           />
@@ -3164,6 +3281,7 @@ export function ViewportCanvas({
         ) : null}
         {renderMode === "lit" && editorInteractionEnabled ? <axesHelper args={[3]} /> : null}
         <ScenePreview
+          entities={entities}
           hiddenSceneItemIds={
             selectedNode &&
             (arcState || bevelState || extrudeState?.kind === "brush-mesh" || extrudeState?.kind === "mesh")
@@ -3171,6 +3289,7 @@ export function ViewportCanvas({
               : hiddenSceneItemIds
           }
           interactive={activeToolId !== "brush" && activeToolId !== "mesh-edit" && activeToolId !== "path-add" && activeToolId !== "path-edit" && viewport.projection === "perspective" && editorInteractionEnabled}
+          nodes={nodes}
           onFocusNode={onFocusNode}
           onMeshObjectChange={handleMeshObjectChange}
           onSelectNode={handleSceneSelectNodes}
@@ -3376,32 +3495,32 @@ function DefaultViewportSun({ center }: { center: Vec3 }) {
       {/* Primary sun — warm, from upper-right-front */}
       <directionalLight
         castShadow
-        color="#fff5e8"
-        intensity={1.6}
-        position={[center.x + 28, center.y + 42, center.z + 24]}
+        color="#fff2df"
+        intensity={1.9}
+        position={[center.x + 26, center.y + 38, center.z + 22]}
         ref={sunRef}
-        shadow-bias={-0.00015}
-        shadow-camera-bottom={-72}
+        shadow-bias={-0.0002}
+        shadow-camera-bottom={-76}
         shadow-camera-far={180}
-        shadow-camera-left={-72}
-        shadow-camera-right={72}
-        shadow-camera-top={72}
-        shadow-mapSize-height={2048}
-        shadow-mapSize-width={2048}
-        shadow-normalBias={0.025}
+        shadow-camera-left={-76}
+        shadow-camera-right={76}
+        shadow-camera-top={76}
+        shadow-mapSize-height={3072}
+        shadow-mapSize-width={3072}
+        shadow-normalBias={0.03}
       />
       {/* Cool fill — from the opposite lower-left-back, no shadows */}
       <directionalLight
-        color="#a8c8f0"
-        intensity={0.38}
-        position={[center.x - 22, center.y + 8, center.z - 18]}
+        color="#9fd0ff"
+        intensity={0.68}
+        position={[center.x - 24, center.y + 10, center.z - 18]}
         ref={fillRef}
       />
       {/* Rim light — backlit edge definition */}
       <directionalLight
-        color="#d0e8ff"
-        intensity={0.22}
-        position={[center.x - 10, center.y + 30, center.z - 40]}
+        color="#ffb877"
+        intensity={0.52}
+        position={[center.x - 6, center.y + 24, center.z - 34]}
       />
       <object3D position={[center.x, center.y, center.z]} ref={targetRef} />
     </>

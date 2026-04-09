@@ -19,6 +19,8 @@ import {
   createVfxEmitterSystemDefinition,
   type GameplayRuntimeSystemDefinition
 } from "@blud/gameplay-runtime";
+import { createCustomScriptSystemDefinition } from "@blud/runtime-scripting";
+import type { CustomScriptHostServices } from "@blud/runtime-scripting";
 import type { WebHammerEngineScene } from "@blud/three-runtime";
 
 export type PlaybackGameplaySystemsState = {
@@ -32,7 +34,11 @@ export type PlaybackGameplaySystemsState = {
 
 export function createPlaybackGameplaySystems(
   scene: Pick<WebHammerEngineScene, "settings">,
-  enabledSystems: PlaybackGameplaySystemsState
+  enabledSystems: PlaybackGameplaySystemsState,
+  createCustomScriptServices?: () => Omit<
+    CustomScriptHostServices,
+    "entities" | "getLocalTransform" | "getWorldTransform" | "nodes" | "setLocalTransform" | "setWorldTransform"
+  >
 ): GameplayRuntimeSystemDefinition[] {
   const systems: GameplayRuntimeSystemDefinition[] = [];
 
@@ -72,6 +78,7 @@ export function createPlaybackGameplaySystems(
   systems.push(createConditionListenerSystemDefinition());
   systems.push(createDestructibleSystemDefinition());
   systems.push(createVfxEmitterSystemDefinition());
+  systems.push(createCustomScriptSystemDefinition(() => createCustomScriptServices?.() ?? {}));
 
   return systems;
 }

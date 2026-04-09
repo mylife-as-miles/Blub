@@ -103,4 +103,37 @@ describe("runtime-build", () => {
 
     expect(worldIndex.chunks[0]?.id).toBe("hub");
   });
+
+  test("preserves custom_script hooks through bundle packing", async () => {
+    const sceneWithCustomScript: RuntimeScene = {
+      ...runtimeScene,
+      nodes: [
+        {
+          ...runtimeScene.nodes[0]!,
+          hooks: [
+            {
+              config: {
+                capabilities: ["scene", "physics"],
+                diagnostics: [{ code: "advanced-physics", severity: "warning" }],
+                origin: { entrypoint: "vehicle.js", generatedBy: "htmljs-importer" },
+                runtime: "blob.custom_script.v1",
+                source: "export default class ImportedVehicle { onTick() {} }"
+              },
+              enabled: true,
+              id: "hook:custom_script:imported",
+              type: "custom_script"
+            }
+          ]
+        }
+      ]
+    };
+
+    const bundle = await externalizeRuntimeAssets(sceneWithCustomScript);
+    const unpacked = unpackRuntimeBundle(packRuntimeBundle(bundle));
+    const hook = unpacked.manifest.nodes[0]?.hooks?.[0];
+
+    expect(hook?.type).toBe("custom_script");
+    expect(hook?.config.runtime).toBe("blob.custom_script.v1");
+    expect(hook?.config.source).toContain("ImportedVehicle");
+  });
 });
