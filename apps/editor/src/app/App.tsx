@@ -40,6 +40,7 @@ import {
   createTranslateNodesCommand,
   createUpsertMaterialCommand,
   createUpsertTextureCommand,
+  type SceneDocumentSnapshot,
   type TransformAxis
 } from "@blud/editor-core";
 import { convertBrushToEditableMesh, invertEditableMeshNormals } from "@blud/geometry-kernel";
@@ -1774,7 +1775,7 @@ export function App() {
       "Load .whmap"
     );
 
-    if (typeof payload !== "string" && !isWebHammerEngineBundle(payload)) {
+    if (isSceneDocumentSnapshotPayload(payload)) {
       applyProjectMetadata(payload.metadata);
       editor.importSnapshot(payload, "scene:load-whmap");
     }
@@ -2165,5 +2166,16 @@ function isHtmlJsImportResult(value: unknown): value is HtmlJsImportResult {
       "report" in value &&
       value.report &&
       typeof value.report === "object"
+  );
+}
+
+function isSceneDocumentSnapshotPayload(value: unknown): value is SceneDocumentSnapshot {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "nodes" in value &&
+      "entities" in value &&
+      "materials" in value &&
+      "settings" in value
   );
 }
