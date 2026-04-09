@@ -5,10 +5,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "bun x vite",
-    "build": "bun x tsc --noEmit && bun x vite build --config vite.config.ts",
-    "typecheck": "bun x tsc --noEmit",
-    "preview": "bun x vite preview"
+    "dev": "vite",
+    "build": "vite build --config vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.2",

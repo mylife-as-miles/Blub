@@ -27,7 +27,8 @@
     "publish:packages": "node ./scripts/release-packages.mjs publish",
     "dev:three-vanilla": "npm run dev -w @blud/three-vanilla-playground",
     "build:three-vanilla": "npm run build -w @blud/three-vanilla-playground",
-    "typecheck:three-vanilla": "npm run typecheck -w @blud/three-vanilla-playground"
+    "typecheck:three-vanilla": "npm run typecheck -w @blud/three-vanilla-playground",
+    "build:published": "node ./scripts/build-published-app.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

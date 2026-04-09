@@ -30,6 +30,18 @@ task = "shell.exec"
 args = "npm run start"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "Vanilla playground"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:three-vanilla"
+waitForPort = 5173
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -46,7 +58,11 @@ externalPort = 8081
 localPort = 8082
 externalPort = 3001
 
+[[ports]]
+localPort = 5173
+externalPort = 5173
+
 [deployment]
 deploymentTarget = "static"
-build = ["npm", "run", "build", "-w", "@blud/editor"]
+build = ["npm", "run", "build:published"]
 publicDir = "apps/editor/dist"
