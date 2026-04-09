@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, type ChangeEvent } from "react";
-import { BellRing, Cable, ChevronLeft, ChevronRight, FolderTree, Globe2, Loader2, Mic, SlidersHorizontal, SwatchBook, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import {
   type EditableMesh,
   isInstancingNode,
@@ -24,7 +24,7 @@ import { DragInput } from "@/components/ui/drag-input";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { EventsPanel, HooksPanel, PathsPanel } from "@/components/editor-shell/GameplayPanels";
 import { NpcVoiceInspector } from "@/components/editor-shell/NpcVoiceInspector";
 import { VoicesPanel } from "@/components/editor-shell/VoicesPanel";
@@ -94,9 +94,6 @@ type InspectorSidebarProps = {
 };
 
 const AXES = ["x", "y", "z"] as const;
-const RIGHT_PANEL_TAB_TRIGGER_CLASS =
-  "editor-toolbar-button !h-11 !gap-1 !rounded-[10px] !border !border-transparent !px-2 !py-2 !text-[10px] !font-semibold !tracking-[0.12em] !text-foreground/72 !uppercase hover:!translate-y-0 active:!scale-100 data-active:!border-[#f6d07d]/22 data-active:!bg-[#f6d07d]/10 data-active:!text-[#fff0cb] [&_svg]:size-3.5 [&_svg]:shrink-0";
-const RIGHT_PANEL_TAB_LABEL_CLASS = "text-[0.52rem] font-semibold tracking-[0.08em] text-inherit uppercase";
 
 function inferSkyboxFormat(file: File): SceneSettings["world"]["skybox"]["format"] {
   return file.name.toLowerCase().endsWith(".hdr") ? "hdr" : "image";
@@ -375,14 +372,6 @@ export function InspectorSidebar({
     );
   };
 
-  const handleTabClick = (panel: RightPanelId) => {
-    if (activeRightPanel === panel) {
-      onChangeRightPanel(null);
-    } else {
-      onChangeRightPanel(panel);
-    }
-  };
-
   const collapsed = activeRightPanel === null;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   useEffect(() => {
@@ -423,8 +412,8 @@ export function InspectorSidebar({
           onValueChange={(value) => onChangeRightPanel(value as RightPanelId)}
           value={activeRightPanel ?? ""}
         >
-          <div className={cn("editor-dock-header px-3 pt-3", collapsed ? "pb-3" : "pb-2")}>
-            <div className="mb-3 flex items-center justify-between gap-2">
+          <div className={cn("editor-dock-header px-3 pt-3", collapsed ? "pb-3" : "pb-3")}>
+            <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <div className="editor-toolbar-label">Details</div>
                 <div className="mt-1 truncate text-[11px] font-medium text-foreground/56">
@@ -435,41 +424,15 @@ export function InspectorSidebar({
                 {selectionEnabled ? "Editable" : "Sim"}
               </span>
             </div>
-            <TabsList className="editor-toolbar-segment !grid !h-auto !w-full !grid-cols-4 !items-stretch !gap-1.5 !rounded-[16px] !p-1.5" variant="default">
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="scene" onClick={() => handleTabClick("scene")}>
-                <FolderTree />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Scene</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="world" onClick={() => handleTabClick("world")}>
-                <Globe2 />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>World</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="player" onClick={() => handleTabClick("player")}>
-                <User />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Player</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="inspector" onClick={() => handleTabClick("inspector")}>
-                <SlidersHorizontal />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Inspect</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="hooks" onClick={() => handleTabClick("hooks")}>
-                <Cable />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Hooks</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="events" onClick={() => handleTabClick("events")}>
-                <BellRing />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Events</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="materials" onClick={() => handleTabClick("materials")}>
-                <SwatchBook />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Mats</span>
-              </TabsTrigger>
-              <TabsTrigger className={cn(RIGHT_PANEL_TAB_TRIGGER_CLASS, "!flex-col !px-0")} value="voices" onClick={() => handleTabClick("voices")}>
-                <Mic />
-                <span className={RIGHT_PANEL_TAB_LABEL_CLASS}>Voices</span>
-              </TabsTrigger>
-            </TabsList>
           </div>
+
+          {collapsed ? (
+            <div className="px-3 pb-3 pt-2">
+              <div className="editor-dock-note rounded-xl px-3 py-3 text-[11px]">
+                Open a details panel from Tools to inspect scene, world, player, or material data.
+              </div>
+            </div>
+          ) : null}
 
           <TabsContent className="min-h-0 flex-1 px-3 pb-3 pt-2" value="scene">
             <div className="flex h-full min-h-0 flex-col gap-3">
