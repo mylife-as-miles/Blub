@@ -15,7 +15,7 @@ import type {
   Transform,
   Vec2
 } from "@blud/shared";
-import type { PrimitiveNodeData, PrimitiveShape } from "@blud/shared";
+import type { PrimitiveNodeData, PrimitiveShape, SkateparkElementType } from "@blud/shared";
 import type { ToolId } from "@blud/tool-system";
 import type { FloorPresetId } from "@/lib/floor-presets";
 import type { WorkerJob } from "@blud/workers";
@@ -530,6 +530,7 @@ export function EditorShell({
               onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
               onPlaceBlockoutRoom={onPlaceBlockoutRoom}
               onPlaceBlockoutStairs={onPlaceBlockoutStairs}
+              onPlaceSkateparkElement={onPlaceSkateparkElement}
               onPlaceEntity={onPlaceEntity}
               onPlaceFloorPreset={onPlaceFloorPreset}
               onPlaceLight={onPlaceLight}

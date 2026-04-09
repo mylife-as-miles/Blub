@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 import { BellRing, Cable, FolderTree, Globe2, Mic, SlidersHorizontal, SwatchBook, User, Wrench, X } from "lucide-react";
 import type { GridSnapValue } from "@blud/render-pipeline";
-import type { BrushShape, EntityType, LightType, PrimitiveShape } from "@blud/shared";
+import type { BrushShape, EntityType, LightType, PrimitiveShape, SkateparkElementType } from "@blud/shared";
 import { defaultTools, type ToolId } from "@blud/tool-system";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -56,6 +56,7 @@ type ToolsPanelProps = {
   onPlaceBlockoutPlatform: () => void;
   onPlaceBlockoutRoom: () => void;
   onPlaceBlockoutStairs: () => void;
+  onPlaceSkateparkElement?: (type: SkateparkElementType) => void;
   onPlaceProp: (shape: PrimitiveShape) => void;
   onPlayPhysics: () => void;
   onSimulatePhysics: () => void;
@@ -109,6 +110,7 @@ export function ToolsPanel({
   onPlaceBlockoutPlatform,
   onPlaceBlockoutRoom,
   onPlaceBlockoutStairs,
+  onPlaceSkateparkElement,
   onPlaceProp,
   onPlayPhysics,
   onSimulatePhysics,
@@ -260,6 +262,7 @@ export function ToolsPanel({
                   onPlaceBlockoutPlatform={onPlaceBlockoutPlatform}
                   onPlaceBlockoutRoom={onPlaceBlockoutRoom}
                   onPlaceBlockoutStairs={onPlaceBlockoutStairs}
+                  onPlaceSkateparkElement={onPlaceSkateparkElement}
                   onPlaceProp={onPlaceProp}
                   onStartAiModelPlacement={onStartAiModelPlacement}
                   onSelectBrushShape={onSelectBrushShape}
