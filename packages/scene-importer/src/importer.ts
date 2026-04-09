@@ -16,9 +16,14 @@ import {
 import { parse as parseHtml } from "parse5";
 import JSZip from "jszip";
 import { parse } from "@babel/parser";
-import traverse from "@babel/traverse";
+import traverseModule from "@babel/traverse";
 import * as t from "@babel/types";
 import type { HtmlJsImportInput, HtmlJsImportResult, ImportDiagnostic, ImportReport } from "./types";
+
+const traverse =
+  typeof traverseModule === "function"
+    ? traverseModule
+    : (traverseModule as unknown as { default: typeof traverseModule }).default;
 
 type ProjectFile = {
   bytes: Uint8Array;
@@ -279,6 +284,11 @@ function collectScripts(project: Awaited<ReturnType<typeof loadProject>>, entryp
     }
 
     const attrs = Object.fromEntries((node.attrs ?? []).map((attr: { name: string; value: string }) => [attr.name, attr.value]));
+    const scriptType = typeof attrs.type === "string" ? attrs.type : "";
+
+    if (!isJavaScriptScriptType(scriptType)) {
+      return;
+    }
 
     if (attrs.src) {
       if (/^https?:\/\//i.test(attrs.src)) {
@@ -329,10 +339,21 @@ function analyzeScript(
   const materialByVariable = new Map<string, MaterialRecord>();
   const gltfLoaders = new Set<string>();
   const rapierWorlds = new Set<string>();
-  const ast = parse(content, {
-    plugins: ["classProperties", "jsx", "topLevelAwait", "typescript"],
-    sourceType: "unambiguous"
-  });
+  let ast: t.File;
+
+  try {
+    ast = parse(content, {
+      plugins: ["classProperties", "jsx", "topLevelAwait", "typescript"],
+      sourceType: "unambiguous"
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown parse error";
+    analysis.diagnostics.push(
+      createDiagnostic("script-parse-failed", "warning", `Script "${path}" could not be parsed during import: ${message}`, path)
+    );
+    analysis.needsCustomScript = true;
+    return;
+  }
 
   traverse(ast, {
     AssignmentExpression(path) {
@@ -1260,6 +1281,22 @@ function guessMimeType(path: string) {
   }
 
   return "application/javascript";
+}
+
+function isJavaScriptScriptType(type: string) {
+  const normalized = type.trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return (
+    normalized === "module" ||
+    normalized === "text/javascript" ||
+    normalized === "application/javascript" ||
+    normalized === "text/ecmascript" ||
+    normalized === "application/ecmascript"
+  );
 }
 
 function createDataUrl(bytes: Uint8Array, mimeType: string) {

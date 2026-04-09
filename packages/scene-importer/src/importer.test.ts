@@ -60,6 +60,41 @@ describe("scene-importer", () => {
     expect(result.snapshot?.nodes.some((node) => node.kind === "light")).toBe(true);
   });
 
+  test("ignores importmap scripts and analyzes the executable module entry", async () => {
+    const result = await importHtmlJsProject({
+      files: [
+        textFile(
+          "index.html",
+          `
+            <!doctype html>
+            <html>
+              <head>
+                <script type="importmap">
+                  {
+                    "imports": {
+                      "three": "https://cdn.example.com/three.module.js"
+                    }
+                  }
+                </script>
+              </head>
+              <body>
+                <script type="module">
+                  import * as THREE from "three";
+                  const scene = new THREE.Scene();
+                  scene.add(new THREE.AmbientLight("#ffffff", 0.8));
+                </script>
+              </body>
+            </html>
+          `
+        )
+      ]
+    });
+
+    expect(result.report.status).toBe("imported");
+    expect(result.report.diagnostics.some((diagnostic) => diagnostic.code === "script-parse-failed")).toBe(false);
+    expect(result.snapshot?.nodes.some((node) => node.kind === "light")).toBe(true);
+  });
+
   test("imports HTML with linked local scripts and model assets", async () => {
     const result = await importHtmlJsProject({
       files: [
