@@ -45,7 +45,9 @@ export class WebGPURendererAdapter implements RendererAdapter {
 
     if (webgpuAvailable) {
       const gpuCaps = await buildWebGPUCapabilities();
-      if (gpuCaps) {
+      const webgpuModule = await loadThreeWebGPU();
+
+      if (gpuCaps && webgpuModule) {
         this._capabilities = { ...gpuCaps, webgpuAvailable: true };
         return this._capabilities;
       }
@@ -158,16 +160,28 @@ function createWebGPURenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
 type ThreeWebGPUModule = { WebGPURenderer: new (opts: unknown) => unknown };
 
 let _cachedWebGPUModule: ThreeWebGPUModule | null | undefined = undefined;
+let _loadingWebGPUModule: Promise<ThreeWebGPUModule | null> | null = null;
+
+async function loadThreeWebGPU(): Promise<ThreeWebGPUModule | null> {
+  if (_cachedWebGPUModule !== undefined) return _cachedWebGPUModule;
+  if (_loadingWebGPUModule) return _loadingWebGPUModule;
+
+  _loadingWebGPUModule = import("three/build/three.webgpu.js")
+    .then((mod) => {
+      _cachedWebGPUModule = mod as unknown as ThreeWebGPUModule;
+      return _cachedWebGPUModule;
+    })
+    .catch(() => {
+      _cachedWebGPUModule = null;
+      return null;
+    })
+    .finally(() => {
+      _loadingWebGPUModule = null;
+    });
+
+  return _loadingWebGPUModule;
+}
 
 function getThreeWebGPU(): ThreeWebGPUModule | null {
-  if (_cachedWebGPUModule !== undefined) return _cachedWebGPUModule;
-
-  try {
-    const mod = require("three/webgpu") as ThreeWebGPUModule;
-    _cachedWebGPUModule = mod;
-    return mod;
-  } catch {
-    _cachedWebGPUModule = null;
-    return null;
-  }
+  return _cachedWebGPUModule ?? null;
 }

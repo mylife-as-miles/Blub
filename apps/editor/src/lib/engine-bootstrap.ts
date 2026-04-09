@@ -28,10 +28,11 @@ function applyDevOverrides(): void {
   if (typeof window === "undefined") return;
 
   const overrides: Partial<EngineFeatureFlags> = {};
+  type EngineFlagKey = Extract<keyof EngineFeatureFlags, string>;
 
   // URL param override: ?flag_ENABLE_WEBGPU=true
   const params = new URLSearchParams(window.location.search);
-  const keys: Array<keyof EngineFeatureFlags> = [
+  const keys: EngineFlagKey[] = [
     "ENABLE_WEBGPU",
     "WEBGPU_PHASE2_MATERIALS",
     "WEBGPU_PHASE3_PICKING",
@@ -43,13 +44,13 @@ function applyDevOverrides(): void {
 
   for (const key of keys) {
     const urlVal = params.get(`flag_${key}`);
-    if (urlVal === "true") (overrides as Record<string, boolean>)[key] = true;
-    if (urlVal === "false") (overrides as Record<string, boolean>)[key] = false;
+    if (urlVal === "true") overrides[key] = true;
+    if (urlVal === "false") overrides[key] = false;
 
     // localStorage override (persisted across reloads — useful for QA)
     const lsVal = window.localStorage.getItem(`blud_flag_${key}`);
-    if (lsVal === "true") (overrides as Record<string, boolean>)[key] = true;
-    if (lsVal === "false") (overrides as Record<string, boolean>)[key] = false;
+    if (lsVal === "true") overrides[key] = true;
+    if (lsVal === "false") overrides[key] = false;
   }
 
   if (Object.keys(overrides).length > 0) {

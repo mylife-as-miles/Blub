@@ -13,6 +13,8 @@ import { createTextureGenerationApiPlugin } from "./server/texture-generation-ap
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 const editorThreePath = path.resolve(__dirname, "node_modules/three");
+const editorThreeWebGPUPath = path.resolve(editorThreePath, "build/three.webgpu.js");
+const editorThreeTSLPath = path.resolve(editorThreePath, "build/three.tsl.js");
 
 const workspaceAliases = {
   "@blud/dev-sync": path.resolve(repoRoot, "packages/dev-sync/src/index.ts"),
@@ -57,7 +59,11 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         ...workspaceAliases,
-        three: editorThreePath
+        three: editorThreePath,
+        "three/webgpu": editorThreeWebGPUPath,
+        "three/tsl": editorThreeTSLPath,
+        "three/build/three.webgpu.js": editorThreeWebGPUPath,
+        "three/build/three.tsl.js": editorThreeTSLPath
       },
       dedupe: ["react", "react-dom", "three"]
     },
